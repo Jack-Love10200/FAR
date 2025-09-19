@@ -104,7 +104,10 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)dependencies\GLFW\include;$(ProjectDir)dependencies\GLEW\include;$(ProjectDir)dependencies\assimp\include;$(ProjectDir)dependencies\glm\;$(ProjectDir)dependencies\stb\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)dependencies\GLFW\include;$(ProjectDir)dependencies\GLEW\include;$(ProjectDir)dependencies\assimp\include;$(ProjectDir)dependencies\glm\;$(ProjectDir)dependencies\stb\;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.hpp</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,7 +145,14 @@ xcopy "$(ProjectDir)dependencies\assimp\lib\$(Configuration)\assimp-vc143-mt.dll
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\Engine\Engine.cpp" />
+    <ClCompile Include="src\Engine\Render.cpp" />
+    <ClCompile Include="src\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Engine\Engine.hpp" />
+    <ClInclude Include="src\Engine\Render.hpp" />
+    <ClInclude Include="src\PCH.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

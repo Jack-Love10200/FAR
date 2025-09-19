@@ -1,3 +1,6 @@
+
+#include "PCH.hpp"
+
 #include "GL/glew.h"
 #include "GL/GL.h"
 #include "GLFW/glfw3.h"
@@ -13,7 +16,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 
 #include "stb_image.h"
-
 
 //camera geometry
 glm::vec3 cameraPos{ 0.0f, 0.0f, 0.0f };
@@ -283,7 +285,6 @@ void Render()
   glBindVertexArray(0);
 }
 
-
 int main()
 {
 
@@ -292,7 +293,7 @@ int main()
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  GLFWwindow* window = glfwCreateWindow(2000, 2000, "test", nullptr, nullptr);
+  GLFWwindow* window = glfwCreateWindow(2000, 1200, "test", nullptr, nullptr);
   glfwMakeContextCurrent(window);
   const char* err;
   glfwGetError(&err);
