@@ -1,0 +1,35 @@
+#version 460 core
+//#extension GL_ARB_bindless_texture : require
+
+//layout(binding = 0) buffer TextureHandles {
+//    sampler2D textures[];
+//};
+
+
+//layout(binding = 0) uniform sampler2DArray textures;
+
+layout(location = 6) uniform sampler2D textures[16];
+
+
+//layout(location = 0) uniform sampler2DArray textures;
+
+
+//layout(location = 0) uniform sampler2DArray tex;
+layout(location = 4) uniform vec4 color;
+layout(location = 5) uniform bool textured;
+
+in vec3 frag_uv;
+out vec4 frag_color;
+void main()
+{
+    if (textured)
+    {
+   //frag_color = texture(textures[int(frag_uv.z)], frag_uv.xy);
+
+    frag_color = texture(textures[int(frag_uv.z)], frag_uv.xy);
+   }
+   else
+    { 
+    frag_color = color;
+    }
+}
