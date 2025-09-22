@@ -21,22 +21,25 @@ int main()
 
   engine.Init();
 
-  Entity cam = engine.CreateEntity();
+  engine.RegisterComponentType<Transform>();
+  engine.RegisterComponentType<Camera>();
+  engine.RegisterComponentType<Model>();
 
-  engine.CreateCamera(cam, Camera{ .isMain = true });
-  engine.CreateTransform(cam, Transform{ .position = glm::vec3(0.0f, 0.0f, 0.0f) });
+  Entity cam = engine.CreateEntity();
+  engine.CreateComponent(cam, Camera{ .isMain = true });
+  engine.CreateComponent(cam, Transform{ .position = glm::vec3(0.0f, 0.0f, 0.0f) });
 
   Entity jack = engine.CreateEntity();
-  engine.CreateModel(jack, Model{ .path = "assets/jack_samba.glb", .textured = true });
-  engine.CreateTransform(jack, Transform{ .position = glm::vec3(0.0f, 0.0f, -3.0f), .rotation = glm::vec3(-90.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f)});
+  engine.CreateComponent(jack, Model{ .path = "assets/jack_samba.glb", .textured = true });
+  engine.CreateComponent(jack, Transform{ .position = glm::vec3(0.0f, 0.0f, -3.0f), .rotation = glm::vec3(-90.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f)});
 
   Entity jack2 = engine.CreateEntity();
-  engine.CreateModel(jack2, Model{ .path = "assets/Adi_Dancing.fbx", .textured = false, });
-  engine.CreateTransform(jack2, Transform{ .position = glm::vec3(1.0f, 0.0f, -3.0f), .rotation = glm::vec3(-90.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
+  engine.CreateComponent(jack2, Model{ .path = "assets/Adi_Dancing.fbx", .textured = false, });
+  engine.CreateComponent(jack2, Transform{ .position = glm::vec3(1.0f, 0.0f, -3.0f), .rotation = glm::vec3(-90.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
 
   Entity jack3 = engine.CreateEntity();
-  engine.CreateModel(jack3, Model{ .path = "assets/okayu/okayu.pmx", .textured = true });
-  engine.CreateTransform(jack3, Transform{ .position = glm::vec3(-10.0f, 0.0f, -30.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
+  engine.CreateComponent(jack3, Model{ .path = "assets/okayu/okayu.pmx", .textured = true });
+  engine.CreateComponent(jack3, Transform{ .position = glm::vec3(-10.0f, 0.0f, -30.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
 
   while (RenderGetWindowIsOpen())
   {

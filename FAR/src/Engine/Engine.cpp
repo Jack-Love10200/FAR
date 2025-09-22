@@ -39,18 +39,3 @@ Entity Engine::CreateEntity()
 
   return currentEntity - 1;
 }
-
-void Engine::CreateModel(Entity e, Model c)
-{
-  models[e] = c;
-}
-
-void Engine::CreateTransform(Entity e, Transform c)
-{
-  transforms[e] = c;
-}
-
-void Engine::CreateCamera(Entity e, Camera c)
-{
-  cameras[e] = c;
-}

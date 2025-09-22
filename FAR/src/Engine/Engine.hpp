@@ -65,7 +65,6 @@ public:
     return eng;
   }
 
-
   void Init();
   void PreUpdate();
   void Update();
@@ -73,13 +72,84 @@ public:
   void Exit();
 
   Entity CreateEntity();
-  void CreateModel(Entity e, Model c);
-  void CreateTransform(Entity e, Transform c);
-  void CreateCamera(Entity e, Camera c);
 
   std::vector<Entity> entities;
 
-  std::array<std::optional<Model>, 50>     models;
-  std::array<std::optional<Transform>, 50> transforms;
-  std::array<std::optional<Camera>, 50>    cameras;
+  template<typename T>
+  void RegisterComponentType()
+  {
+    static std::array<std::optional<T>, 50> componentArray;
+
+    std::type_index typeIndex = std::type_index(typeid(T));
+    componentTypes.push_back(typeIndex);
+
+    componentCreationFuncs.emplace(std::make_pair(typeIndex, [this](Entity e, const void* componentdata) 
+      {
+        const T* component = static_cast<const T*>(componentdata);
+        componentArray[e] = *component;
+      }));
+
+    componentGetFuncs.emplace(std::make_pair(typeIndex, [this](Entity e) -> void*
+      {
+        return componentArray[e].has_value() ? &componentArray[e].value() : nullptr;
+      }));
+
+    //componentArrays.emplace(std::make_pair(typeIndex ,new unsigned char[sizeof(T) * 50]));
+  }
+
+  template<typename T>
+  void CreateComponent(Entity e, const T& component)
+  {
+    //componentArray[e] = component;
+    /*std::type_index typeIndex = std::type_index(typeid(T));
+    unsigned char* array = componentArrays[typeIndex];
+
+    unsigned char* componentPtr = array + (sizeof(T) * e);
+    new (componentPtr) T(component);
+    */
+
+    std::type_index typeIndex = std::type_index(typeid(T));
+    componentCreationFuncs[typeIndex](e, &component);
+  }
+
+  template<typename... ComponentTypes>
+  std::vector<Entity> GetEntities()
+  {
+    std::vector<Entity> result;
+
+    for (Entity e : entities)
+    {
+      bool hasAllComponents = (... && HasComponent<ComponentTypes>(e));
+      if (hasAllComponents)
+        result.push_back(e);
+    }
+    return result;
+  }
+
+  template<typename T>
+  T& GetComponent(Entity e)
+  {
+    std::type_index typeIndex = std::type_index(typeid(T));
+    return *(static_cast<T*>(componentGetFuncs[typeIndex](e)));
+  }
+
+  template<typename T>
+  bool HasComponent(Entity e)
+  {
+    std::type_index typeIndex = std::type_index(typeid(T));
+    return componentGetFuncs[typeIndex](e) != nullptr;
+  }
+  
+  //std::map<std::type_index, unsigned char*> componentArrays;
+  std::vector<std::type_index> componentTypes;
+
+  std::map<std::type_index, std::function<void(Entity, const void*)>> componentCreationFuncs;
+
+  std::map<std::type_index, std::function<void*(Entity)>> componentGetFuncs;
+
+
+
+  //std::array<std::optional<Model>, 50>     models;
+  //std::array<std::optional<Transform>, 50> transforms;
+  //std::array<std::optional<Camera>, 50>    cameras;
 };

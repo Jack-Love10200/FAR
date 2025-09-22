@@ -289,113 +289,6 @@ void LoadModel(const std::filesystem::path& filepath, Model& model)
     }
   }
 
-
-  ////embedded textures
-  //if (samba->HasTextures())
-  //{
-  //  stbi_set_flip_vertically_on_load(1);
-
-  //  int width, height, channels;
-
-  //  for (unsigned int i = 0; i < samba->mNumTextures; i++)
-  //  {
-
-  //    stbi_uc* sambaa = stbi_load_from_memory(
-  //      (const stbi_uc*)samba->mTextures[i]->pcData,
-  //      samba->mTextures[i]->mWidth,
-  //      &width, &height, &channels,
-  //      3);
-
-  //    // GPU buffer for textures
-  //    glGenTextures(1, &m.texArray);
-  //    glBindTexture(GL_TEXTURE_2D, m.texArray);
-
-  //    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  //    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height,
-  //      0, GL_RGB, GL_UNSIGNED_BYTE, sambaa);
-  //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-  //    GLuint handle = glGetTextureHandleARB(m.texArray);
-  //    glMakeTextureHandleResidentARB(handle);
-  //    textureHandles.push_back(handle);
-
-  //    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) * 1024,textureHandles.data(), GL_STATIC_DRAW);
-  //    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
-  //  }
-  //}
-
-  ////non-embedded textures
-  //if (samba->HasMaterials())
-  //{
-  //  std::cout << "model has materials" << std::endl;
-  //  aiString texPath;
-
-  //  for (unsigned int i = 0; i < samba->mNumMaterials; i++)
-  //  {
-  //    aiReturn texFound = samba->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &texPath);
-  //    if (texFound == AI_SUCCESS)
-  //    {
-  //      std::cout << "texture path: " << texPath.C_Str() << std::endl;
-
-  //      std::filesystem::path texFullPath = filepath.parent_path() / texPath.C_Str();
-
-  //      int width;
-  //      int height;
-  //      int channels;
-  //      stbi_uc* sambaa = stbi_load(texFullPath.string().c_str(),
-  //        &width, &height, &channels,
-  //        3);
-
-  //      if (!sambaa)
-  //      {
-  //        continue;
-  //      }
-
-  //      // GPU buffer for texture
-
-  //      GLuint currentTex;
-
-  //      glGenTextures(1, &currentTex);
-  //      glBindTexture(GL_TEXTURE_2D, currentTex);
-  //      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  //      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height,
-  //        0, GL_RGB, GL_UNSIGNED_BYTE, sambaa);
-  //      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  //      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  //      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  //      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-  //      //m.textures.push_back(currentTex);
-  //    }
-  //    else
-  //    {
-  //      std::cout << "no texture found" << std::endl;
-  //    }
-  //  }
-  //}
-
-
-
-  //for (unsigned int i = 0; i < samba->mNumMeshes; i++)
-  //{
-  //  for (unsigned int j = 0; j < samba->mMeshes[i]->mNumVertices; j++)
-  //  {
-  //    if (samba->mMeshes[i]->HasTextureCoords(0))
-  //    {
-  //      m.verticies[i].uv = glm::vec2(samba->mMeshes[i]->mTextureCoords[0][j].x, samba->mMeshes[i]->mTextureCoords[0][j].y);
-  //    }
-  //    else
-  //    {
-  //      m.verticies[i].uv = glm::vec2(0.0f, 0.0f);
-  //    }
-  //  }
-  //}
-
-
-
   //move object to (0, 0, 0) and scale to 1x1x1
   //glm::vec4 max = {0.0f, 0.0f, 0.0f, 0.0f};
   //glm::vec4 min = { 0.0f, 0.0f, 0.0f, 0.0f};
@@ -471,20 +364,14 @@ void RenderInit()
 
 void RenderPreUpdate()
 {
-  for (std::optional<Model>& model : Engine::GetInstance()->models)
+  std::vector<Entity> modelEntities = Engine::GetInstance()->GetEntities<Model>();
+
+  for (const Entity& e : modelEntities)
   {
-    if (!model.has_value()) continue;
+    Model& model = Engine::GetInstance()->GetComponent<Model>(e);
 
-    if (model->path != "" && model->VAOs.size() == 0)
-    {
-      //load model
-      LoadModel(model->path, model.value());
-      //model->indexCount = static_cast<int>(m.indicies.size());
-      //model->texArray = m.texArray;
-
-      //create vao
-      //CreateVAO(m, *model);
-    }
+    if (model.path != "" && model.VAOs.size() == 0)
+      LoadModel(model.path, model);
   }
 }
 
@@ -496,58 +383,57 @@ void RenderUpdate()
   //modeling
   glUseProgram(shaderprogram);
 
+  std::vector<Entity> modelEntities = Engine::GetInstance()->GetEntities<Transform, Model>();
+
   //for each transform
-  for (std::optional<Transform>& transform : Engine::GetInstance()->transforms)
+  //for (std::optional<Transform>& transform : Engine::GetInstance()->transforms)
+  for (const Entity& e : modelEntities)
   {
-    if (!transform.has_value()) continue;
-    transform->modelMatrix = glm::mat4(1.0f);
-    transform->modelMatrix = glm::translate(transform->modelMatrix, transform->position);
-    transform->modelMatrix = glm::scale(transform->modelMatrix, transform->scale);
-    transform->modelMatrix = transform->modelMatrix * glm::eulerAngleXYZ(glm::radians(transform->rotation.x), glm::radians(transform->rotation.y), glm::radians(transform->rotation.z));
+    Transform& transform = Engine::GetInstance()->GetComponent<Transform>(e);
+
+    transform.modelMatrix = glm::mat4(1.0f);
+    transform.modelMatrix = glm::translate(transform.modelMatrix, transform.position);
+    transform.modelMatrix = glm::scale(transform.modelMatrix, transform.scale);
+    transform.modelMatrix = transform.modelMatrix * glm::eulerAngleXYZ(glm::radians(transform.rotation.x), glm::radians(transform.rotation.y), glm::radians(transform.rotation.z));
   }
 
   //assuming exactly one main cam for now
-  for (int i = 0; i < 50; i++)
+  std::vector<Entity> cameraEntities = Engine::GetInstance()->GetEntities<Transform, Camera>();
+  for (const Entity& e : cameraEntities)
   {
-    std::optional<Camera>& camera = Engine::GetInstance()->cameras[i];
-    std::optional<Transform>& cameratransform = Engine::GetInstance()->transforms[i];
+    Camera& camera = Engine::GetInstance()->GetComponent<Camera>(e);
+    Transform& cameratransform = Engine::GetInstance()->GetComponent<Transform>(e);
 
-    if (!camera.has_value()) continue;
-    if (!cameratransform.has_value()) continue;
-    if (!camera->isMain) continue;
+    if (!camera.isMain) continue;
 
     //viewing
     viewMatrix = glm::mat4(1.0f);
-    viewMatrix = glm::lookAt(cameratransform->position, cameratransform->position + camera->forward, camera->up);
+    viewMatrix = glm::lookAt(cameratransform.position, cameratransform.position + camera.forward, camera.up);
     //projection
     projectionMatrix = glm::mat4(1.0f);
-    projectionMatrix = glm::perspective(glm::radians(camera->fov), 1.0f, camera->nearPlane, camera->farPlane);
+    projectionMatrix = glm::perspective(glm::radians(camera.fov), 1.0f, camera.nearPlane, camera.farPlane);
     glUniformMatrix4fv(2, 1, GL_FALSE, &viewMatrix[0][0]);
     glUniformMatrix4fv(3, 1, GL_FALSE, &projectionMatrix[0][0]);
   }
 
-  for (int i = 0; i < 50; i++)
+  for (const Entity& e : modelEntities)
   {
-    std::optional<Model>& model = Engine::GetInstance()->models[i];
-    std::optional<Transform>& transform = Engine::GetInstance()->transforms[i];
-    if (!model.has_value()) continue;
-    if (!transform.has_value()) continue;
-    if (model->VAOs.size() == 0) continue;
+    Transform& transform = Engine::GetInstance()->GetComponent<Transform>(e);
+    Model& model= Engine::GetInstance()->GetComponent<Model>(e);
+
+    if (model.VAOs.size() == 0) continue;
   
-    glUniformMatrix4fv(1, 1, GL_FALSE, &transform->modelMatrix[0][0]);
+    glUniformMatrix4fv(1, 1, GL_FALSE, &transform.modelMatrix[0][0]);
 
-    glUniform1i(5, model->textured ? 1 : 0);
-    glUniform4fv(4, 1, &model->color[0]);
+    glUniform1i(5, model.textured ? 1 : 0);
+    glUniform4fv(4, 1, &model.color[0]);
 
-    //glActiveTexture(GL_TEXTURE0);
-    //glBindTexture(GL_TEXTURE_2D_ARRAY, model->texArray);
-
-    for (const auto& [vao, indexCount] : model->VAOs)
+    for (const auto& [vao, indexCount] : model.VAOs)
     {
-      if (model->textured && model->textures.contains(vao))
+      if (model.textured && model.textures.contains(vao))
       {
         int texIndex = 0;
-        for (const GLuint& tex : model->textures[vao])
+        for (const GLuint& tex : model.textures[vao])
         {
           glActiveTexture(GL_TEXTURE0 + texIndex);
           glBindTexture(GL_TEXTURE_2D, tex);
@@ -558,13 +444,6 @@ void RenderUpdate()
       glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
       glBindVertexArray(0);
     }
-
-
-
-    ////glUniform1i(0, 0);
-    //glBindVertexArray(model->vao);
-    //glDrawElements(GL_TRIANGLES, model->indexCount, GL_UNSIGNED_INT, nullptr);
-    //glBindVertexArray(0);
   }
 
   glUseProgram(0);
