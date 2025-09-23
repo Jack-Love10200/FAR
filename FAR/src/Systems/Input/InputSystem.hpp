@@ -23,6 +23,5 @@ namespace FAR
 
     InputResource* inputResc;
     WindowResource* windowResc;
-
   };
 }

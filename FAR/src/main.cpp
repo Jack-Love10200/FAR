@@ -14,6 +14,7 @@
 //systems
 #include "Systems/Render/Render.hpp"
 #include "Systems/Sandbox/Sandbox.hpp"
+#include "Systems/Input/InputSystem.hpp"
 
 //components
 #include "Components/Transform.hpp"
@@ -35,6 +36,7 @@ int main()
 
   engine.RegisterSystemType<FAR::Render>();
   engine.RegisterSystemType<FAR::Sandbox>();
+  engine.RegisterSystemType<FAR::InputSystem>();
 
   engine.RegisterResource<FAR::InputResource>();
   engine.RegisterResource<FAR::WindowResource>();

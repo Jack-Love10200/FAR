@@ -33,30 +33,43 @@ namespace FAR
 
   void Sandbox::Update()
   {
+    const float speed = 0.1f;
+
     InputResource* inputResc = Engine::GetInstance()->GetResource<InputResource>();
+
+    Transform& camTransform = Engine::GetInstance()->GetComponent<Transform>(cam);
+    Camera& camera = Engine::GetInstance()->GetComponent<Camera>(cam);
 
     if (inputResc->GetKey(KEYCODE::W))
     {
-      Transform& camTransform = Engine::GetInstance()->GetComponent<Transform>(cam);
-      camTransform.position += glm::vec3(0.0f, 0.0f, -0.1f);
+      camTransform.position += camera.forward * speed;
     }
 
     if (inputResc->GetKey(KEYCODE::S))
     {
-      Transform& camTransform = Engine::GetInstance()->GetComponent<Transform>(cam);
-      camTransform.position += glm::vec3(0.0f, 0.0f, 0.1f);
+
+      camTransform.position -= camera.forward * speed;
     }
 
     if (inputResc->GetKey(KEYCODE::A))
     {
-      Transform& camTransform = Engine::GetInstance()->GetComponent<Transform>(cam);
-      camTransform.position += glm::vec3(-0.1f, 0.0f, 0.0f);
+      glm::vec3 right = glm::cross(camera.forward, camera.up);
+      camTransform.position -= right * speed;
     }
 
     if (inputResc->GetKey(KEYCODE::D))
     {
-      Transform& camTransform = Engine::GetInstance()->GetComponent<Transform>(cam);
-      camTransform.position += glm::vec3(0.1f, 0.0f, 0.0f);
+      glm::vec3 right = glm::cross(camera.forward, camera.up);
+      camTransform.position += right * speed;
+    }
+
+    if (inputResc->GetMouseButton(KEYCODE::MOUSE_RIGHT))
+    {
+
+      glm::mat4 rot = glm::mat4(1.0f);
+      rot = glm::rotate(rot, glm::radians(-inputResc->mouseDelta.x * 0.1f), glm::vec3(0.0f, 1.0f, 0.0f));
+      rot = glm::rotate(rot, glm::radians(-inputResc->mouseDelta.y * 0.1f), glm::vec3(1.0f, 0.0f, 0.0f));
+      camera.forward = glm::vec3(rot * glm::vec4(camera.forward, 0.0f));
     }
 
 

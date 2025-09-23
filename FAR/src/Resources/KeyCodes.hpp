@@ -88,6 +88,15 @@ namespace FAR
     RIGHT_SHIFT,
     RIGHT_CONTROL,
     RIGHT_ALT,
-    RIGHT_SUPER
+    RIGHT_SUPER,
+
+    MOUSE_LEFT = 0,
+    MOUSE_RIGHT = 1,
+    MOUSE_MIDDLE = 2,
+    MOUSE_4 = 3,
+    MOUSE_5 = 4,
+    MOUSE_6 = 5,
+    MOUSE_7 = 6,
+    MOUSE_8 = 7
   };
 }

@@ -16,6 +16,14 @@ namespace FAR
     }
   }
 
+  void InputSystem::PreUpdate()
+  {
+  }
+
+  void InputSystem::Update()
+  {
+  }
+
   void InputSystem::PostUpdate()
   {
     inputResc->previousKeyStates = inputResc->currentKeyStates;
@@ -24,5 +32,22 @@ namespace FAR
     {
       inputResc->currentKeyStates[(KEYCODE)key] = glfwGetKey(windowResc->window, key);
     }
+
+    inputResc->previousMousePosition = inputResc->mousePosition;
+    
+    double xpos, ypos;
+    glfwGetCursorPos(windowResc->window, &xpos, &ypos);
+    inputResc->mousePosition = glm::vec2((float)xpos, (float)ypos);
+    inputResc->mouseDelta = inputResc->mousePosition - inputResc->previousMousePosition;
+
+    inputResc->previousMouseButtonStates = inputResc->currentMouseButtonStates;
+    for (int button = 0; button <= 7; button++)
+    {
+      inputResc->currentMouseButtonStates[(KEYCODE)button] = glfwGetMouseButton(windowResc->window, button);
+    }
+
+  }
+  void InputSystem::Exit()
+  {
   }
 }
