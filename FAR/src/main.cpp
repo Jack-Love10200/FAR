@@ -1,4 +1,3 @@
-
 #include "PCH.hpp"
 
 #include <iostream>
@@ -12,36 +11,37 @@
 #include "Engine/Engine.hpp"
 
 //main depends on render for now, will resolve silly dependencies later
-#include "Engine/Render.hpp"
+//systems
+#include "Systems/Render/Render.hpp"
+#include "Systems/Sandbox/Sandbox.hpp"
+
+//components
+#include "Components/Transform.hpp"
+#include "Components/Camera.hpp"
+#include "Components/Model.hpp"
+
+//resources
+#include "Resources/InputResource.h"
+#include "Resources/WindowResource.hpp"
 
 int main()
 {
-  Engine engine;
-  Engine::SetInstance(&engine);
-
-  engine.Init();
+  FAR::Engine engine;
+  FAR::Engine::SetInstance(&engine);
 
   engine.RegisterComponentType<Transform>();
   engine.RegisterComponentType<Camera>();
   engine.RegisterComponentType<Model>();
 
-  Entity cam = engine.CreateEntity();
-  engine.CreateComponent(cam, Camera{ .isMain = true });
-  engine.CreateComponent(cam, Transform{ .position = glm::vec3(0.0f, 0.0f, 0.0f) });
+  engine.RegisterSystemType<FAR::Render>();
+  engine.RegisterSystemType<FAR::Sandbox>();
 
-  Entity jack = engine.CreateEntity();
-  engine.CreateComponent(jack, Model{ .path = "assets/jack_samba.glb", .textured = true });
-  engine.CreateComponent(jack, Transform{ .position = glm::vec3(0.0f, 0.0f, -3.0f), .rotation = glm::vec3(-90.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f)});
+  engine.RegisterResource<FAR::InputResource>();
+  engine.RegisterResource<FAR::WindowResource>();
 
-  Entity jack2 = engine.CreateEntity();
-  engine.CreateComponent(jack2, Model{ .path = "assets/Adi_Dancing.fbx", .textured = false, });
-  engine.CreateComponent(jack2, Transform{ .position = glm::vec3(1.0f, 0.0f, -3.0f), .rotation = glm::vec3(-90.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
+  engine.Init();
 
-  Entity jack3 = engine.CreateEntity();
-  engine.CreateComponent(jack3, Model{ .path = "assets/okayu/okayu.pmx", .textured = true });
-  engine.CreateComponent(jack3, Transform{ .position = glm::vec3(-10.0f, 0.0f, -30.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
-
-  while (RenderGetWindowIsOpen())
+  while (true)
   {
     engine.PreUpdate();
     engine.Update();
@@ -49,6 +49,4 @@ int main()
   }
 
   engine.Exit();
-
-    std::cout << "Hello World!\n";
 }

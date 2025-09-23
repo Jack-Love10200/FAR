@@ -1,41 +1,63 @@
 #include "PCH.hpp"
 #include "Engine.hpp"
 
+
+
+
 //Engine depends on the systems for now, will make systems register themselves later
-#include "Render.hpp"
+#include "Systems/Render/Render.hpp"
 
-Engine* Engine::eng = nullptr;
-
-void Engine::Init()
+namespace FAR
 {
-  RenderInit();
-}
+  Engine* Engine::eng = nullptr;
 
-void Engine::PreUpdate()
-{
-  RenderPreUpdate();
-}
+  void Engine::Init()
+  {
+    for (iSystem* system : systems)
+    {
+      system->Init();
+    }
+  }
 
-void Engine::Update()
-{
-  RenderUpdate();
-}
+  void Engine::PreUpdate()
+  {
+    for (iSystem* system : systems)
+    {
+      system->PreUpdate();
+    }
+  }
 
-void Engine::PostUpdate()
-{
-  RenderPostUpdate();
-}
+  void Engine::Update()
+  {
+    for (iSystem* system : systems)
+    {
+      system->Update();
+    }
+  }
 
-void Engine::Exit()
-{
-  RenderExit();
-}
+  void Engine::PostUpdate()
+  {
+    for (iSystem* system : systems)
+    {
+      system->PostUpdate();
+    }
+  }
 
-Entity Engine::CreateEntity()
-{
-  static Entity currentEntity = 0;
-  entities.push_back(currentEntity);
-  currentEntity++;
+  void Engine::Exit()
+  {
+    for (iSystem* system : systems)
+    {
+      system->Exit();
+    }
+  }
 
-  return currentEntity - 1;
+  Entity Engine::CreateEntity()
+  {
+    static Entity currentEntity = 0;
+    entities.push_back(currentEntity);
+    currentEntity++;
+
+    return currentEntity - 1;
+  }
+
 }

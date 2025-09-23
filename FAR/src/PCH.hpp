@@ -9,8 +9,11 @@
 #include <numeric>
 #include <filesystem>
 #include <map>
+#include <unordered_map>
 #include <typeindex>
 #include <functional>
+#include <memory>
+#include <utility>
 
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtc/matrix_transform.hpp>
