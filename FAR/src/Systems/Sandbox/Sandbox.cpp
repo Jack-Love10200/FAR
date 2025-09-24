@@ -4,6 +4,7 @@
 #include "Engine/Engine.hpp"
 
 #include "Resources/InputResource.h"
+#include "Resources/RenderResource.hpp"
 
 namespace FAR
 {
@@ -22,9 +23,9 @@ namespace FAR
     engine.CreateComponent(adi, Model{ .path = "assets/Adi_Dancing.fbx", .textured = false, });
     engine.CreateComponent(adi, Transform{ .position = glm::vec3(1.0f, 0.0f, -3.0f), .rotation = glm::vec3(-90.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
 
-    okayu = engine.CreateEntity();
-    engine.CreateComponent(okayu, Model{ .path = "assets/okayu/okayu.pmx", .textured = true });
-    engine.CreateComponent(okayu, Transform{ .position = glm::vec3(-10.0f, 0.0f, -30.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
+    //okayu = engine.CreateEntity();
+    //engine.CreateComponent(okayu, Model{ .path = "assets/okayu/okayu.pmx", .textured = true });
+    //engine.CreateComponent(okayu, Transform{ .position = glm::vec3(-10.0f, 0.0f, -30.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
   }
 
   void Sandbox::PreUpdate()
@@ -33,6 +34,12 @@ namespace FAR
 
   void Sandbox::Update()
   {
+
+    Engine::GetInstance()->GetResource<RenderResource>()->DrawRay(
+      glm::vec4(0.0f, 0.0f, -4.0f, 1.0f),
+      glm::vec4(0.0f, 1.0f, -4.0f, 1.0f));
+
+
     const float speed = 0.1f;
 
     InputResource* inputResc = Engine::GetInstance()->GetResource<InputResource>();
@@ -70,6 +77,27 @@ namespace FAR
       rot = glm::rotate(rot, glm::radians(-inputResc->mouseDelta.x * 0.1f), glm::vec3(0.0f, 1.0f, 0.0f));
       rot = glm::rotate(rot, glm::radians(-inputResc->mouseDelta.y * 0.1f), glm::vec3(1.0f, 0.0f, 0.0f));
       camera.forward = glm::vec3(rot * glm::vec4(camera.forward, 0.0f));
+    }
+
+    //rotate the "jack" object using its quaternion
+    if (inputResc->GetMouseButton(KEYCODE::MOUSE_LEFT))
+    {
+      Transform& jackTransform = Engine::GetInstance()->GetComponent<Transform>(jack);
+
+      float sensitivity = 0.01f; // tweak
+      float yaw = inputResc->mouseDelta.x * sensitivity;
+      float pitch = inputResc->mouseDelta.y * sensitivity;
+
+      // build incremental quaternion from mouse movement
+      glm::quat qYaw = glm::angleAxis(yaw, glm::vec3(0, 1, 0));
+      glm::quat qPitch = glm::angleAxis(pitch, glm::vec3(1, 0, 0));
+
+      // combine them
+      glm::quat rotationDelta = qYaw * qPitch;
+
+      // update object’s orientation
+      jackTransform.rotationQuaternion = rotationDelta * jackTransform.rotationQuaternion;
+      jackTransform.rotationQuaternion = glm::normalize(jackTransform.rotationQuaternion); // keep it clean
     }
 
 

@@ -24,6 +24,7 @@
 //resources
 #include "Resources/InputResource.h"
 #include "Resources/WindowResource.hpp"
+#include "Resources/RenderResource.hpp"
 
 int main()
 {
@@ -40,6 +41,7 @@ int main()
 
   engine.RegisterResource<FAR::InputResource>();
   engine.RegisterResource<FAR::WindowResource>();
+  engine.RegisterResource<FAR::RenderResource>();
 
   engine.Init();
 

@@ -12,6 +12,7 @@
 #include "Components/Model.hpp"
 
 #include "Resources/WindowResource.hpp"
+#include "Resources/RenderResource.hpp"
 
 namespace FAR
 {
@@ -26,7 +27,6 @@ namespace FAR
     void PostUpdate() override;
     void Exit() override;
 
-    bool GetWindowIsOpen();
   private:
 
     struct vertex
@@ -43,13 +43,18 @@ namespace FAR
     };
 
     void WindowSetup();
-    void CreateShaderProgram();
+    GLuint CreateShaderProgram(const std::filesystem::path& vertex, const std::filesystem::path& fragment);
     void LoadModel(const std::filesystem::path& filepath, Model& model);
     void CreateVAO(const meshInfo& m, Model& model);
 
-    WindowResource* windowResc;
+    void CreateLinesVAO();
 
-    GLuint shaderprogram = 0;
+
+    GLuint lineVAO;
+
+    WindowResource* windowResc;
+    RenderResource* renderResc;
+
     glm::mat4 viewMatrix{ 1.0f };
     glm::mat4 projectionMatrix{ 1.0f };
   };

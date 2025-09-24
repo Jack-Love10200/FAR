@@ -22,12 +22,12 @@ namespace FAR
 
   }
 
-  void Render::CreateShaderProgram()  
+  GLuint Render::CreateShaderProgram(const std::filesystem::path& vertex, const std::filesystem::path& fragment)
   {
     GLint error;
 
-    std::ifstream vshaderfile("assets/shaders/basic.vert");
-    std::ifstream fshaderfile("assets/shaders/basic.frag");
+    std::ifstream vshaderfile(vertex.string());
+    std::ifstream fshaderfile(fragment.string());
 
     std::string vshaderstr((std::istreambuf_iterator<char>(vshaderfile)), std::istreambuf_iterator<char>());
     std::string fshaderstr((std::istreambuf_iterator<char>(fshaderfile)), std::istreambuf_iterator<char>());
@@ -57,16 +57,16 @@ namespace FAR
       std::cout << "Vertex Shader Compilation Failed\n" << infoLog << std::endl;
     }
 
-    shaderprogram = glCreateProgram();
-    glAttachShader(shaderprogram, vertshader);
-    glAttachShader(shaderprogram, fragshader);
-    glLinkProgram(shaderprogram);
-    glGetProgramiv(shaderprogram, GL_LINK_STATUS, &error);
+    GLuint shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertshader);
+    glAttachShader(shaderProgram, fragshader);
+    glLinkProgram(shaderProgram);
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &error);
     if (!error)
     {
       std::cerr << "program error" << std::endl;
       char buffer[1024];
-      glGetProgramInfoLog(shaderprogram, 1024, 0, buffer);
+      glGetProgramInfoLog(shaderProgram, 1024, 0, buffer);
       std::cerr << buffer << std::endl;
       throw std::runtime_error(buffer);
     }
@@ -79,12 +79,14 @@ namespace FAR
 
 
     //bind texture samplers to texture units
-    glUseProgram(shaderprogram);
+    glUseProgram(shaderProgram);
     GLint texturesUniformLocation = 6;
     GLint samplers[16];
     for (int i = 0; i < 16; i++) samplers[i] = i;
     glUniform1iv(texturesUniformLocation, 16, samplers);
     glUseProgram(0);
+
+    return shaderProgram;
   }
 
   void Render::LoadModel(const std::filesystem::path& filepath, Model& model)
@@ -290,13 +292,39 @@ namespace FAR
     model.VAOs.push_back(std::make_pair(currentVAO, m.indicies.size()));
   }
 
+  void Render::CreateLinesVAO()
+  {
+    GLuint vbo;
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, renderResc->rays.size() * sizeof(glm::vec4), renderResc->rays.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    //vao
+    glGenVertexArrays(1, &lineVAO);
+    glBindVertexArray(lineVAO);
+
+    //bind vbo to vao
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+    //config attrib ptrs
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), 0);
+    glEnableVertexAttribArray(0);
+
+    //done with vao
+    glBindVertexArray(0);
+  }
+
   void Render::Init()
   {
     std::cout << "render inti" << std::endl;
     windowResc = Engine::GetInstance()->GetResource<WindowResource>();
+    renderResc = Engine::GetInstance()->GetResource<RenderResource>();
+
 
     WindowSetup();
-    CreateShaderProgram();
+    renderResc->basicShaderProgram = CreateShaderProgram("assets/shaders/basic.vert", "assets/shaders/basic.frag");
+    renderResc->lineShaderProgram = CreateShaderProgram("assets/shaders/Ray.vert", "assets/shaders/Ray.frag");
   }
 
   void Render::PreUpdate()
@@ -318,7 +346,7 @@ namespace FAR
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //modeling
-    glUseProgram(shaderprogram);
+    glUseProgram(renderResc->basicShaderProgram);
 
     std::vector<Entity> modelEntities = Engine::GetInstance()->GetEntities<Transform, Model>();
 
@@ -331,7 +359,8 @@ namespace FAR
       transform.modelMatrix = glm::mat4(1.0f);
       transform.modelMatrix = glm::translate(transform.modelMatrix, transform.position);
       transform.modelMatrix = glm::scale(transform.modelMatrix, transform.scale);
-      transform.modelMatrix = transform.modelMatrix * glm::eulerAngleXYZ(glm::radians(transform.rotation.x), glm::radians(transform.rotation.y), glm::radians(transform.rotation.z));
+      //transform.modelMatrix = transform.modelMatrix * glm::eulerAngleXYZ(glm::radians(transform.rotation.x), glm::radians(transform.rotation.y), glm::radians(transform.rotation.z));
+      transform.modelMatrix = transform.modelMatrix * glm::mat4_cast(transform.rotationQuaternion);
     }
 
     //assuming exactly one main cam for now
@@ -388,8 +417,31 @@ namespace FAR
 
   void Render::PostUpdate()
   {
+    //line rendering
+
+    glDisable(GL_DEPTH_TEST);
+
+    glUseProgram(renderResc->lineShaderProgram);
+    CreateLinesVAO();
+
+
+    glUniformMatrix4fv(1, 1, false, &viewMatrix[0][0]);
+    glUniformMatrix4fv(2, 1, false, &projectionMatrix[0][0]);
+
+    glBindVertexArray(lineVAO);
+
+    glDrawArrays(GL_LINES, 0, renderResc->rays.size());
+
+    glBindVertexArray(0);
+
+    glDeleteVertexArrays(1, &lineVAO);
+    glUseProgram(0);
+
     glfwSwapBuffers(windowResc->window);
     glfwPollEvents();
+    renderResc->rays.clear();
+
+    glEnable(GL_DEPTH_TEST);
   }
 
   void Render::Exit()

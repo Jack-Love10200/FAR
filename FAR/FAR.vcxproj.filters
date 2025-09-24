@@ -36,6 +36,9 @@
     <ClCompile Include="src\Resources\WindowResource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Resources\RenderResource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Engine\Engine.hpp">
@@ -77,9 +80,14 @@
     <ClInclude Include="src\Resources\WindowResource.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Resources\RenderResource.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\Basic.vert" />
     <None Include="assets\shaders\Basic.frag" />
+    <None Include="assets\shaders\Ray.frag" />
+    <None Include="assets\shaders\Ray.vert" />
   </ItemGroup>
 </Project>
