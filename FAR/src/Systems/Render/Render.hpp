@@ -14,6 +14,10 @@
 #include "Resources/WindowResource.hpp"
 #include "Resources/RenderResource.hpp"
 
+#include "assimp/Importer.hpp"
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 namespace FAR
 {
   class Render : public iSystem
@@ -42,10 +46,14 @@ namespace FAR
       std::vector<unsigned int> indicies;
     };
 
-    void WindowSetup();
     GLuint CreateShaderProgram(const std::filesystem::path& vertex, const std::filesystem::path& fragment);
     void LoadModel(const std::filesystem::path& filepath, Model& model);
     void CreateVAO(const meshInfo& m, Model& model);
+
+    void LoadNodes(const aiNode* node, const aiScene* scene, Model& model, int parentIndex);
+
+    void RenderNodes(Model& model, Transform& trans);
+    void BuildBonePointList(Model& model, std::vector<glm::vec4>& points, int index, glm::mat4 parentTrans);
 
     void CreateLinesVAO();
 

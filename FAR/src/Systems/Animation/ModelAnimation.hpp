@@ -2,19 +2,16 @@
 
 #include "PCH.hpp"
 #include "Systems/iSystem.hpp"
-#include "Engine/Engine.hpp"
-
-#include "Components/Transform.hpp"
-#include "Components/Camera.hpp"
+#include "Components/Animation.hpp"
 #include "Components/Model.hpp"
 
 namespace FAR
 {
-  class Sandbox : public iSystem
+  class ModelAnimation : iSystem
   {
   public:
-    Sandbox() = default;
-    ~Sandbox() override = default;
+    ModelAnimation() = default;
+    ~ModelAnimation() override = default;
     void Init() override;
     void PreUpdate() override;
     void Update() override;
@@ -22,10 +19,7 @@ namespace FAR
     void Exit() override;
   private:
 
-    Entity cam;
-    Entity jack;
-    Entity adi;
-    Entity okayu;
-    Entity pika;
+    void LoadAnimations(Animation& animation);
+
   };
 }

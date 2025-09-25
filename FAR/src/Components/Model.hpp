@@ -14,6 +14,16 @@ struct Model
   //map vao to textures for that mesh
   std::map<GLuint, std::vector<GLuint>> textures;
 
+  struct Node
+  {
+    glm::mat4 transform{ 1.0f };
+    std::vector<int> children;
+    int parent;
+    std::string name{ "" };
+  };
+
+  std::vector<Node> nodes;
+
   int indexCount{ 0 };
   bool textured = false;
   glm::vec4 color{ 1.0f, 1.0f, 1.0f, 1.0f };

@@ -1,9 +1,7 @@
 #include "PCH.hpp"
 #include "Render.hpp"
 
-#include "assimp/Importer.hpp"
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
+
 
 #include "Engine/Engine.hpp"
 
@@ -17,9 +15,13 @@
 namespace FAR
 {
 
-  void Render::WindowSetup()
-  {
-
+  glm::mat4 ToGlm(const aiMatrix4x4& m) {
+    return glm::mat4(
+      m.a1, m.b1, m.c1, m.d1,
+      m.a2, m.b2, m.c2, m.d2,
+      m.a3, m.b3, m.c3, m.d3,
+      m.a4, m.b4, m.c4, m.d4
+    );
   }
 
   GLuint Render::CreateShaderProgram(const std::filesystem::path& vertex, const std::filesystem::path& fragment)
@@ -92,12 +94,14 @@ namespace FAR
   void Render::LoadModel(const std::filesystem::path& filepath, Model& model)
   {
     Assimp::Importer importer;
-    const aiScene* samba = importer.ReadFile(filepath.string(), aiProcess_Triangulate);
+    const aiScene* samba = importer.ReadFile(filepath.string(), aiProcess_Triangulate | aiProcess_OptimizeGraph);
 
     //m.verticies.resize(samba->mMeshes[0]->mNumVertices);
     //m.indicies.resize(samba->mMeshes[0]->mNumFaces * 3);
 
     stbi_set_flip_vertically_on_load(true);
+
+    LoadNodes(samba->mRootNode, samba, model, -1);
 
     //meshes
     for (unsigned int i = 0; i < samba->mNumMeshes; i++)
@@ -114,7 +118,10 @@ namespace FAR
         }
         else
         {
-          m.verticies.push_back(vertex{ glm::vec4(samba->mMeshes[i]->mVertices[j].x, samba->mMeshes[i]->mVertices[j].y, samba->mMeshes[i]->mVertices[j].z, 1.0f)
+          glm::vec4 pos = glm::vec4(samba->mMeshes[i]->mVertices[j].x, samba->mMeshes[i]->mVertices[j].y, samba->mMeshes[i]->mVertices[j].z, 1.0f);
+          pos = ToGlm(samba->mRootNode->mTransformation) * pos;
+
+          m.verticies.push_back(vertex{ pos
             , glm::vec3(samba->mMeshes[i]->mTextureCoords[0][j].x, samba->mMeshes[i]->mTextureCoords[0][j].y, i) });
         }
       }
@@ -292,6 +299,67 @@ namespace FAR
     model.VAOs.push_back(std::make_pair(currentVAO, m.indicies.size()));
   }
 
+  void Render::LoadNodes(const aiNode* node, const aiScene* scene, Model& model, int parentIndex)
+  {
+    Model::Node newNode;
+    newNode.parent = parentIndex;
+    newNode.transform = glm::mat4(1.0f);
+    newNode.transform[0][0] = node->mTransformation.a1; newNode.transform[1][0] = node->mTransformation.a2; newNode.transform[2][0] = node->mTransformation.a3; newNode.transform[3][0] = node->mTransformation.a4;
+    newNode.transform[0][1] = node->mTransformation.b1; newNode.transform[1][1] = node->mTransformation.b2; newNode.transform[2][1] = node->mTransformation.b3; newNode.transform[3][1] = node->mTransformation.b4;
+    newNode.transform[0][2] = node->mTransformation.c1; newNode.transform[1][2] = node->mTransformation.c2; newNode.transform[2][2] = node->mTransformation.c3; newNode.transform[3][2] = node->mTransformation.c4;
+    newNode.transform[0][3] = node->mTransformation.d1; newNode.transform[1][3] = node->mTransformation.d2; newNode.transform[2][3] = node->mTransformation.d3; newNode.transform[3][3] = node->mTransformation.d4;
+    newNode.name = node->mName.C_Str();
+    int currentIndex = model.nodes.size();
+
+    model.nodes.push_back(newNode);
+
+    if (parentIndex != -1)
+      model.nodes[parentIndex].children.push_back(currentIndex);
+
+    for (unsigned int i = 0; i < node->mNumChildren; i++)
+    {
+      LoadNodes(node->mChildren[i], scene, model, currentIndex);
+    }
+  }
+
+  void Render::RenderNodes(Model& model, Transform& trans)
+  {
+    std::vector<glm::vec4> points;
+    BuildBonePointList(model, points, 0, glm::mat4(1));
+
+    for (glm::vec4& point : points)
+    {
+      point = trans.modelMatrix * point;
+    }
+
+    for (int i = 0; i < points.size(); i += 2)
+    {
+      renderResc->DrawRay(points[i], points[i + 1]);
+    }
+
+    //renderResc->rays = points;
+  }
+
+  void Render::BuildBonePointList(Model& model, std::vector<glm::vec4>& points, int index, glm::mat4 parentTrans)
+  {
+    glm::mat4 localTrans = model.nodes[index].transform;
+    glm::mat4 globalTrans = parentTrans * localTrans;
+
+    glm::vec4 pos = globalTrans[3];
+
+    for (int& i : model.nodes[index].children)
+    {
+      glm::mat4 childTrans = model.nodes[i].transform;
+      glm::mat4 childGlobalTrans = globalTrans * childTrans;
+      glm::vec4 childPos = childGlobalTrans[3];
+
+      points.push_back(pos);
+      points.push_back(childPos);
+
+      BuildBonePointList(model, points, i, globalTrans);
+    }
+  }
+
   void Render::CreateLinesVAO()
   {
     GLuint vbo;
@@ -321,8 +389,6 @@ namespace FAR
     windowResc = Engine::GetInstance()->GetResource<WindowResource>();
     renderResc = Engine::GetInstance()->GetResource<RenderResource>();
 
-
-    WindowSetup();
     renderResc->basicShaderProgram = CreateShaderProgram("assets/shaders/basic.vert", "assets/shaders/basic.frag");
     renderResc->lineShaderProgram = CreateShaderProgram("assets/shaders/Ray.vert", "assets/shaders/Ray.frag");
   }
@@ -409,7 +475,10 @@ namespace FAR
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
         glBindVertexArray(0);
+
       }
+      //if (model.path == "assets/jack_samba.glb")
+      RenderNodes(model, transform);
     }
 
     glUseProgram(0);

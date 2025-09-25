@@ -17,15 +17,19 @@ namespace FAR
 
     jack = engine.CreateEntity();
     engine.CreateComponent(jack, Model{ .path = "assets/jack_samba.glb", .textured = true });
-    engine.CreateComponent(jack, Transform{ .position = glm::vec3(0.0f, 0.0f, -3.0f), .rotation = glm::vec3(-90.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
+    engine.CreateComponent(jack, Transform{ .position = glm::vec3(0.0f, 0.0f, -3.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
 
     adi = engine.CreateEntity();
     engine.CreateComponent(adi, Model{ .path = "assets/Adi_Dancing.fbx", .textured = false, });
-    engine.CreateComponent(adi, Transform{ .position = glm::vec3(1.0f, 0.0f, -3.0f), .rotation = glm::vec3(-90.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
+    engine.CreateComponent(adi, Transform{ .position = glm::vec3(1.0f, 0.0f, -3.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
 
-    //okayu = engine.CreateEntity();
-    //engine.CreateComponent(okayu, Model{ .path = "assets/okayu/okayu.pmx", .textured = true });
-    //engine.CreateComponent(okayu, Transform{ .position = glm::vec3(-10.0f, 0.0f, -30.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
+    okayu = engine.CreateEntity();
+    engine.CreateComponent(okayu, Model{ .path = "assets/okayu/okayu.pmx", .textured = true });
+    engine.CreateComponent(okayu, Transform{ .position = glm::vec3(-10.0f, 0.0f, -30.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
+
+    pika = engine.CreateEntity();
+    engine.CreateComponent(pika, Model{ .path = "assets/pika.fbx", .textured = true });
+    engine.CreateComponent(pika, Transform{ .position = glm::vec3(-20.0f, 0.0f, -5.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
   }
 
   void Sandbox::PreUpdate()
