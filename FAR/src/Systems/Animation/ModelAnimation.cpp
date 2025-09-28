@@ -47,7 +47,7 @@ namespace FAR
   void ModelAnimation::LoadAnimations(Animation& animation)
   {
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(animation.filePath, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+    const aiScene* scene = importer.ReadFile(animation.filePath, aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 
 
   }

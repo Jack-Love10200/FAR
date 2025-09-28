@@ -94,7 +94,8 @@ namespace FAR
   void Render::LoadModel(const std::filesystem::path& filepath, Model& model)
   {
     Assimp::Importer importer;
-    const aiScene* samba = importer.ReadFile(filepath.string(), aiProcess_Triangulate | aiProcess_OptimizeGraph);
+    //const aiScene* samba = importer.ReadFile(filepath.string(), aiProcess_Triangulate | aiProcess_GlobalScale | aiProcess_PreTransformVertices);
+    const aiScene* samba = importer.ReadFile(filepath.string(), aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_Triangulate | aiProcess_OptimizeGraph | aiProcess_GlobalScale);
 
     //m.verticies.resize(samba->mMeshes[0]->mNumVertices);
     //m.indicies.resize(samba->mMeshes[0]->mNumFaces * 3);
@@ -119,7 +120,7 @@ namespace FAR
         else
         {
           glm::vec4 pos = glm::vec4(samba->mMeshes[i]->mVertices[j].x, samba->mMeshes[i]->mVertices[j].y, samba->mMeshes[i]->mVertices[j].z, 1.0f);
-          pos = ToGlm(samba->mRootNode->mTransformation) * pos;
+          //pos = ToGlm(samba->mRootNode->mTransformation) * pos;
 
           m.verticies.push_back(vertex{ pos
             , glm::vec3(samba->mMeshes[i]->mTextureCoords[0][j].x, samba->mMeshes[i]->mTextureCoords[0][j].y, i) });

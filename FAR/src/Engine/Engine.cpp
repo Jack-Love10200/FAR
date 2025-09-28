@@ -1,7 +1,7 @@
 #include "PCH.hpp"
 #include "Engine.hpp"
 
-
+#include <ranges>
 
 
 //Engine depends on the systems for now, will make systems register themselves later
@@ -45,7 +45,7 @@ namespace FAR
 
   void Engine::Exit()
   {
-    for (iSystem* system : systems)
+    for (iSystem* system : systems | std::views::reverse)
     {
       system->Exit();
     }

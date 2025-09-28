@@ -4,6 +4,7 @@
 #include "Systems/iSystem.hpp"
 #include "Resources/iResource.hpp"
 
+
 typedef unsigned long long Entity;
 
 namespace FAR
