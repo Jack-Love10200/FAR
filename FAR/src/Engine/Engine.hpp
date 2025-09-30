@@ -32,6 +32,8 @@ namespace FAR
       return eng;
     }
 
+    float dt;
+
     void Init();
     void PreUpdate();
     void Update();

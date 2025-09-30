@@ -19,9 +19,13 @@ layout(location = 4) uniform vec4 color;
 layout(location = 5) uniform bool textured;
 
 in vec3 frag_uv;
+in vec4 vert_color;
+
 out vec4 frag_color;
+
 void main()
 {
+
     if (textured)
     {
    //frag_color = texture(textures[int(frag_uv.z)], frag_uv.xy);
@@ -30,6 +34,10 @@ void main()
    }
    else
     { 
-    frag_color = color;
+    //frag_color = color;
+    frag_color = vec4(0.0f, 1.0f, 0.0f, 1.0f);
     }
+
+    //frag_color = vert_color;
+
 }

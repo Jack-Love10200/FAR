@@ -95,18 +95,36 @@ namespace FAR
   {
     Assimp::Importer importer;
     //const aiScene* samba = importer.ReadFile(filepath.string(), aiProcess_Triangulate | aiProcess_GlobalScale | aiProcess_PreTransformVertices);
-    const aiScene* samba = importer.ReadFile(filepath.string(), aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_Triangulate | aiProcess_OptimizeGraph | aiProcess_GlobalScale);
+    //const aiScene* samba = importer.ReadFile(filepath.string(), aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_Triangulate | aiProcess_OptimizeGraph | aiProcess_GlobalScale);
+    const aiScene* samba = importer.ReadFile(filepath.string(), aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_Triangulate | aiProcess_OptimizeGraph);
 
     //m.verticies.resize(samba->mMeshes[0]->mNumVertices);
     //m.indicies.resize(samba->mMeshes[0]->mNumFaces * 3);
+
+
+    //print out all of the bone names
+    for (unsigned int i = 0; i < samba->mNumMeshes; i++)
+    {
+      for (unsigned int j = 0; j < samba->mMeshes[i]->mNumBones; j++)
+      {
+        std::cout << "bone: " << samba->mMeshes[i]->mBones[j]->mName.C_Str() << std::endl;
+      }
+    }
 
     stbi_set_flip_vertically_on_load(true);
 
     LoadNodes(samba->mRootNode, samba, model, -1);
 
+    if (samba->mNumAnimations > 0)
+      LoadAnimationData(samba, model);
+
+    model.animation.globalInverseTransform = glm::inverse(ToGlm(samba->mRootNode->mTransformation));
+
     //meshes
     for (unsigned int i = 0; i < samba->mNumMeshes; i++)
     {
+      PutNodesInModelSpace(model, samba->mMeshes[i]);
+
       meshInfo m;
       unsigned int numVerts = m.verticies.size();
       std::cout << "num uv channels: " << samba->mMeshes[i]->GetNumUVChannels() << std::endl;
@@ -123,7 +141,7 @@ namespace FAR
           //pos = ToGlm(samba->mRootNode->mTransformation) * pos;
 
           m.verticies.push_back(vertex{ pos
-            , glm::vec3(samba->mMeshes[i]->mTextureCoords[0][j].x, samba->mMeshes[i]->mTextureCoords[0][j].y, i) });
+            , glm::vec4(samba->mMeshes[i]->mTextureCoords[0][j].x, samba->mMeshes[i]->mTextureCoords[0][j].y, i, 0) });
         }
       }
 
@@ -133,6 +151,8 @@ namespace FAR
         m.indicies.push_back(numVerts + samba->mMeshes[i]->mFaces[j].mIndices[1]);
         m.indicies.push_back(numVerts + samba->mMeshes[i]->mFaces[j].mIndices[2]);
       }
+
+      ApplyBoneWeightsToVerticies(m, samba->mMeshes[i]);
 
       CreateVAO(m, model);
       //model.textures.insert(model.textures.end(), std::make_pair(model.VAOs.back().first, std::vector<GLuint>()));
@@ -260,6 +280,57 @@ namespace FAR
     //return m;
   }
 
+  void Render::LoadAnimationData(const aiScene* scene, Model& model)
+  {
+    model.animation.channels.clear();
+    model.animation.duration = scene->mAnimations[0]->mDuration;
+    model.animation.ticksPerSecond = scene->mAnimations[0]->mTicksPerSecond;
+
+    //for each channel
+    for (unsigned int i = 0; i < scene->mAnimations[0]->mNumChannels; i++)
+    {
+      aiNodeAnim* channel = scene->mAnimations[0]->mChannels[i];
+      Model::Animation::Channel newChannel;
+      newChannel.nodeName = channel->mNodeName.C_Str();
+      //position keys
+      for (unsigned int j = 0; j < channel->mNumPositionKeys; j++)
+      {
+        aiVector3D pos = channel->mPositionKeys[j].mValue;
+        newChannel.positionKeys.push_back(std::make_pair(channel->mPositionKeys[j].mTime, glm::vec3(pos.x, pos.y, pos.z)));
+      }
+      //rotation keys
+      for (unsigned int j = 0; j < channel->mNumRotationKeys; j++)
+      {
+        aiQuaternion rot = channel->mRotationKeys[j].mValue;
+        newChannel.rotationKeys.push_back(std::make_pair(channel->mRotationKeys[j].mTime, glm::quat(rot.w, rot.x, rot.y, rot.z)));
+      }
+      //scaling keys
+      for (unsigned int j = 0; j < channel->mNumScalingKeys; j++)
+      {
+        aiVector3D scale = channel->mScalingKeys[j].mValue;
+        newChannel.scalingKeys.push_back(std::make_pair(channel->mScalingKeys[j].mTime, glm::vec3(scale.x, scale.y, scale.z)));
+      }
+      model.animation.channels.push_back(newChannel);
+    }
+
+    //make sure animations are in the same order as the node
+
+    std::vector<Model::Animation::Channel> sortedChannels;
+    for (const Model::Node& node : model.nodes)
+    {
+      for (const Model::Animation::Channel& channel : model.animation.channels)
+      {
+        if (node.name == channel.nodeName)
+        {
+          sortedChannels.push_back(channel);
+          break;
+        }
+      }
+    }
+
+    model.animation.channels = sortedChannels;
+  }
+
   void Render::CreateVAO(const meshInfo& m, Model& model)
   {
     //get the mesh
@@ -284,12 +355,16 @@ namespace FAR
 
     //bind vbo to vao
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
+    
     //config attrib ptrs
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)offsetof(vertex, position));
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)offsetof(vertex, uv));
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)offsetof(vertex, uv));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)offsetof(vertex, boneWeights));
+    glVertexAttribIPointer(3, 4, GL_INT, sizeof(vertex), (void*)offsetof(vertex, boneIds));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(3);
 
     //bind ibo to vao
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
@@ -302,14 +377,39 @@ namespace FAR
 
   void Render::LoadNodes(const aiNode* node, const aiScene* scene, Model& model, int parentIndex)
   {
+
+    bool nameFound = false;
+    //if the name of the node is not in the bone list, dont add it
+    for (unsigned int i = 0; i < scene->mNumMeshes; i++)
+    {
+      for (unsigned int j = 0; j < scene->mMeshes[i]->mNumBones; j++)
+      {
+        //std::cout << "comparing " << node->mName.C_Str() << " to " << scene->mMeshes[i]->mBones[j]->mName.C_Str() << std::endl;
+        //if (node->mName == scene->mMeshes[i]->mBones[j]->mName || !strcmp(node->mName.C_Str(), "Armature"))
+        if (node->mName == scene->mMeshes[i]->mBones[j]->mName)
+        {
+          nameFound = true;
+          break;
+        }
+      }
+    } 
+
+    if (!nameFound)
+    {
+      for (unsigned int i = 0; i < node->mNumChildren; i++)
+      {
+        LoadNodes(node->mChildren[i], scene, model, parentIndex);
+      }
+      return;
+    }
+
     Model::Node newNode;
     newNode.parent = parentIndex;
     newNode.transform = glm::mat4(1.0f);
-    newNode.transform[0][0] = node->mTransformation.a1; newNode.transform[1][0] = node->mTransformation.a2; newNode.transform[2][0] = node->mTransformation.a3; newNode.transform[3][0] = node->mTransformation.a4;
-    newNode.transform[0][1] = node->mTransformation.b1; newNode.transform[1][1] = node->mTransformation.b2; newNode.transform[2][1] = node->mTransformation.b3; newNode.transform[3][1] = node->mTransformation.b4;
-    newNode.transform[0][2] = node->mTransformation.c1; newNode.transform[1][2] = node->mTransformation.c2; newNode.transform[2][2] = node->mTransformation.c3; newNode.transform[3][2] = node->mTransformation.c4;
-    newNode.transform[0][3] = node->mTransformation.d1; newNode.transform[1][3] = node->mTransformation.d2; newNode.transform[2][3] = node->mTransformation.d3; newNode.transform[3][3] = node->mTransformation.d4;
+    newNode.transform = ToGlm(node->mTransformation);
     newNode.name = node->mName.C_Str();
+
+
     int currentIndex = model.nodes.size();
 
     model.nodes.push_back(newNode);
@@ -346,18 +446,65 @@ namespace FAR
     glm::mat4 localTrans = model.nodes[index].transform;
     glm::mat4 globalTrans = parentTrans * localTrans;
 
-    glm::vec4 pos = globalTrans[3];
+    //glm::vec4 pos = globalTrans[3];
+    glm::vec4 pos = localTrans[3];
 
     for (int& i : model.nodes[index].children)
     {
       glm::mat4 childTrans = model.nodes[i].transform;
       glm::mat4 childGlobalTrans = globalTrans * childTrans;
-      glm::vec4 childPos = childGlobalTrans[3];
+      //glm::vec4 childPos = childGlobalTrans[3];
+      glm::vec4 childPos = childTrans[3];
 
       points.push_back(pos);
       points.push_back(childPos);
 
       BuildBonePointList(model, points, i, globalTrans);
+    }
+  }
+
+  void Render::ApplyBoneWeightsToVerticies(meshInfo& m, const aiMesh* mesh)
+  {
+    //for each bone
+    for (int i = 0; i < mesh->mNumBones; i++)
+    {
+      aiBone* bone = mesh->mBones[i];
+      //for each weight in the bone
+      for (int j = 0; j < bone->mNumWeights; j++)
+      {
+        aiVertexWeight weight = bone->mWeights[j];
+        //add the bone index to the vertex's bone id list
+        for (int k = 0; k < 4; k++)
+        {
+          if (m.verticies[weight.mVertexId].boneIds[k] == -1)
+          {
+            m.verticies[weight.mVertexId].boneIds[k] = i;
+            m.verticies[weight.mVertexId].boneWeights[k] = weight.mWeight;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  void Render::PutNodesInModelSpace(Model& model, aiMesh* mesh)
+  {
+    //multipy by the inverse bind pose
+    for (int i = 0; i < mesh->mNumBones; i++)
+    {
+      aiBone* bone = mesh->mBones[i];
+      //find the node with the same name as the bone
+      for (int j = 0; j < model.nodes.size(); j++)
+      {
+        if (model.nodes[j].name == bone->mName.C_Str())
+        {
+          glm::mat4 invBindPose = ToGlm(bone->mOffsetMatrix);
+          //model.nodes[j].transform = model.nodes[j].transform * glm::inverse(invBindPose);
+          //model.nodes[j].transform = model.nodes[j].transform * invBindPose;
+          model.nodes[j].inverseBindPose = invBindPose;
+          break;
+        }
+      }
     }
   }
 
@@ -384,6 +531,173 @@ namespace FAR
     glBindVertexArray(0);
   }
 
+
+  void Render::AnimUpdateNode(Model& model, int nodeIndex, float animationTime, const glm::mat4& parentTransform)
+  {
+    Model::Node& node = model.nodes[nodeIndex];
+
+    glm::mat4 translation = glm::mat4(1.0f);
+    glm::mat4 rotation = glm::mat4(1.0f);
+    glm::mat4 scaling = glm::mat4(1.0f);
+
+    // Find the channel for this node (if any)
+    Model::Animation::Channel* channel = nullptr;
+    if (nodeIndex < model.animation.channels.size() && model.animation.channels[nodeIndex].nodeName == node.name) {
+      channel = &model.animation.channels[nodeIndex];
+    }
+    else {
+      // fallback: search by name
+      for (auto& ch : model.animation.channels) {
+        if (ch.nodeName == node.name) {
+          channel = &ch;
+          break;
+        }
+      }
+    }
+
+    if (channel) {
+      // Interpolate position
+      for (int j = 0; j < channel->positionKeys.size() - 1; j++) {
+        if (animationTime >= channel->positionKeys[j].first && animationTime <= channel->positionKeys[j + 1].first) {
+          float alpha = (animationTime - channel->positionKeys[j].first) / (channel->positionKeys[j + 1].first - channel->positionKeys[j].first);
+          glm::vec3 pos = glm::mix(channel->positionKeys[j].second, channel->positionKeys[j + 1].second, alpha);
+          translation = glm::translate(glm::mat4(1.0f), pos);
+          break;
+        }
+      }
+      // Interpolate rotation
+      for (int j = 0; j < channel->rotationKeys.size() - 1; j++) {
+        if (animationTime >= channel->rotationKeys[j].first && animationTime <= channel->rotationKeys[j + 1].first) {
+          float alpha = (animationTime - channel->rotationKeys[j].first) / (channel->rotationKeys[j + 1].first - channel->rotationKeys[j].first);
+          glm::quat rot = glm::slerp(channel->rotationKeys[j].second, channel->rotationKeys[j + 1].second, alpha);
+          rotation = glm::mat4_cast(rot);
+          break;
+        }
+      }
+      // Interpolate scaling
+      for (int j = 0; j < channel->scalingKeys.size() - 1; j++) {
+        if (animationTime >= channel->scalingKeys[j].first && animationTime <= channel->scalingKeys[j + 1].first) {
+          float alpha = (animationTime - channel->scalingKeys[j].first) / (channel->scalingKeys[j + 1].first - channel->scalingKeys[j].first);
+          glm::vec3 scale = glm::mix(channel->scalingKeys[j].second, channel->scalingKeys[j + 1].second, alpha);
+          scaling = glm::scale(glm::mat4(1.0f), scale);
+          break;
+        }
+      }
+    }
+
+    glm::mat4 localTransform = translation * rotation * scaling;
+    glm::mat4 globalTransform = parentTransform * localTransform;
+
+    node.transform = globalTransform;
+    node.skinningTransform = globalTransform * node.inverseBindPose;
+    //node.transform = model.animation.globalInverseTransform * globalTransform * node.inverseBindPose;
+
+    // Recurse for children
+    for (int childIdx : node.children) {
+      AnimUpdateNode(model, childIdx, animationTime, globalTransform);
+    }
+  }
+
+  void Render::AnimUpdate()
+  {
+    float dt = Engine::GetInstance()->dt;
+    std::vector<Entity> modelEntities = Engine::GetInstance()->GetEntities<Model>();
+
+    for (const Entity& ent : modelEntities)
+    {
+      Model& model = Engine::GetInstance()->GetComponent<Model>(ent);
+
+      model.animationTime += dt * model.animation.ticksPerSecond;
+      //model.animationTime = 100.0f; //debug
+
+      if (model.animationTime > model.animation.duration)
+        model.animationTime = fmod(model.animationTime, model.animation.duration);
+
+      if (model.animation.channels.empty()) continue;
+
+      // Start recursion from root nodes (parent == -1)
+      for (int i = 0; i < model.nodes.size(); ++i) {
+        if (model.nodes[i].parent == -1) {
+          AnimUpdateNode(model, i, model.animationTime, glm::mat4(1.0f));
+        }
+      }
+    }
+  }
+
+
+
+  //void Render::AnimUpdate()
+  //{
+  //  float dt = Engine::GetInstance()->dt;
+
+  //  std::vector<Entity> modelEntities = Engine::GetInstance()->GetEntities<Model>();
+
+  //  for (const Entity& ent : modelEntities)
+  //  {
+  //    Model& model = Engine::GetInstance()->GetComponent<Model>(ent);
+
+  //    model.animationTime += dt * model.animation.ticksPerSecond;
+  //    //model.animationTime = 100.0f; //debug
+
+  //    if (model.animationTime > model.animation.duration)
+  //      model.animationTime = fmod(model.animationTime, model.animation.duration);
+
+  //    if (model.animation.channels.size() == 0) continue;
+
+  //    for (int i = 0; i < model.nodes.size(); i++)
+  //    {
+  //      //model.nodes[i].transform = glm::mat4(1.0f);
+
+  //      glm::mat4 translation = glm::mat4(1.0f);
+  //      glm::mat4 rotation = glm::mat4(1.0f);
+  //      glm::mat4 scaling = glm::mat4(1.0f);
+
+  //      //find the channel for this node
+  //      Model::Animation::Channel& channel = model.animation.channels[i];
+
+  //      //find the position keyframes surrounding the current animation time
+  //      for (int j = 0; j < channel.positionKeys.size() - 1; j++)
+  //      {
+  //        if (model.animationTime >= channel.positionKeys[j].first && model.animationTime <= channel.positionKeys[j + 1].first)
+  //        {
+  //          float alpha = (model.animationTime - channel.positionKeys[j].first) / (channel.positionKeys[j + 1].first - channel.positionKeys[j].first);
+  //          glm::vec3 pos = glm::mix(channel.positionKeys[j].second, channel.positionKeys[j + 1].second, alpha);
+  //          translation = glm::translate(glm::mat4(1.0f), pos);
+  //          break;
+  //        }
+  //      }
+
+  //      //find the rotation keyframes surrounding the current animation time
+  //      for (int j = 0; j < channel.rotationKeys.size() - 1; j++)
+  //      {
+  //        if (model.animationTime >= channel.rotationKeys[j].first && model.animationTime <= channel.rotationKeys[j + 1].first)
+  //        {
+  //          float alpha = (model.animationTime - channel.rotationKeys[j].first) / (channel.rotationKeys[j + 1].first - channel.rotationKeys[j].first);
+  //          glm::quat rot = glm::slerp(channel.rotationKeys[j].second, channel.rotationKeys[j + 1].second, alpha);
+  //          rotation = glm::mat4_cast(rot);
+  //          break;
+  //        }
+  //      }
+
+  //      //find the scaling keyframes surrounding the current animation time
+  //      for (int j = 0; j < channel.scalingKeys.size() - 1; j++)
+  //      {
+  //        if (model.animationTime >= channel.scalingKeys[j].first && model.animationTime <= channel.scalingKeys[j + 1].first)
+  //        {
+  //          float alpha = (model.animationTime - channel.scalingKeys[j].first) / (channel.scalingKeys[j + 1].first - channel.scalingKeys[j].first);
+  //          glm::vec3 scale = glm::mix(channel.scalingKeys[j].second, channel.scalingKeys[j + 1].second, alpha);
+  //          scaling = glm::scale(glm::mat4(1.0f), scale);
+  //          break;
+  //        }
+  //      }
+
+  //      model.nodes[i].transform = translation * rotation * scaling;
+  //      //model.nodes[i].transform = model.nodes[i].transform * model.nodes[i].inverseBindPose;
+  //      //model.nodes[i].transform = model.nodes[i].transform * glm::inverse(model.nodes[i].inverseBindPose);
+  //    }
+  //  }
+  //}
+
   void Render::Init()
   {
     std::cout << "render inti" << std::endl;
@@ -403,12 +717,17 @@ namespace FAR
       Model& model = Engine::GetInstance()->GetComponent<Model>(e);
 
       if (model.path != "" && model.VAOs.size() == 0)
+      {
         LoadModel(model.path, model);
+
+      }
     }
   }
 
   void Render::Update()
   {
+    AnimUpdate();
+
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -456,7 +775,16 @@ namespace FAR
 
       if (model.VAOs.size() == 0) continue;
 
+      //just assemble all of the node matrices into a big array for now
+      glm::mat4 nodeMatrices[100] = { glm::mat4(1.0f) };
+      for (int i = 0; i < model.nodes.size(); i++)
+      {
+        nodeMatrices[i] = model.nodes[i].skinningTransform;
+      }
+
       glUniformMatrix4fv(1, 1, GL_FALSE, &transform.modelMatrix[0][0]);
+
+      glUniformMatrix4fv(50, 100, GL_FALSE, &nodeMatrices[0][0][0]);
 
       glUniform1i(5, model.textured ? 1 : 0);
       glUniform4fv(4, 1, &model.color[0]);

@@ -37,7 +37,10 @@ namespace FAR
     {
       glm::vec4 position;
       //glm::vec4 normal;
-      glm::vec3 uv;
+      glm::vec4 uv;
+      
+      float boneWeights[4] = { 0.0f };
+      int boneIds[4] = { -1 };
     };
 
     struct meshInfo
@@ -48,6 +51,8 @@ namespace FAR
 
     GLuint CreateShaderProgram(const std::filesystem::path& vertex, const std::filesystem::path& fragment);
     void LoadModel(const std::filesystem::path& filepath, Model& model);
+
+    void LoadAnimationData(const aiScene* scene, Model& model);
     void CreateVAO(const meshInfo& m, Model& model);
 
     void LoadNodes(const aiNode* node, const aiScene* scene, Model& model, int parentIndex);
@@ -55,7 +60,16 @@ namespace FAR
     void RenderNodes(Model& model, Transform& trans);
     void BuildBonePointList(Model& model, std::vector<glm::vec4>& points, int index, glm::mat4 parentTrans);
 
+    void ApplyBoneWeightsToVerticies(meshInfo& m, const aiMesh* mesh);
+
+    void PutNodesInModelSpace(Model& model, aiMesh* mesh);
+
+    void AnimUpdateNode(Model& model, int nodeIndex, float animationTime, const glm::mat4& parentTransform);
+
+
     void CreateLinesVAO();
+
+    void AnimUpdate();
 
 
     GLuint lineVAO;

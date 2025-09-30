@@ -21,6 +21,7 @@ namespace FAR
 
   void Engine::PreUpdate()
   {
+    dt = 0.00060606060606061; //placeholder for now, will implement proper timing later
     for (iSystem* system : systems)
     {
       system->PreUpdate();
