@@ -62,6 +62,8 @@ void main()
     float(bones[2]) / 4,
     1.0);
 
+    vert_color = vec4(uv.xy, 1.0f, 1.0f);
+
   frag_uv = uv.xyz;
 }
 

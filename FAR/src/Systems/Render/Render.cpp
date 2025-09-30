@@ -1,8 +1,6 @@
 #include "PCH.hpp"
 #include "Render.hpp"
 
-
-
 #include "Engine/Engine.hpp"
 
 #include <glm/gtx/euler_angles.hpp>
@@ -96,7 +94,7 @@ namespace FAR
     Assimp::Importer importer;
     //const aiScene* samba = importer.ReadFile(filepath.string(), aiProcess_Triangulate | aiProcess_GlobalScale | aiProcess_PreTransformVertices);
     //const aiScene* samba = importer.ReadFile(filepath.string(), aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_Triangulate | aiProcess_OptimizeGraph | aiProcess_GlobalScale);
-    const aiScene* samba = importer.ReadFile(filepath.string(), aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_Triangulate | aiProcess_OptimizeGraph);
+    const aiScene* samba = importer.ReadFile(filepath.string(), aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_Triangulate | aiProcess_OptimizeGraph | aiProcess_GlobalScale);
 
     //m.verticies.resize(samba->mMeshes[0]->mNumVertices);
     //m.indicies.resize(samba->mMeshes[0]->mNumFaces * 3);
@@ -426,7 +424,17 @@ namespace FAR
   void Render::RenderNodes(Model& model, Transform& trans)
   {
     std::vector<glm::vec4> points;
-    BuildBonePointList(model, points, 0, glm::mat4(1));
+
+    for (Model::Node& node : model.nodes)
+    {
+      if (node.parent != -1)
+      {
+      points.push_back(node.transform[3]);
+      points.push_back(model.nodes[node.parent].transform[3]);
+      }
+    }
+
+    //BuildBonePointList(model, points, 0, glm::mat4(1));
 
     for (glm::vec4& point : points)
     {
@@ -446,15 +454,15 @@ namespace FAR
     glm::mat4 localTrans = model.nodes[index].transform;
     glm::mat4 globalTrans = parentTrans * localTrans;
 
-    //glm::vec4 pos = globalTrans[3];
-    glm::vec4 pos = localTrans[3];
+    glm::vec4 pos = globalTrans[3];
+    //glm::vec4 pos = localTrans[3];
 
     for (int& i : model.nodes[index].children)
     {
       glm::mat4 childTrans = model.nodes[i].transform;
       glm::mat4 childGlobalTrans = globalTrans * childTrans;
-      //glm::vec4 childPos = childGlobalTrans[3];
-      glm::vec4 childPos = childTrans[3];
+      glm::vec4 childPos = childGlobalTrans[3];
+      //glm::vec4 childPos = childTrans[3];
 
       points.push_back(pos);
       points.push_back(childPos);
@@ -542,41 +550,72 @@ namespace FAR
 
     // Find the channel for this node (if any)
     Model::Animation::Channel* channel = nullptr;
-    if (nodeIndex < model.animation.channels.size() && model.animation.channels[nodeIndex].nodeName == node.name) {
+    if (nodeIndex < model.animation.channels.size() && model.animation.channels[nodeIndex].nodeName == node.name) 
+    {
       channel = &model.animation.channels[nodeIndex];
     }
-    else {
+    else 
+    {
       // fallback: search by name
-      for (auto& ch : model.animation.channels) {
-        if (ch.nodeName == node.name) {
+      for (auto& ch : model.animation.channels) 
+      {
+        if (ch.nodeName == node.name) 
+        {
           channel = &ch;
           break;
         }
       }
     }
 
-    if (channel) {
+    if (channel) 
+    {
       // Interpolate position
-      for (int j = 0; j < channel->positionKeys.size() - 1; j++) {
-        if (animationTime >= channel->positionKeys[j].first && animationTime <= channel->positionKeys[j + 1].first) {
+
+      if (channel->positionKeys.size() == 1)
+      {
+        translation = glm::translate(channel->positionKeys[0].second);
+      }
+
+      for (int j = 0; j < channel->positionKeys.size() - 1; j++)
+      {
+        if (animationTime >= channel->positionKeys[j].first && animationTime <= channel->positionKeys[j + 1].first) 
+        {
           float alpha = (animationTime - channel->positionKeys[j].first) / (channel->positionKeys[j + 1].first - channel->positionKeys[j].first);
           glm::vec3 pos = glm::mix(channel->positionKeys[j].second, channel->positionKeys[j + 1].second, alpha);
           translation = glm::translate(glm::mat4(1.0f), pos);
           break;
         }
       }
+
       // Interpolate rotation
-      for (int j = 0; j < channel->rotationKeys.size() - 1; j++) {
-        if (animationTime >= channel->rotationKeys[j].first && animationTime <= channel->rotationKeys[j + 1].first) {
+
+      if (channel->rotationKeys.size() == 1)
+      {
+        rotation = glm::mat4_cast(channel->rotationKeys[0].second);
+      }
+
+      for (int j = 0; j < channel->rotationKeys.size() - 1; j++) 
+      {
+        if (animationTime >= channel->rotationKeys[j].first && animationTime <= channel->rotationKeys[j + 1].first) 
+        {
           float alpha = (animationTime - channel->rotationKeys[j].first) / (channel->rotationKeys[j + 1].first - channel->rotationKeys[j].first);
           glm::quat rot = glm::slerp(channel->rotationKeys[j].second, channel->rotationKeys[j + 1].second, alpha);
           rotation = glm::mat4_cast(rot);
           break;
         }
       }
+
       // Interpolate scaling
-      for (int j = 0; j < channel->scalingKeys.size() - 1; j++) {
-        if (animationTime >= channel->scalingKeys[j].first && animationTime <= channel->scalingKeys[j + 1].first) {
+
+      if (channel->scalingKeys.size() == 1)
+      {
+        scaling = glm::scale(channel->scalingKeys[0].second);
+      }
+
+      for (int j = 0; j < channel->scalingKeys.size() - 1; j++) 
+      {
+        if (animationTime >= channel->scalingKeys[j].first && animationTime <= channel->scalingKeys[j + 1].first) 
+        {
           float alpha = (animationTime - channel->scalingKeys[j].first) / (channel->scalingKeys[j + 1].first - channel->scalingKeys[j].first);
           glm::vec3 scale = glm::mix(channel->scalingKeys[j].second, channel->scalingKeys[j + 1].second, alpha);
           scaling = glm::scale(glm::mat4(1.0f), scale);
