@@ -39,8 +39,8 @@ namespace FAR
       //glm::vec4 normal;
       glm::vec4 uv;
       
-      float boneWeights[4] = { 0.0f };
-      int boneIds[4] = { -1 };
+      float boneWeights[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+      int boneIds[4] = { -1, -1, -1, -1 };
     };
 
     struct meshInfo

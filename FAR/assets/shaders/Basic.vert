@@ -1,8 +1,8 @@
 #version 460 core
 layout(location = 0) in vec4 vertex_position;
 layout(location = 1) in vec4 uv;
-layout(location = 2) in float weights[4];
-layout(location = 3) in int bones[4];
+layout(location = 2) in vec4 weights;
+layout(location = 3) in ivec4 bones;
 
 layout(location = 1) uniform mat4 Modeling;
 layout(location = 2) uniform mat4 Viewing;
@@ -22,12 +22,12 @@ void main()
 
         for (uint i = 0; i < 1 ; i++)
         {
-            if(bones[i] == -1) continue;
+            //if(bones[i] == -1) continue;
 
             //vec4 localPosition = BoneTransforms[bones[i]] * vec4(vertex_position.xyz,1.0f);
-            vec4 localPosition = BoneTransforms[bones[i]] * vertex_position;
+            //vec4 localPosition = BoneTransforms[bones[i]] * vertex_position;
             //totalPosition += localPosition * weights[i];
-            totalPosition += localPosition;
+            //totalPosition += localPosition;
 
 
             validBoneFound = true;
@@ -41,10 +41,10 @@ void main()
 
 
   mat4 skinMat =
-    BoneTransforms[bones[0]] * weights[0] +
-    BoneTransforms[bones[1]] * weights[1] +
-    BoneTransforms[bones[2]] * weights[2] +
-    BoneTransforms[bones[3]] * weights[3];
+    BoneTransforms[bones.x] * weights.x +
+    BoneTransforms[bones.y] * weights.y +
+    BoneTransforms[bones.z] * weights.z +
+    BoneTransforms[bones.w] * weights.w;
 
     totalPosition = skinMat * vec4(vertex_position.xyz, 1.0f);
 
