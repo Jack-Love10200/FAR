@@ -53,5 +53,6 @@ struct Model
 
   int indexCount{ 0 };
   bool textured = false;
+  bool animating = false;
   glm::vec4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
 };

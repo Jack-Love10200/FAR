@@ -1,5 +1,7 @@
 #include "PCH.hpp"
 
+#include "glm/glm.hpp"
+
 class VQS
 {
 public:
@@ -7,6 +9,7 @@ public:
   glm::vec3 v; // translation
   glm::quat q; // rotation
   float s;     // scale
+  //glm::vec3 s;
 
   VQS() : v(0.0f), q(1.0f, 0.0f, 0.0f, 0.0f), s(1.0f) {}
   VQS(const glm::vec3& translation, const glm::quat& rotation, float scale)
@@ -18,7 +21,13 @@ public:
     // Extract translation
     v = glm::vec3(matrix[3]);
     // Extract scale
+    
     s = glm::length(glm::vec3(matrix[0]));
+    
+    //s.x = glm::length(glm::vec3(matrix[0]));
+    //s.y = glm::length(glm::vec3(matrix[1]));
+    //s.z = glm::length(glm::vec3(matrix[2]));
+
     // Extract rotation
     glm::mat3 rotMatrix = glm::mat3(matrix);
     rotMatrix[0] /= s;
@@ -40,13 +49,17 @@ public:
   {
     glm::vec3 newV = *this * other.v; // Apply this transformation to other's translation
     glm::quat newQ = this->q * other.q; // Combine rotations
+
     float newS = this->s * other.s; // Combine scales
+    //glm::vec3 newS = this->s * other.s; // Combine scales
+
     return VQS(newV, newQ, newS);
   }
 
   glm::vec3 operator*(const glm::vec3 & vec) const
   {
-    glm::vec3 scaled = vec * s;
+    glm::vec3 scaled = vec * s; //non-uniform scale
+
     glm::vec3 rotated = q * scaled;// *glm::inverse(q);
     glm::vec3 translated = rotated + v;
     return translated;

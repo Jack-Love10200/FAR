@@ -28,5 +28,7 @@ namespace FAR
     Entity okayu;
     Entity pika;
     Entity roman;
+    Entity egyptian;
+    Entity viking;
   };
 }

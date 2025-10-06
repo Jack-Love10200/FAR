@@ -8,9 +8,11 @@ layout(location = 1) uniform mat4 Modeling;
 layout(location = 2) uniform mat4 Viewing;
 layout(location = 3) uniform mat4 Projection;
 
+layout(location = 200) uniform bool useSkinning;
+
 layout(location = 50) uniform mat4 BoneTransforms[100];
 
-out vec3 frag_uv;
+out vec4 frag_uv;
 out vec4 vert_color;
 
 void main()
@@ -46,7 +48,10 @@ void main()
     BoneTransforms[bones.z] * weights.z +
     BoneTransforms[bones.w] * weights.w;
 
+    if (useSkinning)
     totalPosition = skinMat * vec4(vertex_position.xyz, 1.0f);
+    else
+    totalPosition = vec4(vertex_position.xyz, 1.0f);
 
     gl_Position = Projection * Viewing * Modeling * totalPosition;
 
@@ -64,7 +69,7 @@ void main()
 
     vert_color = vec4(uv.xy, 1.0f, 1.0f);
 
-  frag_uv = uv.xyz;
+  frag_uv = uv;
 }
 
 

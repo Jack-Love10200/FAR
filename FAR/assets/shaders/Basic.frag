@@ -18,7 +18,7 @@ layout(location = 6) uniform sampler2D textures[16];
 layout(location = 4) uniform vec4 color;
 layout(location = 5) uniform bool textured;
 
-in vec3 frag_uv;
+in vec4 frag_uv;
 in vec4 vert_color;
 
 out vec4 frag_color;

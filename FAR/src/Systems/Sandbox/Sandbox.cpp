@@ -16,24 +16,32 @@ namespace FAR
     engine.CreateComponent(cam, Transform{ .position = glm::vec3(0.0f, 0.0f, 0.0f) });
 
     jack = engine.CreateEntity();
-    engine.CreateComponent(jack, Model{ .path = "assets/jack_samba.glb", .textured = true });
+    engine.CreateComponent(jack, Model{ .path = "assets/jack_samba.glb", .textured = true, .animating = true });
     engine.CreateComponent(jack, Transform{ .position = glm::vec3(0.0f, 0.0f, -3.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(0.1f, 0.1f, 0.1f) });
 
     adi = engine.CreateEntity();
-    engine.CreateComponent(adi, Model{ .path = "assets/Adi_Dancing.fbx", .textured = false, });
+    engine.CreateComponent(adi, Model{ .path = "assets/Adi_Dancing.fbx", .textured = false, .animating = true});
     engine.CreateComponent(adi, Transform{ .position = glm::vec3(1.0f, 0.0f, -3.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
 
-    //roman = engine.CreateEntity();
-    //engine.CreateComponent(roman, Model{ .path = "assets/CS460Models/fbx/roman_D.fbx", .textured = true });
-    //engine.CreateComponent(roman, Transform{ .position = glm::vec3(-1.0f, 0.0f, -3.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(100.0f, 100.0f, 100.0f) });
+    roman = engine.CreateEntity();
+    engine.CreateComponent(roman, Model{ .path = "assets/CS460Models/fbx/roman_D.fbx", .textured = true, .animating = true});
+    engine.CreateComponent(roman, Transform{ .position = glm::vec3(0.0f, 0.0f, -100.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(100.0f, 100.0f, 100.0f) });
 
-    //okayu = engine.CreateEntity();
-    //engine.CreateComponent(okayu, Model{ .path = "assets/okayu/okayu.pmx", .textured = true });
-    //engine.CreateComponent(okayu, Transform{ .position = glm::vec3(-10.0f, 0.0f, -30.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) })/*;
+    egyptian = engine.CreateEntity();
+    engine.CreateComponent(egyptian, Model{ .path = "assets/CS460Models/fbx/egyptian_B.fbx", .textured = false, .animating = true });
+    engine.CreateComponent(egyptian, Transform{ .position = glm::vec3(-50.0f, 0.0f, -100.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(100.0f, 100.0f, 100.0f) });
 
-    //pika = engine.CreateEntity();
-    //engine.CreateComponent(pika, Model{ .path = "assets/pika.fbx", .textured = true });
-    //engine.CreateComponent(pika, Transform{ .position = glm::vec3(-20.0f, 0.0f, -5.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
+    viking = engine.CreateEntity();
+    engine.CreateComponent(viking, Model{ .path = "assets/CS460Models/fbx/viking_C.fbx", .textured = true, .animating = true });
+    engine.CreateComponent(viking, Transform{ .position = glm::vec3(50.0f, 0.0f, -100.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(100.0f, 100.0f, 100.0f) });
+
+    okayu = engine.CreateEntity();
+    engine.CreateComponent(okayu, Model{ .path = "assets/okayu/okayu.pmx", .textured = true, .animating = false });
+    engine.CreateComponent(okayu, Transform{ .position = glm::vec3(-10.0f, 0.0f, -30.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
+
+    pika = engine.CreateEntity();
+    engine.CreateComponent(pika, Model{ .path = "assets/pika.fbx", .textured = false, .animating = true });
+    engine.CreateComponent(pika, Transform{ .position = glm::vec3(-20.0f, 0.0f, -5.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
   }
 
   void Sandbox::PreUpdate()

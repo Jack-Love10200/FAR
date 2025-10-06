@@ -111,7 +111,7 @@ namespace FAR
 
     stbi_set_flip_vertically_on_load(true);
 
-    LoadNodes(samba->mRootNode, samba, model, -1);
+    LoadNodes(samba->mRootNode, samba, model, -1, VQS());
 
     if (samba->mNumAnimations > 0)
       LoadAnimationData(samba, model);
@@ -121,6 +121,7 @@ namespace FAR
     //meshes
     for (unsigned int i = 0; i < samba->mNumMeshes; i++)
     {
+
       PutNodesInModelSpace(model, samba->mMeshes[i]);
 
       meshInfo m;
@@ -139,7 +140,7 @@ namespace FAR
           //pos = ToGlm(samba->mRootNode->mTransformation) * pos;
 
           m.verticies.push_back(vertex{ pos
-            , glm::vec4(samba->mMeshes[i]->mTextureCoords[0][j].x, samba->mMeshes[i]->mTextureCoords[0][j].y, i, 0) });
+            , glm::vec4(samba->mMeshes[i]->mTextureCoords[0][j].x, samba->mMeshes[i]->mTextureCoords[0][j].y, 0, 0) });
         }
       }
 
@@ -150,7 +151,7 @@ namespace FAR
         m.indicies.push_back(numVerts + samba->mMeshes[i]->mFaces[j].mIndices[2]);
       }
 
-      ApplyBoneWeightsToVerticies(m, samba->mMeshes[i]);
+      ApplyBoneWeightsToVerticies(m, samba->mMeshes[i], model);
 
       CreateVAO(m, model);
       //model.textures.insert(model.textures.end(), std::make_pair(model.VAOs.back().first, std::vector<GLuint>()));
@@ -316,23 +317,46 @@ namespace FAR
     std::vector<Model::Animation::Channel> sortedChannels;
     for (const Model::Node& node : model.nodes)
     {
+      bool alreadyAdded = false;
       for (const Model::Animation::Channel& channel : model.animation.channels)
       {
-        std::string assimpextra = "_$AssimpFbx$_Rotation";
-        std::string assimpextrascale = "_$AssimpFbx$_Scaling";
-        std::string assimpextraposition = "_$AssimpFbx$_Translation";
-        if (node.name == channel.nodeName.substr(0, channel.nodeName.size() - assimpextra.size()) ||
-          node.name == channel.nodeName.substr(0, channel.nodeName.size() - assimpextrascale.size()) ||
-          node.name == channel.nodeName.substr(0, channel.nodeName.size() - assimpextraposition.size()))
-        //if (node.name == channel.nodeName)
+        if (node.name == channel.nodeName)
         {
-          sortedChannels.push_back(channel);
+          alreadyAdded = true;
           break;
         }
       }
+
+      if (alreadyAdded)
+        continue;
+
+      Model::Animation::Channel emptyChannel;
+      emptyChannel.nodeName = node.name;
+      emptyChannel.positionKeys.push_back({0.0f, node.transform.v});
+      emptyChannel.rotationKeys.push_back({0.0f, node.transform.q});
+      emptyChannel.scalingKeys.push_back({ 0.0f, glm::vec3(node.transform.s) });
+
+      model.animation.channels.push_back(emptyChannel);
+
+
+
+      //for (const Model::Animation::Channel& channel : model.animation.channels)
+      //{
+      //  std::string assimpextra = "_$AssimpFbx$_Rotation";
+      //  std::string assimpextrascale = "_$AssimpFbx$_Scaling";
+      //  std::string assimpextraposition = "_$AssimpFbx$_Translation";
+      //  if (node.name == channel.nodeName.substr(0, channel.nodeName.size() - assimpextra.size()) ||
+      //    node.name == channel.nodeName.substr(0, channel.nodeName.size() - assimpextrascale.size()) ||
+      //    node.name == channel.nodeName.substr(0, channel.nodeName.size() - assimpextraposition.size()))
+      //  //if (node.name == channel.nodeName)
+      //  {
+      //    sortedChannels.push_back(channel);
+      //    break;
+      //  }
+      //}
     }
 
-    model.animation.channels = sortedChannels;
+    //model.animation.channels = sortedChannels;
   }
 
   void Render::CreateVAO(const meshInfo& m, Model& model)
@@ -379,7 +403,7 @@ namespace FAR
     model.VAOs.push_back(std::make_pair(currentVAO, m.indicies.size()));
   }
 
-  void Render::LoadNodes(const aiNode* node, const aiScene* scene, Model& model, int parentIndex)
+  void Render::LoadNodes(const aiNode* node, const aiScene* scene, Model& model, int parentIndex, VQS parentTransform)
   {
 
     bool nameFound = false;
@@ -398,18 +422,22 @@ namespace FAR
       }
     } 
 
-    if (!nameFound)
-    {
-      for (unsigned int i = 0; i < node->mNumChildren; i++)
-      {
-        LoadNodes(node->mChildren[i], scene, model, parentIndex);
-      }
-      return;
-    }
+    //if (!nameFound)
+    //{
+    //  for (unsigned int i = 0; i < node->mNumChildren; i++)
+    //  {
+    //    LoadNodes(node->mChildren[i], scene, model, parentIndex);
+    //  }
+    //  return;
+    //}
 
     Model::Node newNode;
     newNode.parent = parentIndex;
-    newNode.transform = ToGlm(node->mTransformation);
+    //newNode.transform = ToGlm(node->mTransformation);
+
+    VQS localTransform = VQS(ToGlm(node->mTransformation));
+    newNode.transform = parentTransform * localTransform;
+
     newNode.name = node->mName.C_Str();
 
 
@@ -422,7 +450,8 @@ namespace FAR
 
     for (unsigned int i = 0; i < node->mNumChildren; i++)
     {
-      LoadNodes(node->mChildren[i], scene, model, currentIndex);
+      //LoadNodes(node->mChildren[i], scene, model, currentIndex, newNode.transform);
+      LoadNodes(node->mChildren[i], scene, model, currentIndex, VQS());
     }
   }
 
@@ -477,7 +506,7 @@ namespace FAR
     }
   }
 
-  void Render::ApplyBoneWeightsToVerticies(meshInfo& m, const aiMesh* mesh)
+  void Render::ApplyBoneWeightsToVerticies(meshInfo& m, const aiMesh* mesh, Model& model)
   {
     //for each bone
     for (int i = 0; i < mesh->mNumBones; i++)
@@ -492,7 +521,21 @@ namespace FAR
         {
           if (m.verticies[weight.mVertexId].boneIds[k] == -1)
           {
-            m.verticies[weight.mVertexId].boneIds[k] = i;
+            //search for the node with the same name as the bone
+            int found = -1;
+            for (int n = 0; n < model.nodes.size(); n++)
+            {
+              if (!strcmp(bone->mName.C_Str(), model.nodes[n].name.c_str()))
+              {
+                //std::cout << "found bone " << bone->mName.C_Str() << " at index " << n << std::endl;
+                found = n;
+                break;
+              }
+            }
+            
+
+
+            m.verticies[weight.mVertexId].boneIds[k] = found;
             m.verticies[weight.mVertexId].boneWeights[k] = weight.mWeight;
             break;
           }
@@ -557,6 +600,11 @@ namespace FAR
     glm::vec3 v(0.0f, 0.0f, 0.0f);
     glm::quat q(1.0f, 0.0f, 0.0f, 0.0f);
     float s = 1.0f;
+    //glm::vec3 s(1.0f, 1.0f, 1.0f);
+
+    //v = node.transform.v;
+    //q = node.transform.q;
+    //s = node.transform.s;
 
     // Find the channel for this node (if any)
     Model::Animation::Channel* channel = nullptr;
@@ -574,10 +622,10 @@ namespace FAR
       for (auto& ch : model.animation.channels) 
       {
 
-        if (node.name == ch.nodeName.substr(0, ch.nodeName.size() - assimpextra.size()) ||
-          node.name == ch.nodeName.substr(0, ch.nodeName.size() - assimpextrascale.size()) ||
-          node.name == ch.nodeName.substr(0, ch.nodeName.size() - assimpextraposition.size()))
-        //if (ch.nodeName == node.name) 
+        //if (node.name == ch.nodeName.substr(0, ch.nodeName.size() - assimpextra.size()) ||
+        //  node.name == ch.nodeName.substr(0, ch.nodeName.size() - assimpextrascale.size()) ||
+        //  node.name == ch.nodeName.substr(0, ch.nodeName.size() - assimpextraposition.size()))
+        if (ch.nodeName == node.name) 
         {
           channel = &ch;
           break;
@@ -593,6 +641,11 @@ namespace FAR
       {
         translation = glm::translate(channel->positionKeys[0].second);
         v = channel->positionKeys[0].second;
+
+        //if (v == glm::vec3(0.0f, 0.0f, 0.0f))
+        //{
+        //  v = glm::vec3(0.0f, 1.0f, 0.0f);
+        //}
       }
 
       for (int j = 0; j < channel->positionKeys.size() - 1; j++)
@@ -841,7 +894,7 @@ namespace FAR
       if (model.VAOs.size() == 0) continue;
 
       //just assemble all of the node matrices into a big array for now
-      glm::mat4 nodeMatrices[100] = { glm::mat4(1.0f) };
+      glm::mat4 nodeMatrices[300] = { glm::mat4(1.0f) };
       for (int i = 0; i < model.nodes.size(); i++)
       {
         //nodeMatrices[i] = model.nodes[i].skinningTransform;
@@ -854,6 +907,7 @@ namespace FAR
 
       glUniform1i(5, model.textured ? 1 : 0);
       glUniform4fv(4, 1, &model.color[0]);
+      glUniform1i(200, model.animating? 1 : 0);
 
       for (const auto& [vao, indexCount] : model.VAOs)
       {
@@ -870,7 +924,6 @@ namespace FAR
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
         glBindVertexArray(0);
-
       }
       //if (model.path == "assets/jack_samba.glb")
       RenderNodes(model, transform);
