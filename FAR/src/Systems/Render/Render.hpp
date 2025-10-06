@@ -58,13 +58,13 @@ namespace FAR
     void LoadNodes(const aiNode* node, const aiScene* scene, Model& model, int parentIndex);
 
     void RenderNodes(Model& model, Transform& trans);
-    void BuildBonePointList(Model& model, std::vector<glm::vec4>& points, int index, glm::mat4 parentTrans);
+    void BuildBonePointList(Model& model, std::vector<glm::vec4>& points, int index, VQS parentTrans);
 
     void ApplyBoneWeightsToVerticies(meshInfo& m, const aiMesh* mesh);
 
     void PutNodesInModelSpace(Model& model, aiMesh* mesh);
 
-    void AnimUpdateNode(Model& model, int nodeIndex, float animationTime, const glm::mat4& parentTransform);
+    void AnimUpdateNode(Model& model, int nodeIndex, float animationTime, const VQS& parentTransform);
 
 
     void CreateLinesVAO();

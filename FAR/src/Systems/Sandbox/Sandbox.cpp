@@ -15,17 +15,17 @@ namespace FAR
     engine.CreateComponent(cam, Camera{ .isMain = true });
     engine.CreateComponent(cam, Transform{ .position = glm::vec3(0.0f, 0.0f, 0.0f) });
 
-    adi = engine.CreateEntity();
-    engine.CreateComponent(adi, Model{ .path = "assets/Adi_Dancing.fbx", .textured = false, });
-    engine.CreateComponent(adi, Transform{ .position = glm::vec3(1.0f, 0.0f, -3.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
-
     jack = engine.CreateEntity();
     engine.CreateComponent(jack, Model{ .path = "assets/jack_samba.glb", .textured = true });
     engine.CreateComponent(jack, Transform{ .position = glm::vec3(0.0f, 0.0f, -3.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(0.1f, 0.1f, 0.1f) });
 
-    roman = engine.CreateEntity();
-    engine.CreateComponent(roman, Model{ .path = "assets/CS460Models/fbx/roman_D.fbx", .textured = true });
-    engine.CreateComponent(roman, Transform{ .position = glm::vec3(-1.0f, 0.0f, -3.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(100.0f, 100.0f, 100.0f) });
+    adi = engine.CreateEntity();
+    engine.CreateComponent(adi, Model{ .path = "assets/Adi_Dancing.fbx", .textured = false, });
+    engine.CreateComponent(adi, Transform{ .position = glm::vec3(1.0f, 0.0f, -3.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
+
+    //roman = engine.CreateEntity();
+    //engine.CreateComponent(roman, Model{ .path = "assets/CS460Models/fbx/roman_D.fbx", .textured = true });
+    //engine.CreateComponent(roman, Transform{ .position = glm::vec3(-1.0f, 0.0f, -3.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(100.0f, 100.0f, 100.0f) });
 
     //okayu = engine.CreateEntity();
     //engine.CreateComponent(okayu, Model{ .path = "assets/okayu/okayu.pmx", .textured = true });

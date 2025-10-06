@@ -409,7 +409,6 @@ namespace FAR
 
     Model::Node newNode;
     newNode.parent = parentIndex;
-    newNode.transform = glm::mat4(1.0f);
     newNode.transform = ToGlm(node->mTransformation);
     newNode.name = node->mName.C_Str();
 
@@ -440,7 +439,7 @@ namespace FAR
       }
     }
 
-    //BuildBonePointList(model, points, 0, glm::mat4(1));
+    //BuildBonePointList(model, points, 0, VQS());
 
     for (glm::vec4& point : points)
     {
@@ -455,20 +454,21 @@ namespace FAR
     //renderResc->rays = points;
   }
 
-  void Render::BuildBonePointList(Model& model, std::vector<glm::vec4>& points, int index, glm::mat4 parentTrans)
+  void Render::BuildBonePointList(Model& model, std::vector<glm::vec4>& points, int index, VQS parentTrans)
   {
-    glm::mat4 localTrans = model.nodes[index].transform.ToMatrix();
-    glm::mat4 globalTrans = parentTrans * localTrans;
+    VQS localTrans = model.nodes[index].transform;
+    VQS globalTrans = parentTrans * localTrans;
 
-    glm::vec4 pos = globalTrans[3];
-    //glm::vec4 pos = localTrans[3];
+    glm::vec4 pos = glm::vec4(globalTrans.v, 1.0f);
+    //glm::vec4 pos = glm::vec4(localTrans.v, 1.0f);
 
     for (int& i : model.nodes[index].children)
     {
-      glm::mat4 childTrans = model.nodes[i].transform.ToMatrix();
-      glm::mat4 childGlobalTrans = globalTrans * childTrans;
-      glm::vec4 childPos = childGlobalTrans[3];
-      //glm::vec4 childPos = childTrans[3];
+      VQS childTrans = model.nodes[i].transform;
+      VQS childGlobalTrans = globalTrans * childTrans;
+      glm::vec4 childPos = glm::vec4(childGlobalTrans.v, 1.0f);
+      //glm::vec4 childPos = glm::vec4(childTrans.v, 1.0f);
+      
 
       points.push_back(pos);
       points.push_back(childPos);
@@ -546,13 +546,17 @@ namespace FAR
   }
 
 
-  void Render::AnimUpdateNode(Model& model, int nodeIndex, float animationTime, const glm::mat4& parentTransform)
+  void Render::AnimUpdateNode(Model& model, int nodeIndex, float animationTime, const VQS& parentTransform)
   {
     Model::Node& node = model.nodes[nodeIndex];
 
     glm::mat4 translation = glm::mat4(1.0f);
     glm::mat4 rotation = glm::mat4(1.0f);
     glm::mat4 scaling = glm::mat4(1.0f);
+
+    glm::vec3 v(0.0f, 0.0f, 0.0f);
+    glm::quat q(1.0f, 0.0f, 0.0f, 0.0f);
+    float s = 1.0f;
 
     // Find the channel for this node (if any)
     Model::Animation::Channel* channel = nullptr;
@@ -588,6 +592,7 @@ namespace FAR
       if (channel->positionKeys.size() == 1)
       {
         translation = glm::translate(channel->positionKeys[0].second);
+        v = channel->positionKeys[0].second;
       }
 
       for (int j = 0; j < channel->positionKeys.size() - 1; j++)
@@ -596,7 +601,8 @@ namespace FAR
         {
           float alpha = (animationTime - channel->positionKeys[j].first) / (channel->positionKeys[j + 1].first - channel->positionKeys[j].first);
           glm::vec3 pos = glm::mix(channel->positionKeys[j].second, channel->positionKeys[j + 1].second, alpha);
-          translation = glm::translate(glm::mat4(1.0f), pos);
+          //translation = glm::translate(glm::mat4(1.0f), pos);
+          v = pos;
           break;
         }
       }
@@ -606,6 +612,7 @@ namespace FAR
       if (channel->rotationKeys.size() == 1)
       {
         rotation = glm::mat4_cast(channel->rotationKeys[0].second);
+        q = channel->rotationKeys[0].second;
       }
 
       for (int j = 0; j < channel->rotationKeys.size() - 1; j++) 
@@ -614,7 +621,8 @@ namespace FAR
         {
           float alpha = (animationTime - channel->rotationKeys[j].first) / (channel->rotationKeys[j + 1].first - channel->rotationKeys[j].first);
           glm::quat rot = glm::slerp(channel->rotationKeys[j].second, channel->rotationKeys[j + 1].second, alpha);
-          rotation = glm::mat4_cast(rot);
+          //rotation = glm::mat4_cast(rot);
+          q = rot;
           break;
         }
       }
@@ -624,6 +632,7 @@ namespace FAR
       if (channel->scalingKeys.size() == 1)
       {
         scaling = glm::scale(channel->scalingKeys[0].second);
+        s = (channel->scalingKeys[0].second.x + channel->scalingKeys[0].second.y + channel->scalingKeys[0].second.z) / 3.0f; //assume uniform scale for now
       }
 
       for (int j = 0; j < channel->scalingKeys.size() - 1; j++) 
@@ -632,16 +641,19 @@ namespace FAR
         {
           float alpha = (animationTime - channel->scalingKeys[j].first) / (channel->scalingKeys[j + 1].first - channel->scalingKeys[j].first);
           glm::vec3 scale = glm::mix(channel->scalingKeys[j].second, channel->scalingKeys[j + 1].second, alpha);
-          scaling = glm::scale(glm::mat4(1.0f), scale);
+          //scaling = glm::scale(glm::mat4(1.0f), scale);
+          s = (scale.x + scale.y + scale.z) / 3.0f; //assume uniform scale for now
           break;
         }
       }
     }
 
-    glm::mat4 localTransform = translation * rotation * scaling;
-    glm::mat4 globalTransform = parentTransform * localTransform;
+    VQS localTransform = VQS(v, q, s);
+    VQS globalTransform = parentTransform * localTransform;
+    //VQS globalTransform = localTransform * parentTransform;
 
     node.transform = globalTransform;
+    
     //node.skinningTransform = globalTransform * node.inverseBindPose;
     //node.transform = model.animation.globalInverseTransform * globalTransform * node.inverseBindPose;
 
@@ -671,7 +683,7 @@ namespace FAR
       // Start recursion from root nodes (parent == -1)
       for (int i = 0; i < model.nodes.size(); ++i) {
         if (model.nodes[i].parent == -1) {
-          AnimUpdateNode(model, i, model.animationTime, glm::mat4(1.0f));
+          AnimUpdateNode(model, i, model.animationTime, VQS());
         }
       }
     }

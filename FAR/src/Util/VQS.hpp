@@ -7,6 +7,7 @@ public:
   glm::vec3 v; // translation
   glm::quat q; // rotation
   float s;     // scale
+
   VQS() : v(0.0f), q(1.0f, 0.0f, 0.0f, 0.0f), s(1.0f) {}
   VQS(const glm::vec3& translation, const glm::quat& rotation, float scale)
     : v(translation), q(rotation), s(scale) {
@@ -46,7 +47,7 @@ public:
   glm::vec3 operator*(const glm::vec3 & vec) const
   {
     glm::vec3 scaled = vec * s;
-    glm::vec3 rotated = q * scaled * glm::inverse(q);
+    glm::vec3 rotated = q * scaled;// *glm::inverse(q);
     glm::vec3 translated = rotated + v;
     return translated;
   }
