@@ -30,29 +30,29 @@ struct Model
 
   std::vector<Node> nodes;
 
-  float animationTime{ 0.0f };
+  //float animationTime{ 0.0f };
 
   //animation data
-  struct Animation
-  {
-    glm::mat4 globalInverseTransform{ 1.0f };
-    std::string name{ "" };
-    float duration{ 0.0f };
-    float ticksPerSecond{ 0.0f };
-    struct Channel
-    {
-      std::string nodeName{ "" };
-      std::vector<std::pair<float, glm::vec3>> positionKeys;
-      std::vector<std::pair<float, glm::quat>> rotationKeys;
-      std::vector<std::pair<float, glm::vec3>> scalingKeys;
-    };
-    std::vector<Channel> channels;
-  };
+  //struct Animation
+  //{
+  //  glm::mat4 globalInverseTransform{ 1.0f };
+  //  std::string name{ "" };
+  //  float duration{ 0.0f };
+  //  float ticksPerSecond{ 0.0f };
+  //  struct Channel
+  //  {
+  //    std::string nodeName{ "" };
+  //    std::vector<std::pair<float, glm::vec3>> positionKeys;
+  //    std::vector<std::pair<float, glm::quat>> rotationKeys;
+  //    std::vector<std::pair<float, glm::vec3>> scalingKeys;
+  //  };
+  //  std::vector<Channel> channels;
+  //};
 
-  Animation animation;
+  //Animation animation;
+  //bool animating = false;
 
   int indexCount{ 0 };
   bool textured = false;
-  bool animating = false;
   glm::vec4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
 };

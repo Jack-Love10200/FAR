@@ -1,3 +1,5 @@
+#pragma once
+
 #include "PCH.hpp"
 
 #include "glm/glm.hpp"

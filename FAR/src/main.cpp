@@ -15,11 +15,13 @@
 #include "Systems/Render/Render.hpp"
 #include "Systems/Sandbox/Sandbox.hpp"
 #include "Systems/Input/InputSystem.hpp"
+#include "Systems/Animation/SkeletalAnimation.hpp"
 
 //components
 #include "Components/Transform.hpp"
 #include "Components/Camera.hpp"
 #include "Components/Model.hpp"
+#include "Components/SkeletalAnimator.hpp"
 
 //resources
 #include "Resources/InputResource.h"
@@ -34,8 +36,11 @@ int main()
   engine.RegisterComponentType<Transform>();
   engine.RegisterComponentType<Camera>();
   engine.RegisterComponentType<Model>();
+  engine.RegisterComponentType<SkeletalAnimator>();
 
   engine.RegisterSystemType<FAR::Render>();
+  engine.RegisterSystemType<FAR::SkeletalAnimation>();
+
   engine.RegisterSystemType<FAR::Sandbox>();
   engine.RegisterSystemType<FAR::InputSystem>();
 
