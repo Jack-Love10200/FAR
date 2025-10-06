@@ -83,6 +83,9 @@
     <ClInclude Include="src\Resources\RenderResource.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Util\VQS.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\Basic.vert" />

@@ -185,6 +185,7 @@ xcopy "$(ProjectDir)assets" "$(OutDir)assets" /I /S /Y</Command>
     <ClInclude Include="src\Systems\Render\Render.hpp" />
     <ClInclude Include="src\PCH.hpp" />
     <ClInclude Include="src\Systems\Sandbox\Sandbox.hpp" />
+    <ClInclude Include="src\Util\VQS.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\Basic.frag" />

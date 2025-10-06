@@ -318,7 +318,13 @@ namespace FAR
     {
       for (const Model::Animation::Channel& channel : model.animation.channels)
       {
-        if (node.name == channel.nodeName)
+        std::string assimpextra = "_$AssimpFbx$_Rotation";
+        std::string assimpextrascale = "_$AssimpFbx$_Scaling";
+        std::string assimpextraposition = "_$AssimpFbx$_Translation";
+        if (node.name == channel.nodeName.substr(0, channel.nodeName.size() - assimpextra.size()) ||
+          node.name == channel.nodeName.substr(0, channel.nodeName.size() - assimpextrascale.size()) ||
+          node.name == channel.nodeName.substr(0, channel.nodeName.size() - assimpextraposition.size()))
+        //if (node.name == channel.nodeName)
         {
           sortedChannels.push_back(channel);
           break;
@@ -429,8 +435,8 @@ namespace FAR
     {
       if (node.parent != -1)
       {
-      points.push_back(node.transform[3]);
-      points.push_back(model.nodes[node.parent].transform[3]);
+        points.push_back(glm::vec4(node.transform.v, 1.0f));
+        points.push_back(glm::vec4(model.nodes[node.parent].transform.v, 1.0f));
       }
     }
 
@@ -451,7 +457,7 @@ namespace FAR
 
   void Render::BuildBonePointList(Model& model, std::vector<glm::vec4>& points, int index, glm::mat4 parentTrans)
   {
-    glm::mat4 localTrans = model.nodes[index].transform;
+    glm::mat4 localTrans = model.nodes[index].transform.ToMatrix();
     glm::mat4 globalTrans = parentTrans * localTrans;
 
     glm::vec4 pos = globalTrans[3];
@@ -459,7 +465,7 @@ namespace FAR
 
     for (int& i : model.nodes[index].children)
     {
-      glm::mat4 childTrans = model.nodes[i].transform;
+      glm::mat4 childTrans = model.nodes[i].transform.ToMatrix();
       glm::mat4 childGlobalTrans = globalTrans * childTrans;
       glm::vec4 childPos = childGlobalTrans[3];
       //glm::vec4 childPos = childTrans[3];
@@ -557,9 +563,17 @@ namespace FAR
     else 
     {
       // fallback: search by name
+      std::string assimpextra = "_$AssimpFbx$_Rotation";
+      std::string assimpextrascale = "_$AssimpFbx$_Scaling";
+      std::string assimpextraposition = "_$AssimpFbx$_Translation";
+
       for (auto& ch : model.animation.channels) 
       {
-        if (ch.nodeName == node.name) 
+
+        if (node.name == ch.nodeName.substr(0, ch.nodeName.size() - assimpextra.size()) ||
+          node.name == ch.nodeName.substr(0, ch.nodeName.size() - assimpextrascale.size()) ||
+          node.name == ch.nodeName.substr(0, ch.nodeName.size() - assimpextraposition.size()))
+        //if (ch.nodeName == node.name) 
         {
           channel = &ch;
           break;
@@ -628,7 +642,7 @@ namespace FAR
     glm::mat4 globalTransform = parentTransform * localTransform;
 
     node.transform = globalTransform;
-    node.skinningTransform = globalTransform * node.inverseBindPose;
+    //node.skinningTransform = globalTransform * node.inverseBindPose;
     //node.transform = model.animation.globalInverseTransform * globalTransform * node.inverseBindPose;
 
     // Recurse for children
@@ -818,7 +832,8 @@ namespace FAR
       glm::mat4 nodeMatrices[100] = { glm::mat4(1.0f) };
       for (int i = 0; i < model.nodes.size(); i++)
       {
-        nodeMatrices[i] = model.nodes[i].skinningTransform;
+        //nodeMatrices[i] = model.nodes[i].skinningTransform;
+        nodeMatrices[i] = model.nodes[i].transform.ToMatrix() * model.nodes[i].inverseBindPose;
       }
 
       glUniformMatrix4fv(1, 1, GL_FALSE, &transform.modelMatrix[0][0]);

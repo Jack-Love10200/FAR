@@ -2,6 +2,7 @@
 
 #include "PCH.hpp"
 #include "GL/glew.h"
+#include "Util/VQS.hpp"
 
 struct Model
 {
@@ -17,10 +18,13 @@ struct Model
   struct Node
   {
     std::string name{ "" };
-    glm::mat4 transform{ 1.0f };
     std::vector<int> children;
+
+    //glm::mat4 transform{ 1.0f };
+    VQS transform;
+
     glm::mat4 inverseBindPose{ 1.0f };
-    glm::mat4 skinningTransform{ 1.0f };
+    //glm::mat4 skinningTransform{ 1.0f };
     int parent;
   };
 

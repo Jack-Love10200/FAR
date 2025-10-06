@@ -27,5 +27,6 @@ namespace FAR
     Entity adi;
     Entity okayu;
     Entity pika;
+    Entity roman;
   };
 }
