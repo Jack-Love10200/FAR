@@ -219,6 +219,16 @@ namespace FAR
 
       sk.animationTime += dt * sk.animations[sk.currentAnimation].ticksPerSecond;
 
+      if (sk.looping)
+      {
+        sk.animationTime = fmod(sk.animationTime, sk.animations[sk.currentAnimation].duration);
+      }
+      else
+      {
+        if (sk.animationTime > sk.animations[sk.currentAnimation].duration)
+          sk.animationTime = sk.animations[sk.currentAnimation].duration;
+      }
+
       for (int i = 0; i < model.nodes.size(); i++)
       {
         UpdateNode(model, sk, i);

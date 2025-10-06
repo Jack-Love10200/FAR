@@ -9,6 +9,8 @@ struct SkeletalAnimator
 
   struct Animation
   {
+
+
     //glm::mat4 globalInverseTransform{ 1.0f };
     std::string name{ "" };
     float duration{ 0.0f };
@@ -26,4 +28,5 @@ struct SkeletalAnimator
   int currentAnimation = 0;
   std::vector<Animation> animations;
 
+  bool looping;
 };
