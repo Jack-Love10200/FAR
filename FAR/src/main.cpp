@@ -16,6 +16,7 @@
 #include "Systems/Sandbox/Sandbox.hpp"
 #include "Systems/Input/InputSystem.hpp"
 #include "Systems/Animation/SkeletalAnimation.hpp"
+#include "Systems/Editor/EditorSystem.hpp"
 
 //components
 #include "Components/Transform.hpp"
@@ -38,6 +39,7 @@ int main()
   engine.RegisterComponentType<Model>();
   engine.RegisterComponentType<SkeletalAnimator>();
 
+  engine.RegisterSystemType<FAR::EditorSystem>();
   engine.RegisterSystemType<FAR::Render>();
   engine.RegisterSystemType<FAR::SkeletalAnimation>();
 
@@ -47,6 +49,7 @@ int main()
   engine.RegisterResource<FAR::InputResource>();
   engine.RegisterResource<FAR::WindowResource>();
   engine.RegisterResource<FAR::RenderResource>();
+
 
   engine.Init();
 

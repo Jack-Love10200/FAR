@@ -530,6 +530,10 @@ namespace FAR
   {
     //AnimUpdate();
 
+    //render to our offscreen framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, renderResc->fbo);
+    glViewport(0, 0, renderResc->vpwidth, renderResc->vpheight);
+
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -560,12 +564,14 @@ namespace FAR
 
       if (!camera.isMain) continue;
 
+      camera.aspect = (float)renderResc->vpwidth / (float)renderResc->vpheight;
+
       //viewing
       viewMatrix = glm::mat4(1.0f);
       viewMatrix = glm::lookAt(cameratransform.position, cameratransform.position + camera.forward, camera.up);
       //projection
       projectionMatrix = glm::mat4(1.0f);
-      projectionMatrix = glm::perspective(glm::radians(camera.fov), 1.0f, camera.nearPlane, camera.farPlane);
+      projectionMatrix = glm::perspective(glm::radians(camera.fov), camera.aspect, camera.nearPlane, camera.farPlane);
       glUniformMatrix4fv(2, 1, GL_FALSE, &viewMatrix[0][0]);
       glUniformMatrix4fv(3, 1, GL_FALSE, &projectionMatrix[0][0]);
     }
@@ -626,12 +632,13 @@ namespace FAR
     }
 
     glUseProgram(0);
-  }
 
-  void Render::PostUpdate()
-  {
+    //done rendering to offscreen framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     //line rendering
-
+    glBindFramebuffer(GL_FRAMEBUFFER, renderResc->fbo);
+    glViewport(0, 0, renderResc->vpwidth, renderResc->vpheight);
     glDisable(GL_DEPTH_TEST);
 
     glUseProgram(renderResc->lineShaderProgram);
@@ -655,6 +662,13 @@ namespace FAR
     renderResc->rays.clear();
 
     glEnable(GL_DEPTH_TEST);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  }
+
+
+  void Render::PostUpdate()
+  {
+
   }
 
   void Render::Exit()

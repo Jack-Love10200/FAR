@@ -20,6 +20,13 @@ namespace FAR
     //  glm::vec4 color;
     //};
 
+    int vpwidth;
+    int vpheight;
+
+    GLuint fbo, colorTex, rboDepth;
+
+    void CreateFrameBuffer(int width, int height);
+
     void DrawRay(glm::vec4 start, glm::vec4 end);
 
     std::vector<glm::vec4> rays;
