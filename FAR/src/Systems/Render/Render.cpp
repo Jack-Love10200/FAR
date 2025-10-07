@@ -301,46 +301,6 @@ namespace FAR
 
   void Render::LoadNodes(const aiNode* node, const aiScene* scene, Model& model, int parentIndex, VQS parentTransform)
   {
-
-    bool nameFound = false;
-    //if the name of the node is not in the bone list, dont add it
-    for (unsigned int i = 0; i < scene->mNumMeshes; i++)
-    {
-      for (unsigned int j = 0; j < scene->mMeshes[i]->mNumBones; j++)
-      {
-        //std::cout << "comparing " << node->mName.C_Str() << " to " << scene->mMeshes[i]->mBones[j]->mName.C_Str() << std::endl;
-        //if (node->mName == scene->mMeshes[i]->mBones[j]->mName || !strcmp(node->mName.C_Str(), "Armature"))
-        if (node->mName == scene->mMeshes[i]->mBones[j]->mName)
-        {
-          nameFound = true;
-          break;
-        }
-      }
-    } 
-
-    //if (!nameFound)
-    //{
-    //  for (unsigned int i = 0; i < node->mNumChildren; i++)
-    //  {
-    //    LoadNodes(node->mChildren[i], scene, model, parentIndex);
-    //  }
-    //  return;
-    //}
-
-    //skip the root node but load all of its children
-    //const aiString rootnodename("RootNode");
-    //const aiString armaturename("Armature");
-    //if (node->mName == rootnodename || node->mName == armaturename)
-    //{
-    //  for (unsigned int i = 0; i < node->mNumChildren; i++)
-    //  {
-    //    if (node->mChildren[i]->mNumChildren > 0)
-    //      LoadNodes(node->mChildren[i], scene, model, parentIndex, VQS());
-    //  }
-    //  return;
-    //}
-    
-
     Model::Node newNode;
     newNode.parent = parentIndex;
     //newNode.transform = ToGlm(node->mTransformation);
@@ -369,15 +329,6 @@ namespace FAR
   {
     std::vector<glm::vec4> points;
 
-    //for (Model::Node& node : model.nodes)
-    //{
-    //  if (node.parent != -1)
-    //  {
-    //    points.push_back(glm::vec4(node.transform.v, 1.0f));
-    //    points.push_back(glm::vec4(model.nodes[node.parent].transform.v, 1.0f));
-    //  }
-    //}
-
     BuildBonePointList(model, points, 0, VQS());
 
     for (glm::vec4& point : points)
@@ -390,7 +341,6 @@ namespace FAR
       renderResc->DrawRay(points[i], points[i + 1]);
     }
 
-    //renderResc->rays = points;
   }
 
   void Render::BuildBonePointList(Model& model, std::vector<glm::vec4>& points, int index, VQS parentTrans)
@@ -583,11 +533,6 @@ namespace FAR
       //viewing
       viewMatrix = glm::mat4(1.0f);
       viewMatrix = glm::lookAt(cameratransform.position, cameratransform.position + camera.forward, camera.up);
-
-      //glm::vec3 forward(0.0f, 0.0f, -1.0f);
-      //glm::vec3 up(0.0f, 1.0f, 0.0f);
-      //viewMatrix = glm::lookAt(cameratransform.position, cameratransform.position + (cameratransform.rotationQuaternion * forward), camera.up);
-
 
       //projection
       projectionMatrix = glm::mat4(1.0f);
