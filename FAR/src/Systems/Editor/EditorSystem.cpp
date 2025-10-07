@@ -8,6 +8,13 @@
 
 #include "Engine/Engine.hpp"
 
+
+#include "Components/Transform.hpp"
+#include "Components/Camera.hpp"
+#include "Components/Model.hpp"
+#include "Components/SkeletalAnimator.hpp"
+
+
 namespace FAR
 {
 
@@ -57,21 +64,12 @@ namespace FAR
   {
     ImGui::DockSpaceOverViewport();
 
-    int windowWidth, windowHeight;
-    windowWidth = 1280;
-    windowHeight = 720;
-    //glfwGetWindowSize(windowResc->window, (int*)&windowWidth, (int*)&windowHeight);
+    RenderSceneView();
 
-    ImGui::Begin("Scene View", nullptr, ImGuiWindowFlags_NoScrollbar);
+    RenderSceneHierarchy();
 
-    ImVec2 windowsize = ImGui::GetContentRegionAvail();
+    RenderInspector();
 
-    renderResc->CreateFrameBuffer(windowsize.x, windowsize.y);
-
-    ImGui::Image((void*)(intptr_t)renderResc->colorTex, windowsize, ImVec2(0, 1), ImVec2(1, 0));
-    ImGui::End();
-
-    ImGui::ShowDemoWindow();
   }
 
   void EditorSystem::PostUpdate()
@@ -87,6 +85,109 @@ namespace FAR
 
   void EditorSystem::Exit()
   {
+
+  }
+
+  void EditorSystem::RenderSceneView()
+  {
+    ImGui::Begin("Scene View", nullptr, ImGuiWindowFlags_NoScrollbar);
+    ImVec2 windowsize = ImGui::GetContentRegionAvail();
+    renderResc->CreateFrameBuffer(windowsize.x, windowsize.y);
+    ImGui::Image((void*)(intptr_t)renderResc->colorTex, windowsize, ImVec2(0, 1), ImVec2(1, 0));
+    ImGui::End();
+  }
+
+  void EditorSystem::RenderSceneHierarchy()
+  {
+    ImGui::Begin("Scene Hierarchy");
+
+    const std::vector<Entity>& entities = Engine::GetInstance()->GetAllEntities();
+
+    for (const Entity& e : entities)
+    {
+      std::string label = "Entity " + std::to_string(e);
+
+      bool is_selected = (selected == e);
+      if (ImGui::Selectable(label.c_str(), &is_selected))
+        selected = e; // only one can be selected
+    }
+
+    ImGui::End();
+  }
+
+  void EditorSystem::RenderInspector()
+  {
+    ImGui::Begin("Inspector");
+
+    //Transform component
+    if (selected != -1 && Engine::GetInstance()->HasComponent<Transform>(selected))
+    {
+      Transform& transform = Engine::GetInstance()->GetComponent<Transform>(selected);
+      if (ImGui::TreeNode("Transform Component"))
+      {
+        ImGui::DragFloat3("Position", &transform.position[0], 0.1f);
+        ImGui::DragFloat3("Rotation", &transform.rotation[0], 0.1f);
+        ImGui::DragFloat3("Scale", &transform.scale[0], 0.1f);
+        ImGui::TreePop();
+      }
+    }
+
+    //Camera component
+    if (selected != -1 && Engine::GetInstance()->HasComponent<Camera>(selected))
+    {
+      Camera& camera = Engine::GetInstance()->GetComponent<Camera>(selected);
+      if (ImGui::TreeNode("Camera Component"))
+      {
+        ImGui::DragFloat("FOV", &camera.fov, 0.1f);
+        ImGui::DragFloat("Near Plane", &camera.nearPlane, 0.1f);
+        ImGui::DragFloat("Far Plane", &camera.farPlane, 0.1f);
+        ImGui::Checkbox("Is Main", &camera.isMain);
+        ImGui::TreePop();
+      }
+    }
+
+    //Model Component
+    if (selected != -1 && Engine::GetInstance()->HasComponent<Model>(selected))
+    {
+      Model& model = Engine::GetInstance()->GetComponent<Model>(selected);
+      if (ImGui::TreeNode("Model Component"))
+      {
+        ImGui::Text(model.path.c_str());
+        ImGui::Checkbox("Textured", &model.textured);
+        ImGui::TreePop();
+      }
+    }
+
+    if (selected != -1 && Engine::GetInstance()->HasComponent<SkeletalAnimator>(selected))
+    {
+      SkeletalAnimator& sk = Engine::GetInstance()->GetComponent<SkeletalAnimator>(selected);
+      if (ImGui::TreeNode("Skeltal Animator Component"))
+      {
+        ImGui::Text(sk.path.c_str());
+        ImGui::Checkbox("Looping", &sk.looping);
+
+        if (ImGui::BeginCombo("Animation", sk.animations[sk.currentAnimation].name.c_str()))
+        {
+          for (int i = 0; i < sk.animations.size(); i++)
+          {
+            const bool is_selected = (sk.currentAnimation == i);
+            const char* animName = sk.animations[i].name.c_str();
+
+            if (ImGui::Selectable(animName, is_selected))
+              sk.currentAnimation = i;
+
+            // Make sure the current item is focused if it’s selected
+            if (is_selected)
+              ImGui::SetItemDefaultFocus();
+          }
+          ImGui::EndCombo();
+        }
+        ImGui::TreePop();
+      }
+    }
+
+
+    ImGui::End();
   }
 
 }

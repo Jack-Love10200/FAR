@@ -17,11 +17,12 @@ namespace FAR
     {
       system->Init();
     }
+
+    current = std::chrono::high_resolution_clock::now();
   }
 
   void Engine::PreUpdate()
   {
-    dt = 0.00060606060606061; //placeholder for now, will implement proper timing later
     for (iSystem* system : systems)
     {
       system->PreUpdate();
@@ -42,6 +43,13 @@ namespace FAR
     {
       system->PostUpdate();
     }
+
+    last = current;
+    current = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<float> dtf = current - last;
+
+    dt = dtf.count();
   }
 
   void Engine::Exit()

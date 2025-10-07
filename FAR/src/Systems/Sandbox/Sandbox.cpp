@@ -26,24 +26,20 @@ namespace FAR
     engine.CreateComponent(adi, Transform{ .position = glm::vec3(1.0f, 0.0f, -3.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
     engine.CreateComponent(adi,  SkeletalAnimator{ .path = "assets/Adi_Dancing.fbx", .currentAnimation = 0 });
 
-
     roman = engine.CreateEntity();
     engine.CreateComponent(roman, Model{ .path = "assets/CS460Models/fbx/roman_D.fbx", .textured = true });
     engine.CreateComponent(roman, Transform{ .position = glm::vec3(0.0f, 0.0f, -100.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(100.0f, 100.0f, 100.0f) });
-    engine.CreateComponent(roman, SkeletalAnimator{ .path = "assets/CS460Models/fbx/roman_D.fbx", .currentAnimation = 0 });
-
+    engine.CreateComponent(roman, SkeletalAnimator{ .path = "assets/CS460Models/fbx/roman_D.fbx", .currentAnimation = 0, .looping = true});
 
     egyptian = engine.CreateEntity();
     engine.CreateComponent(egyptian, Model{ .path = "assets/CS460Models/fbx/egyptian_B.fbx", .textured = false });
     engine.CreateComponent(egyptian, Transform{ .position = glm::vec3(-50.0f, 0.0f, -100.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(100.0f, 100.0f, 100.0f) });
-    engine.CreateComponent(egyptian, SkeletalAnimator{ .path = "assets/CS460Models/fbx/egyptian_B.fbx", .currentAnimation = 0 });
-
+    engine.CreateComponent(egyptian, SkeletalAnimator{ .path = "assets/CS460Models/fbx/egyptian_B.fbx", .currentAnimation = 0, .looping = true});
 
     viking = engine.CreateEntity();
     engine.CreateComponent(viking, Model{ .path = "assets/CS460Models/fbx/viking_C.fbx", .textured = true });
     engine.CreateComponent(viking, Transform{ .position = glm::vec3(50.0f, 0.0f, -100.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(100.0f, 100.0f, 100.0f) });
-    engine.CreateComponent(viking, SkeletalAnimator{ .path = "assets/CS460Models/fbx/viking_C.fbx", .currentAnimation = 0 });
-
+    engine.CreateComponent(viking, SkeletalAnimator{ .path = "assets/CS460Models/fbx/viking_C.fbx", .currentAnimation = 0, .looping = true });
 
     //okayu = engine.CreateEntity();
     //engine.CreateComponent(okayu, Model{ .path = "assets/okayu/okayu.pmx", .textured = true});
@@ -102,11 +98,33 @@ namespace FAR
 
     if (inputResc->GetMouseButton(KEYCODE::MOUSE_RIGHT))
     {
+      float sensitivity = 0.01f; // tweak
+      float yaw = inputResc->mouseDelta.x * sensitivity * -1.0f;
+      float pitch = inputResc->mouseDelta.y * sensitivity;
 
-      glm::mat4 rot = glm::mat4(1.0f);
-      rot = glm::rotate(rot, glm::radians(-inputResc->mouseDelta.x * 0.1f), glm::vec3(0.0f, 1.0f, 0.0f));
-      rot = glm::rotate(rot, glm::radians(-inputResc->mouseDelta.y * 0.1f), glm::vec3(1.0f, 0.0f, 0.0f));
-      camera.forward = glm::vec3(rot * glm::vec4(camera.forward, 0.0f));
+      if (glm::dot(camTransform.rotationQuaternion * glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f)) > 0.99f && pitch < 0.0f)
+        pitch = 0.0f;
+
+      if (glm::dot(camTransform.rotationQuaternion * glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)) > 0.99f && pitch > 0.0f)
+        pitch = 0.0f;
+
+      // build incremental quaternion from mouse movement
+      glm::quat qYaw = glm::angleAxis(yaw, glm::vec3(0, 1, 0));
+      glm::quat qPitch = glm::angleAxis(pitch, glm::vec3(1, 0, 0));
+
+      // combine them
+      //glm::quat rotationDelta = qYaw * qPitch;
+
+      camTransform.rotationQuaternion = qYaw * camTransform.rotationQuaternion;
+      camTransform.rotationQuaternion = camTransform.rotationQuaternion * qPitch;
+
+      camTransform.rotationQuaternion = glm::normalize(camTransform.rotationQuaternion); // keep it clean
+
+      camera.forward = camTransform.rotationQuaternion * glm::vec3(0.0f, 0.0f, -1.0f);
+
+      // update object’s orientation
+      //camTransform.rotationQuaternion = rotationDelta * camTransform.rotationQuaternion;
+      //camTransform.rotationQuaternion = glm::normalize(camTransform.rotationQuaternion); // keep it clean
     }
 
     //rotate the "jack" object using its quaternion
@@ -118,16 +136,31 @@ namespace FAR
       float yaw = inputResc->mouseDelta.x * sensitivity;
       float pitch = inputResc->mouseDelta.y * sensitivity;
 
-      // build incremental quaternion from mouse movement
+      if (glm::dot(jackTransform.rotationQuaternion * glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f)) > 0.99f && pitch < 0.0f)
+        pitch = 0.0f;
+
+      if (glm::dot(jackTransform.rotationQuaternion * glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)) > 0.99f && pitch > 0.0f)
+        pitch = 0.0f;
+
+      //// build incremental quaternion from mouse movement
+      //glm::quat qYaw = glm::angleAxis(yaw, glm::vec3(0, 1, 0));
+      //glm::quat qPitch = glm::angleAxis(pitch, glm::vec3(1, 0, 0));
+
+      //// combine them
+      //glm::quat rotationDelta = qYaw * qPitch;
+
       glm::quat qYaw = glm::angleAxis(yaw, glm::vec3(0, 1, 0));
       glm::quat qPitch = glm::angleAxis(pitch, glm::vec3(1, 0, 0));
 
-      // combine them
-      glm::quat rotationDelta = qYaw * qPitch;
+      jackTransform.rotationQuaternion = qYaw * jackTransform.rotationQuaternion;
+      jackTransform.rotationQuaternion = jackTransform.rotationQuaternion * qPitch;
+
+      jackTransform.rotationQuaternion = glm::normalize(jackTransform.rotationQuaternion); // keep it clean
+
 
       // update object’s orientation
-      jackTransform.rotationQuaternion = rotationDelta * jackTransform.rotationQuaternion;
-      jackTransform.rotationQuaternion = glm::normalize(jackTransform.rotationQuaternion); // keep it clean
+      //jackTransform.rotationQuaternion = rotationDelta * jackTransform.rotationQuaternion;
+      //jackTransform.rotationQuaternion = glm::normalize(jackTransform.rotationQuaternion); // keep it clean
     }
 
 

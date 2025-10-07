@@ -4,6 +4,7 @@
 #include "Resources/RenderResource.hpp"
 #include "Resources/WindowResource.hpp"
 
+#include "Engine/Engine.hpp"
 
 namespace FAR
 {
@@ -18,6 +19,17 @@ namespace FAR
     void PostUpdate() override;
     void Exit() override;
   private:
+
+    void RenderSceneView();
+
+    void RenderSceneHierarchy();
+
+    void RenderInspector();
+
+    //super duper temp
+    std::array<bool, 50> EntitySelectionStates = { false };
+
+    Entity selected;
 
     WindowResource* windowResc = nullptr;
     RenderResource* renderResc = nullptr;

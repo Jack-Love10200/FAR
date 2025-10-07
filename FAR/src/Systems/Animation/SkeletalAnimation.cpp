@@ -201,7 +201,31 @@ namespace FAR
       {
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(sk.path, aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_Triangulate | aiProcess_OptimizeGraph | aiProcess_GlobalScale);
-        LoadAnimationData(scene, sk);
+
+
+
+        std::cout << sk.path << std::endl << std::endl;
+        for (int i = 0; i < scene->mMetaData->mNumProperties; i++)
+        {
+          std::cout << "metadata: " << scene->mMetaData->mKeys[i].C_Str() << ", " << scene->mMetaData->mValues[i].mType << "  ";
+
+          switch (scene->mMetaData->mValues[i].mType)
+          {
+          case AI_BOOL:  std::cout << *(bool*)(scene->mMetaData->mValues[i].mData) << std::endl; break;
+          AI_INT32:      std::cout << *(int*)(scene->mMetaData->mValues[i].mData) << std::endl; break;
+          AI_UINT64:     std::cout << *(uint64_t*)(scene->mMetaData->mValues[i].mData) << std::endl; break;
+          AI_FLOAT:      std::cout << *(float*)(scene->mMetaData->mValues[i].mData) << std::endl; break;
+          AI_DOUBLE:     std::cout << *(double*)(scene->mMetaData->mValues[i].mData) << std::endl; break;
+          AI_AISTRING:   std::cout << *(char**)(scene->mMetaData->mValues[i].mData) << std::endl; break;
+            //AI_AIVECTOR3D: std::cout << *(glm::vec3*)(scene->mMetaData->mValues[i].mData) << std::endl;
+            //AI_AIMETADATA: std::cout << ()(scene->mMetaData->mValues[i].mData) << std::endl;
+          AI_INT64:      std::cout << *(long int*)(scene->mMetaData->mValues[i].mData) << std::endl; break;
+          AI_UINT32:     std::cout << *(uint32_t*)(scene->mMetaData->mValues[i].mData) << std::endl; break;
+          }
+
+          std::cout << std::endl;
+        }
+          LoadAnimationData(scene, sk);
       }
     }
   }

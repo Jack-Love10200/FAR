@@ -327,6 +327,20 @@ namespace FAR
     //  return;
     //}
 
+    //skip the root node but load all of its children
+    //const aiString rootnodename("RootNode");
+    //const aiString armaturename("Armature");
+    //if (node->mName == rootnodename || node->mName == armaturename)
+    //{
+    //  for (unsigned int i = 0; i < node->mNumChildren; i++)
+    //  {
+    //    if (node->mChildren[i]->mNumChildren > 0)
+    //      LoadNodes(node->mChildren[i], scene, model, parentIndex, VQS());
+    //  }
+    //  return;
+    //}
+    
+
     Model::Node newNode;
     newNode.parent = parentIndex;
     //newNode.transform = ToGlm(node->mTransformation);
@@ -569,6 +583,12 @@ namespace FAR
       //viewing
       viewMatrix = glm::mat4(1.0f);
       viewMatrix = glm::lookAt(cameratransform.position, cameratransform.position + camera.forward, camera.up);
+
+      //glm::vec3 forward(0.0f, 0.0f, -1.0f);
+      //glm::vec3 up(0.0f, 1.0f, 0.0f);
+      //viewMatrix = glm::lookAt(cameratransform.position, cameratransform.position + (cameratransform.rotationQuaternion * forward), camera.up);
+
+
       //projection
       projectionMatrix = glm::mat4(1.0f);
       projectionMatrix = glm::perspective(glm::radians(camera.fov), camera.aspect, camera.nearPlane, camera.farPlane);

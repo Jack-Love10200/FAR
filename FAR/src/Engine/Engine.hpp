@@ -32,7 +32,7 @@ namespace FAR
       return eng;
     }
 
-    float dt;
+    float dt = 0.016666666666666f;
 
     void Init();
     void PreUpdate();
@@ -121,6 +121,16 @@ namespace FAR
       return result;
     }
 
+    const std::vector <std::type_index>& GetComponentTypes()
+    {
+      return componentTypes;
+    }
+
+    const std::vector<Entity>& GetAllEntities()
+    {
+      return entities;
+    }
+
     template<typename T>
     T& GetComponent(Entity e)
     {
@@ -134,6 +144,9 @@ namespace FAR
       std::type_index typeIndex = std::type_index(typeid(T));
       return componentGetFuncs[typeIndex](e) != nullptr;
     }
+
+    std::chrono::high_resolution_clock::time_point last;
+    std::chrono::high_resolution_clock::time_point current;
 
     //std::map<std::type_index, unsigned char*> componentArrays;
     std::vector<std::type_index> componentTypes;
