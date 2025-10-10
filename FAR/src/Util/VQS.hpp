@@ -10,12 +10,19 @@ public:
 
   glm::vec3 v; // translation
   glm::quat q; // rotation
-  float s;     // scale
-  //glm::vec3 s;
+  //float s;     // scale
+  glm::vec3 s;
 
-  VQS() : v(0.0f), q(1.0f, 0.0f, 0.0f, 0.0f), s(1.0f) {}
-  VQS(const glm::vec3& translation, const glm::quat& rotation, float scale)
-    : v(translation), q(rotation), s(scale) {
+  //VQS() : v(0.0f), q(1.0f, 0.0f, 0.0f, 0.0f), s(1.0f) {}
+  //VQS(const glm::vec3& translation, const glm::quat& rotation, float scale)
+  //  : v(translation), q(rotation), s(scale) 
+  //{
+  //}
+
+  VQS() : v(0.0f), q(1.0f, 0.0f, 0.0f, 0.0f), s(1.0f, 1.0f, 1.0f) {}
+  VQS(const glm::vec3& translation, const glm::quat& rotation, glm::vec3 scale)
+    : v(translation), q(rotation), s(scale) 
+  {
   }
 
   VQS(const glm::mat4& matrix)
@@ -24,11 +31,11 @@ public:
     v = glm::vec3(matrix[3]);
     // Extract scale
     
-    s = glm::length(glm::vec3(matrix[0]));
+    //s = glm::length(glm::vec3(matrix[0]));
     
-    //s.x = glm::length(glm::vec3(matrix[0]));
-    //s.y = glm::length(glm::vec3(matrix[1]));
-    //s.z = glm::length(glm::vec3(matrix[2]));
+    s.x = glm::length(glm::vec3(matrix[0]));
+    s.y = glm::length(glm::vec3(matrix[1]));
+    s.z = glm::length(glm::vec3(matrix[2]));
 
     // Extract rotation
     glm::mat3 rotMatrix = glm::mat3(matrix);
@@ -52,8 +59,8 @@ public:
     glm::vec3 newV = *this * other.v; // Apply this transformation to other's translation
     glm::quat newQ = this->q * other.q; // Combine rotations
 
-    float newS = this->s * other.s; // Combine scales
-    //glm::vec3 newS = this->s * other.s; // Combine scales
+    //float newS = this->s * other.s; // Combine scales
+    glm::vec3 newS = this->s * other.s; // Combine scales
 
     return VQS(newV, newQ, newS);
   }
@@ -70,6 +77,15 @@ public:
   static float elerp(float a, float b, float f)
   {
     return a * pow(b / a, f);
+  }
+
+  static glm::vec3 elerp(const glm::vec3& a, const glm::vec3& b, float f)
+  {
+    return glm::vec3(
+      elerp(a.x, b.x, f),
+      elerp(a.y, b.y, f),
+      elerp(a.z, b.z, f)
+    );
   }
 
   //lerp position
