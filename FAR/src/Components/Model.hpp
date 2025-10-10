@@ -20,37 +20,13 @@ struct Model
     std::string name{ "" };
     std::vector<int> children;
 
-    //glm::mat4 transform{ 1.0f };
     VQS transform;
 
     glm::mat4 inverseBindPose{ 1.0f };
-    //glm::mat4 skinningTransform{ 1.0f };
-    int parent;
+    int parent = -1;
   };
 
   std::vector<Node> nodes;
-
-  //float animationTime{ 0.0f };
-
-  //animation data
-  //struct Animation
-  //{
-  //  glm::mat4 globalInverseTransform{ 1.0f };
-  //  std::string name{ "" };
-  //  float duration{ 0.0f };
-  //  float ticksPerSecond{ 0.0f };
-  //  struct Channel
-  //  {
-  //    std::string nodeName{ "" };
-  //    std::vector<std::pair<float, glm::vec3>> positionKeys;
-  //    std::vector<std::pair<float, glm::quat>> rotationKeys;
-  //    std::vector<std::pair<float, glm::vec3>> scalingKeys;
-  //  };
-  //  std::vector<Channel> channels;
-  //};
-
-  //Animation animation;
-  //bool animating = false;
 
   int indexCount{ 0 };
   bool textured = false;

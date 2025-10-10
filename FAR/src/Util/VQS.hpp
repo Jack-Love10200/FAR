@@ -67,6 +67,25 @@ public:
     return translated;
   }
 
+  static float elerp(float a, float b, float f)
+  {
+    return a * pow(b / a, f);
+  }
+
+  //lerp position
+  //slerp rotation
+  //elerp scale
+  static VQS Interpolate(VQS left, VQS right, float alpha)
+  {
+    VQS retval;
+
+    retval.v = glm::mix(left.v, right.v, alpha);
+    retval.q = glm::slerp(left.q, right.q, alpha);
+    retval.s = elerp(left.s, right.s, alpha);
+
+    return retval;
+  }
+
 
   // Inverse of the VQS transformation
   VQS inverse() const 

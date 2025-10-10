@@ -39,50 +39,181 @@ namespace FAR
       aiNodeAnim* channel = animation->mChannels[i];
       SkeletalAnimator::Animation::Channel newChannel;
       newChannel.nodeName = channel->mNodeName.C_Str();
-      //position keys
-      for (unsigned int j = 0; j < channel->mNumPositionKeys; j++)
+
+      int numPositionKeys = channel->mNumPositionKeys;
+      int numRotationKeys = channel->mNumRotationKeys;
+      int numScalingKeys = channel->mNumScalingKeys;
+
+      int maxKeys = std::max(numPositionKeys, std::max(numRotationKeys, numScalingKeys));
+
+      newChannel.keyFrames.reserve(numPositionKeys);
+
+      //collect all keyframe times
+      std::set<float> keyTimes;
+
+      for (size_t i = 0; i < channel->mNumPositionKeys; i++)
       {
-        aiVector3D pos = channel->mPositionKeys[j].mValue;
-        newChannel.positionKeys.push_back(std::make_pair(channel->mPositionKeys[j].mTime, glm::vec3(pos.x, pos.y, pos.z)));
+        keyTimes.insert(channel->mPositionKeys[i].mTime);
       }
-      //rotation keys
-      for (unsigned int j = 0; j < channel->mNumRotationKeys; j++)
+      for (size_t i = 0; i < channel->mNumRotationKeys; i++)
       {
-        aiQuaternion rot = channel->mRotationKeys[j].mValue;
-        newChannel.rotationKeys.push_back(std::make_pair(channel->mRotationKeys[j].mTime, glm::quat(rot.w, rot.x, rot.y, rot.z)));
+        keyTimes.insert(channel->mRotationKeys[i].mTime);
       }
-      //scaling keys
-      for (unsigned int j = 0; j < channel->mNumScalingKeys; j++)
+      for (size_t i = 0; i < channel->mNumScalingKeys; i++)
       {
-        aiVector3D scale = channel->mScalingKeys[j].mValue;
-        newChannel.scalingKeys.push_back(std::make_pair(channel->mScalingKeys[j].mTime, glm::vec3(scale.x, scale.y, scale.z)));
+        keyTimes.insert(channel->mScalingKeys[i].mTime);
       }
+
+      //for each unique key time, find the corresponding pos/rot/scale (or the last one before it)
+
+      for (float time : keyTimes)
+      {
+        //glm::vec3 pos(0.0f, 0.0f, 0.0f);
+        //glm::quat rot(1.0f, 0.0f, 0.0f, 0.0f);
+        //glm::vec3 scale(1.0f, 1.0f, 1.0f);
+
+        VQS vqs;
+
+        if (numPositionKeys > 0)
+        {
+
+          bool posKeyFound = false;
+          for (int j = 0; j < numPositionKeys; j++)
+          {
+            if (channel->mPositionKeys[j].mTime == time)
+            {
+              aiVector3D p = channel->mPositionKeys[j].mValue;
+              vqs.v = glm::vec3(p.x, p.y, p.z);
+              posKeyFound = true;
+            }
+            //if not a perfect match, lerp between the last key and the next key
+            else if (channel->mPositionKeys[j].mTime < time)
+            {
+              aiVector3D p = channel->mPositionKeys[j].mValue;
+              glm::vec3 pos1 = glm::vec3(p.x, p.y, p.z);
+              if (j + 1 < numPositionKeys)
+              {
+                aiVector3D p2 = channel->mPositionKeys[j + 1].mValue;
+                glm::vec3 pos2 = glm::vec3(p2.x, p2.y, p2.z);
+                float t1 = channel->mPositionKeys[j].mTime;
+                float t2 = channel->mPositionKeys[j + 1].mTime;
+                float alpha = (time - t1) / (t2 - t1);
+                vqs.v = glm::mix(pos1, pos2, alpha);
+                posKeyFound = true;
+              }
+              else
+              {
+                vqs.v = pos1;
+                posKeyFound = true;
+              }
+            }
+          }
+          if (!posKeyFound)
+          {
+            aiVector3D p = channel->mPositionKeys[0].mValue;
+            vqs.v = glm::vec3(p.x, p.y, p.z);
+          }
+        }
+
+
+        if (numRotationKeys > 0)
+        {
+          bool rotKeyFound = false;
+          for (int j = 0; j < numRotationKeys; j++)
+          {
+            if (channel->mRotationKeys[j].mTime == time)
+            {
+              aiQuaternion q = channel->mRotationKeys[j].mValue;
+              vqs.q = glm::quat(q.w, q.x, q.y, q.z);
+              rotKeyFound = true;
+            }
+            //if not a perfect match, lerp between the last key and the next key
+            else if (channel->mRotationKeys[j].mTime < time)
+            {
+              aiQuaternion q = channel->mRotationKeys[j].mValue;
+              glm::quat rot1 = glm::quat(q.w, q.x, q.y, q.z);
+              if (j + 1 < numRotationKeys)
+              {
+                aiQuaternion q2 = channel->mRotationKeys[j + 1].mValue;
+                glm::quat rot2 = glm::quat(q2.w, q2.x, q2.y, q2.z);
+                float t1 = channel->mRotationKeys[j].mTime;
+                float t2 = channel->mRotationKeys[j + 1].mTime;
+                float alpha = (time - t1) / (t2 - t1);
+                vqs.q = glm::slerp(rot1, rot2, alpha);
+                rotKeyFound = true;
+              }
+              else
+              {
+                vqs.q = rot1;
+                rotKeyFound = true;
+              }
+            }
+          }
+          if (!rotKeyFound)
+          {
+            aiQuaternion q = channel->mRotationKeys[0].mValue;
+            vqs.q = glm::quat(q.w, q.x, q.y, q.z);
+          }
+        }
+
+        if (numScalingKeys > 0)
+        {
+          //if not a perfect match, lerp between the last key and the next key
+          bool scaleKeyFound = false;
+          for (int j = 0; j < numScalingKeys; j++)
+          {
+            if (channel->mScalingKeys[j].mTime == time)
+            {
+              float s = (channel->mScalingKeys[j].mValue.x + channel->mScalingKeys[j].mValue.y + channel->mScalingKeys[j].mValue.z) / 3.0f;
+              vqs.s = s;
+              scaleKeyFound = true;
+            }
+            else if (channel->mScalingKeys[j].mTime < time)
+            {
+              aiVector3D sc = channel->mScalingKeys[j].mValue;
+              float scale1 = (sc.x + sc.y + sc.z) / 3.0f;
+              if (j + 1 < numScalingKeys)
+              {
+                aiVector3D sc2 = channel->mScalingKeys[j + 1].mValue;
+                float scale2 = (sc2.x + sc2.y + sc2.z) / 3.0f;
+                float t1 = channel->mScalingKeys[j].mTime;
+                float t2 = channel->mScalingKeys[j + 1].mTime;
+                float alpha = (time - t1) / (t2 - t1);
+                vqs.s = glm::mix(scale1, scale2, alpha);
+                scaleKeyFound = true;
+              }
+              else
+              {
+                vqs.s = scale1;
+                scaleKeyFound = true;
+              }
+            }
+          }
+          if (!scaleKeyFound)
+          {
+            float s = (channel->mScalingKeys[0].mValue.x + channel->mScalingKeys[0].mValue.y + channel->mScalingKeys[0].mValue.z) / 3.0f;
+            vqs.s = s;
+          }
+        }
+        newChannel.keyFrames.push_back(std::make_pair(time, vqs));
+      }
+
       newAnim.channels.push_back(newChannel);
     }
 
     animator.animations.push_back(newAnim);
   }
 
+  float elerp(float a, float b, float f)
+  {
+    return a + f * (b - a);
+  }
+
   void SkeletalAnimation::UpdateNode(Model& model, SkeletalAnimator& animator, int nodeIndex)
   {
     Model::Node& node = model.nodes[nodeIndex];
-
-    glm::mat4 translation = glm::mat4(1.0f);
-    glm::mat4 rotation = glm::mat4(1.0f);
-    glm::mat4 scaling = glm::mat4(1.0f);
-
-    glm::vec3 v(0.0f, 0.0f, 0.0f);
-    glm::quat q(1.0f, 0.0f, 0.0f, 0.0f);
-    float s = 1.0f;
-    //glm::vec3 s(1.0f, 1.0f, 1.0f);
-
-    //v = node.transform.v;
-    //q = node.transform.q;
-    //s = node.transform.s;
-
-    // Find the channel for this node (if any)
-    
     SkeletalAnimator::Animation& currentAnim = animator.animations[animator.currentAnimation];
+
     SkeletalAnimator::Animation::Channel* channel = nullptr;
     if (nodeIndex < currentAnim.channels.size() && currentAnim.channels[nodeIndex].nodeName == node.name)
     {
@@ -90,17 +221,9 @@ namespace FAR
     }
     else
     {
-      // fallback: search by name
-      std::string assimpextra = "_$AssimpFbx$_Rotation";
-      std::string assimpextrascale = "_$AssimpFbx$_Scaling";
-      std::string assimpextraposition = "_$AssimpFbx$_Translation";
-
+      //fall back to searching by name
       for (auto& ch : currentAnim.channels)
       {
-
-        //if (node.name == ch.nodeName.substr(0, ch.nodeName.size() - assimpextra.size()) ||
-        //  node.name == ch.nodeName.substr(0, ch.nodeName.size() - assimpextrascale.size()) ||
-        //  node.name == ch.nodeName.substr(0, ch.nodeName.size() - assimpextraposition.size()))
         if (ch.nodeName == node.name)
         {
           channel = &ch;
@@ -109,78 +232,22 @@ namespace FAR
       }
     }
 
+    VQS localTransform;
+
     if (channel)
     {
       // Interpolate position
-
-      if (channel->positionKeys.size() == 1)
+      for (int i = 0; i < channel->keyFrames.size() - 1; i++)
       {
-        translation = glm::translate(channel->positionKeys[0].second);
-        v = channel->positionKeys[0].second;
-
-        //if (v == glm::vec3(0.0f, 0.0f, 0.0f))
-        //{
-        //  v = glm::vec3(0.0f, 1.0f, 0.0f);
-        //}
-      }
-
-      for (int j = 0; j < channel->positionKeys.size() - 1; j++)
-      {
-        if (animator.animationTime >= channel->positionKeys[j].first && animator.animationTime <= channel->positionKeys[j + 1].first)
+        if (animator.animationTime >= channel->keyFrames[i].first && animator.animationTime <= channel->keyFrames[i + 1].first)
         {
-          float alpha = (animator.animationTime - channel->positionKeys[j].first) / (channel->positionKeys[j + 1].first - channel->positionKeys[j].first);
-          glm::vec3 pos = glm::mix(channel->positionKeys[j].second, channel->positionKeys[j + 1].second, alpha);
-          //translation = glm::translate(glm::mat4(1.0f), pos);
-          v = pos;
+          float alpha = (animator.animationTime - channel->keyFrames[i].first) / (channel->keyFrames[i + 1].first - channel->keyFrames[i].first);
+          VQS kf1 = channel->keyFrames[i].second;
+          VQS kf2 = channel->keyFrames[i + 1].second;
+          localTransform = VQS::Interpolate(kf1, kf2, alpha);
           break;
         }
       }
-
-      // Interpolate rotation
-
-      if (channel->rotationKeys.size() == 1)
-      {
-        rotation = glm::mat4_cast(channel->rotationKeys[0].second);
-        q = channel->rotationKeys[0].second;
-      }
-
-      for (int j = 0; j < channel->rotationKeys.size() - 1; j++)
-      {
-        if (animator.animationTime >= channel->rotationKeys[j].first && animator.animationTime <= channel->rotationKeys[j + 1].first)
-        {
-          float alpha = (animator.animationTime - channel->rotationKeys[j].first) / (channel->rotationKeys[j + 1].first - channel->rotationKeys[j].first);
-          glm::quat rot = glm::slerp(channel->rotationKeys[j].second, channel->rotationKeys[j + 1].second, alpha);
-          //rotation = glm::mat4_cast(rot);
-          q = rot;
-          break;
-        }
-      }
-
-      // Interpolate scaling
-
-      if (channel->scalingKeys.size() == 1)
-      {
-        scaling = glm::scale(channel->scalingKeys[0].second);
-        s = (channel->scalingKeys[0].second.x + channel->scalingKeys[0].second.y + channel->scalingKeys[0].second.z) / 3.0f; //assume uniform scale for now
-      }
-
-      for (int j = 0; j < channel->scalingKeys.size() - 1; j++)
-      {
-        if (animator.animationTime >= channel->scalingKeys[j].first && animator.animationTime <= channel->scalingKeys[j + 1].first)
-        {
-          float alpha = (animator.animationTime - channel->scalingKeys[j].first) / (channel->scalingKeys[j + 1].first - channel->scalingKeys[j].first);
-          glm::vec3 scale = glm::mix(channel->scalingKeys[j].second, channel->scalingKeys[j + 1].second, alpha);
-          //scaling = glm::scale(glm::mat4(1.0f), scale);
-          s = (scale.x + scale.y + scale.z) / 3.0f; //assume uniform scale for now
-          break;
-        }
-      }
-
-      VQS localTransform = VQS(v, q, s);
-      //VQS globalTransform = parentTransform * localTransform;
-      //VQS globalTransform = localTransform * parentTransform;
-
-      //node.transform = globalTransform;
       node.transform = localTransform;
     }
   }
@@ -196,36 +263,11 @@ namespace FAR
     for (const Entity& e : entities)
     {
       SkeletalAnimator& sk = Engine::GetInstance()->GetComponent<SkeletalAnimator>(e);
-
       if (sk.path != "" && sk.animations.size() == 0)
       {
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(sk.path, aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_Triangulate | aiProcess_OptimizeGraph | aiProcess_GlobalScale);
-
-
-
-        std::cout << sk.path << std::endl << std::endl;
-        for (int i = 0; i < scene->mMetaData->mNumProperties; i++)
-        {
-          std::cout << "metadata: " << scene->mMetaData->mKeys[i].C_Str() << ", " << scene->mMetaData->mValues[i].mType << "  ";
-
-          switch (scene->mMetaData->mValues[i].mType)
-          {
-          case AI_BOOL:  std::cout << *(bool*)(scene->mMetaData->mValues[i].mData) << std::endl; break;
-          AI_INT32:      std::cout << *(int*)(scene->mMetaData->mValues[i].mData) << std::endl; break;
-          AI_UINT64:     std::cout << *(uint64_t*)(scene->mMetaData->mValues[i].mData) << std::endl; break;
-          AI_FLOAT:      std::cout << *(float*)(scene->mMetaData->mValues[i].mData) << std::endl; break;
-          AI_DOUBLE:     std::cout << *(double*)(scene->mMetaData->mValues[i].mData) << std::endl; break;
-          AI_AISTRING:   std::cout << *(char**)(scene->mMetaData->mValues[i].mData) << std::endl; break;
-            //AI_AIVECTOR3D: std::cout << *(glm::vec3*)(scene->mMetaData->mValues[i].mData) << std::endl;
-            //AI_AIMETADATA: std::cout << ()(scene->mMetaData->mValues[i].mData) << std::endl;
-          AI_INT64:      std::cout << *(long int*)(scene->mMetaData->mValues[i].mData) << std::endl; break;
-          AI_UINT32:     std::cout << *(uint32_t*)(scene->mMetaData->mValues[i].mData) << std::endl; break;
-          }
-
-          std::cout << std::endl;
-        }
-          LoadAnimationData(scene, sk);
+        LoadAnimationData(scene, sk);
       }
     }
   }
@@ -241,7 +283,8 @@ namespace FAR
 
       float dt = Engine::GetInstance()->dt;
 
-      sk.animationTime += dt * sk.animations[sk.currentAnimation].ticksPerSecond;
+      if (sk.playing)
+        sk.animationTime += dt * sk.animations[sk.currentAnimation].ticksPerSecond;
 
       if (sk.looping)
       {
