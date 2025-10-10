@@ -165,6 +165,9 @@ namespace FAR
       {
         ImGui::Text(sk.path.c_str());
         ImGui::Checkbox("Looping", &sk.looping);
+        ImGui::Checkbox("Playing", &sk.playing);
+
+        ImGui::DragFloat("Animation Time", &sk.animationTime, 0.1f, 0, sk.animations[sk.currentAnimation].duration);
 
         if (ImGui::BeginCombo("Animation", sk.animations[sk.currentAnimation].name.c_str()))
         {

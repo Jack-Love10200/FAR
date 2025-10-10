@@ -9,24 +9,22 @@ struct SkeletalAnimator
 
   struct Animation
   {
-
-
-    //glm::mat4 globalInverseTransform{ 1.0f };
     std::string name{ "" };
     float duration{ 0.0f };
     float ticksPerSecond{ 0.0f };
+
     struct Channel
     {
       std::string nodeName{ "" };
-      std::vector<std::pair<float, glm::vec3>> positionKeys;
-      std::vector<std::pair<float, glm::quat>> rotationKeys;
-      std::vector<std::pair<float, glm::vec3>> scalingKeys;
+      std::vector<std::pair<float, VQS>> keyFrames;
     };
+
     std::vector<Channel> channels;
   };
 
   int currentAnimation = 0;
   std::vector<Animation> animations;
 
+  bool playing;
   bool looping;
 };

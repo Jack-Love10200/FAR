@@ -52,7 +52,6 @@ namespace FAR
     GLuint CreateShaderProgram(const std::filesystem::path& vertex, const std::filesystem::path& fragment);
     void LoadModel(const std::filesystem::path& filepath, Model& model);
 
-    //void LoadAnimationData(const aiScene* scene, Model& model);
     void CreateVAO(const meshInfo& m, Model& model);
 
     void LoadNodes(const aiNode* node, const aiScene* scene, Model& model, int parentIndex, VQS parentTransform);
@@ -64,14 +63,8 @@ namespace FAR
 
     void PutNodesInModelSpace(Model& model, aiMesh* mesh);
 
-    //void AnimUpdateNode(Model& model, int nodeIndex, float animationTime, const VQS& parentTransform);
-
     void ApplyNodeHeirarchy(std::vector<Model::Node>& nodes, int nodeIndex, const VQS& parentTransform);
-
     void CreateLinesVAO();
-
-    //void AnimUpdate();
-
 
     GLuint lineVAO;
 

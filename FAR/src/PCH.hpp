@@ -14,6 +14,7 @@
 #include <functional>
 #include <memory>
 #include <utility>
+#include <set>
 
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtc/matrix_transform.hpp>
