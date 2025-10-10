@@ -9,7 +9,8 @@ class VQS
 public:
 
   glm::vec3 v; // translation
-  glm::quat q; // rotation
+  //glm::quat q; // rotation
+  FAR::Quat q; // rotation
   //float s;     // scale
   glm::vec3 s;
 
@@ -20,7 +21,7 @@ public:
   //}
 
   VQS() : v(0.0f), q(1.0f, 0.0f, 0.0f, 0.0f), s(1.0f, 1.0f, 1.0f) {}
-  VQS(const glm::vec3& translation, const glm::quat& rotation, glm::vec3 scale)
+  VQS(const glm::vec3& translation, const FAR::Quat& rotation, glm::vec3 scale)
     : v(translation), q(rotation), s(scale) 
   {
   }
@@ -42,14 +43,14 @@ public:
     rotMatrix[0] /= s;
     rotMatrix[1] /= s;
     rotMatrix[2] /= s;
-    q = glm::quat_cast(rotMatrix);
+    q = FAR::Quat::FromMatrix(rotMatrix);
   }
 
   // Convert to a 4x4 transformation matrix
   glm::mat4 ToMatrix() const 
   {
     glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), v);
-    glm::mat4 rotationMatrix = glm::mat4_cast(q);
+    glm::mat4 rotationMatrix = q.ToMatrix();
     glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(s));
     return translationMatrix * rotationMatrix * scaleMatrix;
   }
@@ -57,7 +58,7 @@ public:
   VQS operator*(const VQS& other) const 
   {
     glm::vec3 newV = *this * other.v; // Apply this transformation to other's translation
-    glm::quat newQ = this->q * other.q; // Combine rotations
+    FAR::Quat newQ = this->q * other.q; // Combine rotations
 
     //float newS = this->s * other.s; // Combine scales
     glm::vec3 newS = this->s * other.s; // Combine scales
@@ -91,12 +92,22 @@ public:
   //lerp position
   //slerp rotation
   //elerp scale
+
+  static VQS IncrementalInterpolate(VQS prev, VQS next, float alpha, float incval)
+  {
+    VQS retval;
+    retval.v = prev.v + (next.v * alpha);
+    retval.q = FAR::Quat::Slerp(prev.q, next.q, alpha);
+    retval.s = elerp(prev.s, next.s * alpha, alpha);
+    return retval;
+  }
+
   static VQS Interpolate(VQS left, VQS right, float alpha)
   {
     VQS retval;
 
     retval.v = glm::mix(left.v, right.v, alpha);
-    retval.q = glm::slerp(left.q, right.q, alpha);
+    retval.q = FAR::Quat::Slerp(left.q, right.q, alpha);
     retval.s = elerp(left.s, right.s, alpha);
 
     return retval;

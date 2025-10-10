@@ -120,22 +120,22 @@ namespace FAR
             if (channel->mRotationKeys[j].mTime == time)
             {
               aiQuaternion q = channel->mRotationKeys[j].mValue;
-              vqs.q = glm::quat(q.w, q.x, q.y, q.z);
+              vqs.q = Quat(q.w, q.x, q.y, q.z);
               rotKeyFound = true;
             }
             //if not a perfect match, lerp between the last key and the next key
             else if (channel->mRotationKeys[j].mTime < time)
             {
               aiQuaternion q = channel->mRotationKeys[j].mValue;
-              glm::quat rot1 = glm::quat(q.w, q.x, q.y, q.z);
+              Quat rot1 = Quat(q.w, q.x, q.y, q.z);
               if (j + 1 < numRotationKeys)
               {
                 aiQuaternion q2 = channel->mRotationKeys[j + 1].mValue;
-                glm::quat rot2 = glm::quat(q2.w, q2.x, q2.y, q2.z);
+                Quat rot2 = Quat(q2.w, q2.x, q2.y, q2.z);
                 float t1 = channel->mRotationKeys[j].mTime;
                 float t2 = channel->mRotationKeys[j + 1].mTime;
                 float alpha = (time - t1) / (t2 - t1);
-                vqs.q = glm::slerp(rot1, rot2, alpha);
+                vqs.q = Quat::Slerp(rot1, rot2, alpha);
                 rotKeyFound = true;
               }
               else
@@ -148,7 +148,7 @@ namespace FAR
           if (!rotKeyFound)
           {
             aiQuaternion q = channel->mRotationKeys[0].mValue;
-            vqs.q = glm::quat(q.w, q.x, q.y, q.z);
+            vqs.q = Quat(q.w, q.x, q.y, q.z);
           }
         }
 
@@ -281,14 +281,9 @@ namespace FAR
         sk.animationTime += dt * sk.animations[sk.currentAnimation].ticksPerSecond;
 
       if (sk.looping)
-      {
         sk.animationTime = fmod(sk.animationTime, sk.animations[sk.currentAnimation].duration);
-      }
-      else
-      {
-        if (sk.animationTime > sk.animations[sk.currentAnimation].duration)
-          sk.animationTime = sk.animations[sk.currentAnimation].duration;
-      }
+      else if (sk.animationTime > sk.animations[sk.currentAnimation].duration)
+        sk.animationTime = sk.animations[sk.currentAnimation].duration;
 
       for (int i = 0; i < model.nodes.size(); i++)
       {

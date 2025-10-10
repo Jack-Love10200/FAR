@@ -126,7 +126,8 @@ namespace FAR
       if (ImGui::TreeNode("Transform Component"))
       {
         ImGui::DragFloat3("Position", &transform.position[0], 0.1f);
-        ImGui::DragFloat3("Rotation", &transform.rotation[0], 0.1f);
+        //ImGui::DragFloat3("Rotation", &transform.rotation[0], 0.1f);
+        ImGui::DragFloat4("RotationQuat", (float*) & transform.rotationQuaternion, 0.1f);
         ImGui::DragFloat3("Scale", &transform.scale[0], 0.1f);
         ImGui::TreePop();
       }
