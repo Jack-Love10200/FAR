@@ -68,10 +68,6 @@ namespace FAR
 
       for (float time : keyTimes)
       {
-        //glm::vec3 pos(0.0f, 0.0f, 0.0f);
-        //glm::quat rot(1.0f, 0.0f, 0.0f, 0.0f);
-        //glm::vec3 scale(1.0f, 1.0f, 1.0f);
-
         VQS vqs;
 
         if (numPositionKeys > 0)
@@ -164,18 +160,18 @@ namespace FAR
           {
             if (channel->mScalingKeys[j].mTime == time)
             {
-              float s = (channel->mScalingKeys[j].mValue.x + channel->mScalingKeys[j].mValue.y + channel->mScalingKeys[j].mValue.z) / 3.0f;
+              glm::vec3 s = glm::vec3(channel->mScalingKeys[j].mValue.x, channel->mScalingKeys[j].mValue.y, channel->mScalingKeys[j].mValue.z);
               vqs.s = s;
               scaleKeyFound = true;
             }
             else if (channel->mScalingKeys[j].mTime < time)
             {
               aiVector3D sc = channel->mScalingKeys[j].mValue;
-              float scale1 = (sc.x + sc.y + sc.z) / 3.0f;
+              glm::vec3 scale1 = glm::vec3(sc.x, sc.y, sc.z);
               if (j + 1 < numScalingKeys)
               {
                 aiVector3D sc2 = channel->mScalingKeys[j + 1].mValue;
-                float scale2 = (sc2.x + sc2.y + sc2.z) / 3.0f;
+                glm::vec3 scale2 = glm::vec3(sc2.x, sc2.y, sc2.z);
                 float t1 = channel->mScalingKeys[j].mTime;
                 float t2 = channel->mScalingKeys[j + 1].mTime;
                 float alpha = (time - t1) / (t2 - t1);
@@ -191,16 +187,14 @@ namespace FAR
           }
           if (!scaleKeyFound)
           {
-            float s = (channel->mScalingKeys[0].mValue.x + channel->mScalingKeys[0].mValue.y + channel->mScalingKeys[0].mValue.z) / 3.0f;
+            glm::vec3 s = glm::vec3(channel->mScalingKeys[0].mValue.x, channel->mScalingKeys[0].mValue.y, channel->mScalingKeys[0].mValue.z);
             vqs.s = s;
           }
         }
         newChannel.keyFrames.push_back(std::make_pair(time, vqs));
       }
-
       newAnim.channels.push_back(newChannel);
     }
-
     animator.animations.push_back(newAnim);
   }
 
