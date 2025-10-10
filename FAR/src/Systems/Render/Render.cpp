@@ -516,7 +516,7 @@ namespace FAR
       transform.modelMatrix = glm::translate(transform.modelMatrix, transform.position);
       transform.modelMatrix = glm::scale(transform.modelMatrix, transform.scale);
       //transform.modelMatrix = transform.modelMatrix * glm::eulerAngleXYZ(glm::radians(transform.rotation.x), glm::radians(transform.rotation.y), glm::radians(transform.rotation.z));
-      transform.modelMatrix = transform.modelMatrix * glm::mat4_cast(transform.rotationQuaternion);
+      transform.modelMatrix = transform.modelMatrix * transform.rotationQuaternion.ToMatrix();
     }
 
     //assuming exactly one main cam for now
