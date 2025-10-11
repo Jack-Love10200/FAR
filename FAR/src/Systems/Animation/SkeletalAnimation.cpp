@@ -193,6 +193,7 @@ namespace FAR
         }
         newChannel.keyFrames.push_back(std::make_pair(time, vqs));
       }
+      ComputeIncrementalInterpolationConstants(newChannel, newAnim.ticksPerSecond);
       newAnim.channels.push_back(newChannel);
     }
     animator.animations.push_back(newAnim);
@@ -207,6 +208,8 @@ namespace FAR
   {
     Model::Node& node = model.nodes[nodeIndex];
     SkeletalAnimator::Animation& currentAnim = animator.animations[animator.currentAnimation];
+
+    VQS prevTransform = node.transform;
 
     SkeletalAnimator::Animation::Channel* channel = nullptr;
     if (nodeIndex < currentAnim.channels.size() && currentAnim.channels[nodeIndex].nodeName == node.name)
@@ -223,7 +226,7 @@ namespace FAR
           channel = &ch;
           break;
         }
-      }
+      } 
     }
 
     VQS localTransform;
@@ -233,16 +236,91 @@ namespace FAR
       // Interpolate position
       for (int i = 0; i < channel->keyFrames.size() - 1; i++)
       {
-        if (animator.animationTime >= channel->keyFrames[i].first && animator.animationTime <= channel->keyFrames[i + 1].first)
+        if (animator.animationTime >= channel->keyFrames[i].first && animator.animationTime < channel->keyFrames[i + 1].first)
         {
-          float alpha = (animator.animationTime - channel->keyFrames[i].first) / (channel->keyFrames[i + 1].first - channel->keyFrames[i].first);
-          VQS kf1 = channel->keyFrames[i].second;
-          VQS kf2 = channel->keyFrames[i + 1].second;
-          localTransform = VQS::Interpolate(kf1, kf2, alpha);
-          break;
+          if (channel->currentKeyFrame != i)
+          {
+            prevTransform = channel->keyFrames[i].second;
+            channel->currentKeyFrame = i;
+
+            if (channel->nodeName == "LeftLeg_rD_red_$AssimpFbx$_Rotation")
+            std::cout << "kf" << std::endl;
+
+            node.transform = prevTransform;
+            return;
+          }
+          else
+          {
+            if (channel->nodeName == "LeftLeg_rD_red_$AssimpFbx$_Rotation")
+            std::cout << " not kf" << std::endl;
+          }
+
+          localTransform = VQS::IncrementalInterpolate(prevTransform, channel->incrementalValues[i].second);
         }
       }
       node.transform = localTransform;
+    }
+  }
+
+  void SkeletalAnimation::ComputeIncrementalInterpolationConstants(SkeletalAnimator::Animation::Channel& channel, float tps)
+  {
+    float fps = 60.0f;
+
+    for (int i = 0; i < channel.keyFrames.size() - 1; i++)
+    {
+      float duration = (channel.keyFrames[i + 1].first - channel.keyFrames[i].first);
+
+      float ticksPerFrame = tps / fps;
+
+      int n = duration / ticksPerFrame;
+      float a = glm::acos(glm::clamp(Quat::Dot(channel.keyFrames[i].second.q, channel.keyFrames[i + 1].second.q), -1.0f, 1.0f));
+
+      VQS increment;
+        VQS kf1 = channel.keyFrames[i].second;
+        VQS kf2 = channel.keyFrames[i + 1].second;
+
+        kf1.q.Normalize();
+        kf2.q.Normalize();
+
+      if (a < std::numeric_limits<float>::epsilon())
+      {
+        increment.q = Quat(1, 0, 0, 0);
+      }
+      else
+      {
+
+        float B = a / (float)n;
+
+        glm::vec3 u0 = glm::vec3(kf1.q.x, kf1.q.y, kf1.q.z);
+        glm::vec3 un = glm::vec3(kf2.q.x, kf2.q.y, kf2.q.z);
+
+        float w0 = kf1.q.w;
+        float wn = kf2.q.w;
+
+        glm::vec3 u;
+
+        //u = ((w0 * u0) - (wn * un) + glm::cross(u0, un)) / sin(a);
+
+        u = (kf2.q * kf1.q.Conjugate()).GetVectorPart() / sin(a);
+
+        u = glm::normalize(u);
+
+        float sinB = sin(B);
+
+
+        glm::vec3 sinBu = sinB * u;
+
+        increment.q = Quat(cos(B), sinBu.x, sinBu.y, sinBu.z);
+        increment.q.Normalize();
+
+      }
+        increment.v = (kf2.v - kf1.v) / (float)n;
+
+        increment.s.x = pow(kf2.s.x / kf1.s.x, 1.0f / float(n));
+        increment.s.y = pow(kf2.s.y / kf1.s.y, 1.0f / float(n));
+        increment.s.z = pow(kf2.s.z / kf1.s.z, 1.0f / float(n));
+
+        channel.incrementalValues.push_back({ channel.keyFrames[i].first, increment });
     }
   }
 

@@ -13,20 +13,32 @@ namespace FAR
     float z;
     Quat() : w(1.0f), x(0.0f), y(0.0f), z(0.0f) {}
     Quat(float w, float x, float y, float z) : w(w), x(x), y(y), z(z) {}
+    Quat(float w, glm::vec3 v) : w(w), x(v.x), y(v.y), z(v.z) {}
     
     Quat operator*(const Quat& other) const
     {
-      return Quat(
-        w * other.w - x * other.x - y * other.y - z * other.z,
-        w * other.x + x * other.w + y * other.z - z * other.y,
-        w * other.y - x * other.z + y * other.w + z * other.x,
-        w * other.z + x * other.y - y * other.x + z * other.w);
+
+      glm::vec3 v = glm::vec3(x, y, z);
+      glm::vec3 qv = glm::vec3(other.x, other.y, other.z);
+
+      //return Qu(s * q.s - glm::dot(v, q.v), glm::vec3(s * q.v + q.s * v + glm::cross(v, q.v)));
+      return Quat(w * other.w - glm::dot(v, qv), glm::vec3(w * qv + other.w * v + glm::cross(v, qv)));
+      //return Quat(
+      //  w * other.w - x * other.x - y * other.y - z * other.z,
+      //  w * other.x + x * other.w + y * other.z - z * other.y,
+      //  w * other.y - x * other.z + y * other.w + z * other.x,
+      //  w * other.z + x * other.y - y * other.x + z * other.w);
     }
     glm::vec3 operator*(const glm::vec3& v) const
     {
       glm::vec3 qVec(x, y, z);
       glm::vec3 t = 2.0f * glm::cross(qVec, v);
       return v + w * t + glm::cross(qVec, t);
+    }
+
+    glm::vec3 GetVectorPart()
+    {
+      return glm::vec3(x, y, z);
     }
 
     float Length() const
@@ -49,6 +61,11 @@ namespace FAR
       return Quat(std::cos(halfAngle), axis.x * s, axis.y * s, axis.z * s).Normalize();
     }
 
+    Quat Conjugate() const
+    {
+      return Quat(w, -x, -y, -z);
+    }
+
     Quat operator*(float scalar) const
     {
       return Quat(w * scalar, x * scalar, y * scalar, z * scalar);
@@ -69,7 +86,6 @@ namespace FAR
       return Quat(q.w / scalar, q.x / scalar, q.y / scalar, q.z / scalar);
     }
 
-    private:
       static float Dot(const Quat& q1, const Quat& q2)
       {
         return q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
@@ -181,6 +197,11 @@ namespace FAR
       Result[2][1] = 2.0f * (qyz - qwx);
       Result[2][2] = 1.0f - 2.0f * (qxx + qyy);
       return Result;
+    }
+
+    static Quat Islerp(Quat left, Quat right, float k, int n)
+    {
+      
     }
 
 

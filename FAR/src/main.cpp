@@ -29,6 +29,18 @@
 #include "Resources/WindowResource.hpp"
 #include "Resources/RenderResource.hpp"
 
+void BusyWaitFrameRateControl(float targetFrameTime)
+{
+  auto start = std::chrono::high_resolution_clock::now();
+  while (true)
+  {
+    auto now = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float> elapsed = now - start;
+    if (elapsed.count() >= targetFrameTime)
+      break;
+  }
+} 
+
 int main()
 {
   FAR::Engine engine;
@@ -53,11 +65,14 @@ int main()
 
   engine.Init();
 
+
+
   while (true)
   {
     engine.PreUpdate();
     engine.Update();
     engine.PostUpdate();
+    BusyWaitFrameRateControl(1.0f / 60.0f);
   }
 
   engine.Exit();

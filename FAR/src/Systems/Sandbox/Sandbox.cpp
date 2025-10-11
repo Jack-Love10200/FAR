@@ -16,39 +16,39 @@ namespace FAR
     engine.CreateComponent(cam, Camera{ .isMain = true });
     engine.CreateComponent(cam, Transform{ .position = glm::vec3(0.0f, 0.0f, 0.0f), .rotationQuaternion = Quat(0.0f, 0.0f, 0.0f, 1.0f)});
 
-    jack = engine.CreateEntity();
-    engine.CreateComponent(jack, Model{ .path = "assets/jack_samba.glb", .textured = true});
-    engine.CreateComponent(jack, Transform{ .position = glm::vec3(0.0f, 0.0f, -3.0f), .scale = glm::vec3(0.1f, 0.1f, 0.1f) });
-    engine.CreateComponent(jack, SkeletalAnimator{ .path = "assets/jack_samba.glb", .currentAnimation = 0 });
+    //jack = engine.CreateEntity();
+    //engine.CreateComponent(jack, Model{ .path = "assets/jack_samba.glb", .textured = true});
+    //engine.CreateComponent(jack, Transform{ .position = glm::vec3(0.0f, 0.0f, -3.0f), .scale = glm::vec3(0.1f, 0.1f, 0.1f) });
+    //engine.CreateComponent(jack, SkeletalAnimator{ .path = "assets/jack_samba.glb", .currentAnimation = 0 });
 
-    adi = engine.CreateEntity();
-    engine.CreateComponent(adi, Model{ .path = "assets/Adi_Dancing.fbx", .textured = false});
-    engine.CreateComponent(adi, Transform{ .position = glm::vec3(1.0f, 0.0f, -3.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
-    engine.CreateComponent(adi,  SkeletalAnimator{ .path = "assets/Adi_Dancing.fbx", .currentAnimation = 0 });
+    //adi = engine.CreateEntity();
+    //engine.CreateComponent(adi, Model{ .path = "assets/Adi_Dancing.fbx", .textured = false});
+    //engine.CreateComponent(adi, Transform{ .position = glm::vec3(1.0f, 0.0f, -3.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
+    //engine.CreateComponent(adi,  SkeletalAnimator{ .path = "assets/Adi_Dancing.fbx", .currentAnimation = 0 });
 
     roman = engine.CreateEntity();
     engine.CreateComponent(roman, Model{ .path = "assets/CS460Models/fbx/roman_D.fbx", .textured = true });
     engine.CreateComponent(roman, Transform{ .position = glm::vec3(0.0f, 0.0f, -100.0f), .scale = glm::vec3(100.0f, 100.0f, 100.0f) });
-    engine.CreateComponent(roman, SkeletalAnimator{ .path = "assets/CS460Models/fbx/roman_D.fbx", .currentAnimation = 0, .looping = true});
+    engine.CreateComponent(roman, SkeletalAnimator{ .path = "assets/CS460Models/fbx/roman_D.fbx", .currentAnimation = 0, .playing = true, .looping = true});
 
-    egyptian = engine.CreateEntity();
-    engine.CreateComponent(egyptian, Model{ .path = "assets/CS460Models/fbx/egyptian_B.fbx", .textured = false });
-    engine.CreateComponent(egyptian, Transform{ .position = glm::vec3(-50.0f, 0.0f, -100.0f), .scale = glm::vec3(100.0f, 100.0f, 100.0f) });
-    engine.CreateComponent(egyptian, SkeletalAnimator{ .path = "assets/CS460Models/fbx/egyptian_B.fbx", .currentAnimation = 0, .looping = true});
+    //egyptian = engine.CreateEntity();
+    //engine.CreateComponent(egyptian, Model{ .path = "assets/CS460Models/fbx/egyptian_B.fbx", .textured = false });
+    //engine.CreateComponent(egyptian, Transform{ .position = glm::vec3(-50.0f, 0.0f, -100.0f), .scale = glm::vec3(100.0f, 100.0f, 100.0f) });
+    //engine.CreateComponent(egyptian, SkeletalAnimator{ .path = "assets/CS460Models/fbx/egyptian_B.fbx", .currentAnimation = 0, .looping = true});
 
-    viking = engine.CreateEntity();
-    engine.CreateComponent(viking, Model{ .path = "assets/CS460Models/fbx/viking_C.fbx", .textured = true });
-    engine.CreateComponent(viking, Transform{ .position = glm::vec3(50.0f, 0.0f, -100.0f), .scale = glm::vec3(100.0f, 100.0f, 100.0f) });
-    engine.CreateComponent(viking, SkeletalAnimator{ .path = "assets/CS460Models/fbx/viking_C.fbx", .currentAnimation = 0, .looping = true });
+    //viking = engine.CreateEntity();
+    //engine.CreateComponent(viking, Model{ .path = "assets/CS460Models/fbx/viking_C.fbx", .textured = true });
+    //engine.CreateComponent(viking, Transform{ .position = glm::vec3(50.0f, 0.0f, -100.0f), .scale = glm::vec3(100.0f, 100.0f, 100.0f) });
+    //engine.CreateComponent(viking, SkeletalAnimator{ .path = "assets/CS460Models/fbx/viking_C.fbx", .currentAnimation = 0, .looping = true });
 
     //okayu = engine.CreateEntity();
     //engine.CreateComponent(okayu, Model{ .path = "assets/okayu/okayu.pmx", .textured = true});
     //engine.CreateComponent(okayu, Transform{ .position = glm::vec3(-10.0f, 0.0f, -30.0f), .rotation = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
 
-    pika = engine.CreateEntity();
-    engine.CreateComponent(pika, Model{ .path = "assets/pika.fbx", .textured = false});
-    engine.CreateComponent(pika, Transform{ .position = glm::vec3(-20.0f, 0.0f, -5.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
-    engine.CreateComponent(pika, SkeletalAnimator{ .path = "assets/pika.fbx", .currentAnimation = 0, .looping = true });
+    //pika = engine.CreateEntity();
+    //engine.CreateComponent(pika, Model{ .path = "assets/pika.fbx", .textured = false});
+    //engine.CreateComponent(pika, Transform{ .position = glm::vec3(-20.0f, 0.0f, -5.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
+    //engine.CreateComponent(pika, SkeletalAnimator{ .path = "assets/pika.fbx", .currentAnimation = 0, .looping = true });
   }
 
   void Sandbox::PreUpdate()

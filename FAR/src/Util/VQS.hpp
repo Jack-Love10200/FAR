@@ -40,9 +40,9 @@ public:
 
     // Extract rotation
     glm::mat3 rotMatrix = glm::mat3(matrix);
-    rotMatrix[0] /= s;
-    rotMatrix[1] /= s;
-    rotMatrix[2] /= s;
+    rotMatrix[0] /= s.x;
+    rotMatrix[1] /= s.y;
+    rotMatrix[2] /= s.z;
     q = FAR::Quat::FromMatrix(rotMatrix);
   }
 
@@ -77,7 +77,13 @@ public:
 
   static float elerp(float a, float b, float f)
   {
-    return a * pow(b / a, f);
+    // Handle edge cases safely
+    if (std::abs(a) < std::numeric_limits<float>::epsilon() ||
+      std::abs(b) < std::numeric_limits<float>::epsilon() ||
+      (a * b < 0)) {
+      return glm::mix(a, b, f);  // Fallback to linear
+    }
+    return a * std::pow(b / a, f);
   }
 
   static glm::vec3 elerp(const glm::vec3& a, const glm::vec3& b, float f)
@@ -93,12 +99,12 @@ public:
   //slerp rotation
   //elerp scale
 
-  static VQS IncrementalInterpolate(VQS prev, VQS next, float alpha, float incval)
+  static VQS IncrementalInterpolate(VQS left, VQS right)
   {
     VQS retval;
-    retval.v = prev.v + (next.v * alpha);
-    retval.q = FAR::Quat::Slerp(prev.q, next.q, alpha);
-    retval.s = elerp(prev.s, next.s * alpha, alpha);
+    retval.v = left.v + right.v;
+    retval.q = right.q * left.q;
+    retval.s = left.s * right.s;
     return retval;
   }
 
