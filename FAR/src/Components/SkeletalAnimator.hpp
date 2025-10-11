@@ -16,7 +16,11 @@ struct SkeletalAnimator
     struct Channel
     {
       std::string nodeName{ "" };
+
+      int currentKeyFrame = 0;
+
       std::vector<std::pair<float, VQS>> keyFrames;
+      std::vector<std::pair<float, VQS>> incrementalValues;
     };
 
     std::vector<Channel> channels;

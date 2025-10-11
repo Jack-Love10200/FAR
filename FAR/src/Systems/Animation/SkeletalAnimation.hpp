@@ -35,6 +35,8 @@ namespace FAR
 
     void UpdateNode(Model& model, SkeletalAnimator& animator, int nodeIndex);
 
+    void ComputeIncrementalInterpolationConstants(SkeletalAnimator::Animation::Channel& channel, float tps);
+
     //void LoadBoneNodes(const aiNode* node, SkeletalAnimator& animator, int parentIndex, const VQS& parentTransform);
 
   };
