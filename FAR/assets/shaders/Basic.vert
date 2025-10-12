@@ -17,91 +17,23 @@ out vec4 vert_color;
 
 void main()
 {
-
     vec4 totalPosition = vec4(0.0f);
-    
-    bool validBoneFound = false;
 
-        for (uint i = 0; i < 1 ; i++)
-        {
-            //if(bones[i] == -1) continue;
-
-            //vec4 localPosition = BoneTransforms[bones[i]] * vec4(vertex_position.xyz,1.0f);
-            //vec4 localPosition = BoneTransforms[bones[i]] * vertex_position;
-            //totalPosition += localPosition * weights[i];
-            //totalPosition += localPosition;
-
-
-            validBoneFound = true;
-        }
-    
-    if (!validBoneFound || totalPosition == vec4(0.0))
-    {
-		//totalPosition = vec4(vertex_position.xyz, 1.0);
-		totalPosition = vertex_position;
-	}
-
-
-  mat4 skinMat =
+    //compute skinning matrix
+    mat4 skinMat =
     BoneTransforms[bones.x] * weights.x +
     BoneTransforms[bones.y] * weights.y +
     BoneTransforms[bones.z] * weights.z +
     BoneTransforms[bones.w] * weights.w;
 
+    //apply skinning to the vertex position
     if (useSkinning)
     totalPosition = skinMat * vec4(vertex_position.xyz, 1.0f);
     else
     totalPosition = vec4(vertex_position.xyz, 1.0f);
 
+    //outputs to the fragment shader
     gl_Position = Projection * Viewing * Modeling * totalPosition;
-
-    //gl_Position = gl_Position / gl_Position.w;
-
-    vert_color = vec4(weights[0], 1 - weights[1], weights[2], weights[3]);
-
-    vert_color = vec4(gl_Position.xyz / gl_Position.w * 0.5 + 0.5, 1.0);
-
-    vert_color = vec4(
-    float(bones[0]) / 4,
-    float(bones[1]) / 4,
-    float(bones[2]) / 4,
-    1.0);
-
     vert_color = vec4(uv.xy, 1.0f, 1.0f);
-
-  frag_uv = uv;
+    frag_uv = uv;
 }
-
-
-
-
-
-//void main()
-//{
-//  float totalweight = 0.0f;
-//  mat4 skinning = mat4(0.0);
-//  for(int i = 0; i < 4; i++)
-//  {
-//    if(weights[i] > 0.0)
-//    {
-//      skinning += weights[i] * BoneTransforms[bones[i]];
-//      totalweight += weights[i];
-//    }
-//  }
-//
-//  if (totalweight > 0.0)
-//    skinning /= totalweight;
-//  else
-//    skinning = mat4(1.0);
-//
-//
-//  mat4 skinnedModeling = Modeling * skinning;
-//  //mat4 skinnedModeling = skinning * Modeling;
-//
-//  gl_Position = Projection * Viewing * skinnedModeling * vertex_position;
-//  //gl_Position = Projection * Viewing * Modeling * vertex_position;
-//
-//  //gl_Position = BoneTransforms[bones[0]][3];
-//
-//  frag_uv = uv.xyz;
-//}

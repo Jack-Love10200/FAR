@@ -66,12 +66,24 @@
     <ClCompile Include="src\Systems\Editor\EditorSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\PCH\STB_Impls.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Util\Quaternion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Util\VQS.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Util\MathHelpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Engine\Engine.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\PCH.hpp">
+    <ClInclude Include="src\PCH\PCH.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Systems\Render\Render.hpp">
@@ -149,11 +161,17 @@
     <ClInclude Include="src\Util\Quaternion.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Util\MathHelpers.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\Basic.vert" />
     <None Include="assets\shaders\Basic.frag" />
     <None Include="assets\shaders\Ray.frag" />
     <None Include="assets\shaders\Ray.vert" />
+    <None Include="src\Engine\Engine.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

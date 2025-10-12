@@ -1,11 +1,12 @@
-#include "PCH.hpp"
+///
+/// @file   Engine.cpp
+/// @brief  Entitiy/Component/System/Resource manager (ECS) game engine core.
+/// @author Jack Love
+/// @date   11.10.2025
+///
+#include "PCH/PCH.hpp"
 #include "Engine.hpp"
-
 #include <ranges>
-
-
-//Engine depends on the systems for now, will make systems register themselves later
-#include "Systems/Render/Render.hpp"
 
 namespace FAR
 {
@@ -39,7 +40,7 @@ namespace FAR
 
   void Engine::PostUpdate()
   {
-    for (iSystem* system : systems)
+    for (iSystem* system : systems | std::views::reverse)
     {
       system->PostUpdate();
     }
@@ -61,6 +62,7 @@ namespace FAR
     }
   }
 
+  //TODO: make entity recycling system
   Entity Engine::CreateEntity()
   {
     static Entity currentEntity = 0;

@@ -1,5 +1,12 @@
+///
+/// @file   Render.hpp
+/// @brief  System for rendering models to the screen using OpenGL
+/// @author Jack Love
+/// @date   11.10.2025
+///
+
 #pragma once
-#include "PCH.hpp"
+#include "PCH/PCH.hpp"
 
 #include "GL/glew.h"
 #include "GL/GL.h"
@@ -25,6 +32,8 @@ namespace FAR
   public:
     Render() = default;
     ~Render() override = default;
+
+    //engine steps
     void Init() override;
     void PreUpdate() override;
     void Update() override;
@@ -49,27 +58,36 @@ namespace FAR
       std::vector<unsigned int> indicies;
     };
 
+    //load, upload, and link a shader program from vertex and fragment shader files
     GLuint CreateShaderProgram(const std::filesystem::path& vertex, const std::filesystem::path& fragment);
+
+    //load a model from a file into a Model component
     void LoadModel(const std::filesystem::path& filepath, Model& model);
 
+    //create a gpu vao from a mesh
     void CreateVAO(const meshInfo& m, Model& model);
 
+    //load all of the nodes from an assimp scene into a model component
     void LoadNodes(const aiNode* node, const aiScene* scene, Model& model, int parentIndex, VQS parentTransform);
 
+    //render all of a model's nodes as lines
     void RenderNodes(Model& model, Transform& trans);
+    //helper for RenderNodes, recursively builds a list of points representing the bones
     void BuildBonePointList(Model& model, std::vector<glm::vec4>& points, int index, VQS parentTrans);
 
+    //apply bone weights from an assimp mesh to a meshInfo struct
     void ApplyBoneWeightsToVerticies(meshInfo& m, const aiMesh* mesh, Model& model);
 
-    void PutNodesInModelSpace(Model& model, aiMesh* mesh);
+
+    void GetInverseBindPositions(Model& model, aiMesh* mesh);
 
     void ApplyNodeHeirarchy(std::vector<Model::Node>& nodes, int nodeIndex, const VQS& parentTransform);
     void CreateLinesVAO();
 
-    GLuint lineVAO;
+    GLuint lineVAO = 0;
 
-    WindowResource* windowResc;
-    RenderResource* renderResc;
+    WindowResource* windowResc = nullptr;
+    RenderResource* renderResc = nullptr;
 
     glm::mat4 viewMatrix{ 1.0f };
     glm::mat4 projectionMatrix{ 1.0f };

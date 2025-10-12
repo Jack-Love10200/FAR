@@ -1,38 +1,22 @@
+///
+/// @file   WindowResource.hpp
+/// @brief  Resource for storing/manipulating the window, currently only using GLFW.
+/// @author Jack Love
+/// @date   11.10.2025
+///
+
 #pragma once
-#include "PCH.hpp"
+#include "PCH/PCH.hpp"
 #include "Resources/iResource.hpp"
 
 #include "GLFW/glfw3.h"
 
 namespace FAR
 {
-  class WindowResource// : public iResource
+  class WindowResource : public iResource
   {
   public:
-    WindowResource();// = default;
-    //WindowResource()
-    //{
-    //  glfwInit();
-    //  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    //  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    //  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    //  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    //  window = glfwCreateWindow(2000, 1200, "test", nullptr, nullptr);
-    //  glfwMakeContextCurrent(window);
-    //  const char* err;
-    //  glfwGetError(&err);
-    //  if (err)
-    //    std::cout << err << std::endl;
-
-    //  //GLenum glewerr = glewInit();
-    //  //if (glewerr != GLEW_OK)
-    //  //{
-    //  //  std::cerr << "Error: Unable to initialize GLEW " << glewGetErrorString(glewerr) << std::endl;
-    //  //  glfwDestroyWindow(window); // destroy window and corresponding GL context
-    //  //  glfwTerminate();
-    //  //  std::exit(EXIT_FAILURE);
-    //  //}
-    //}
+    WindowResource();
     ~WindowResource() = default;
 
     int width{ 2000 };
@@ -40,6 +24,12 @@ namespace FAR
     std::string title{ "FAR OUT ENGINE" };
 
     GLFWwindow* window = nullptr;
+
+    bool isWindowClosing()
+    {
+      return glfwWindowShouldClose(window);
+    }
+
   private:
   };
 }

@@ -1,162 +1,118 @@
+///
+/// @file   Engine.hpp
+/// @brief  Entitiy/Component/System/Resource manager (ECS) game engine core.
+/// @author Jack Love
+/// @date   11.10.2025
+///
 #pragma once
 
-#include "PCH.hpp"
+#include "PCH/PCH.hpp"
 #include "Systems/iSystem.hpp"
 #include "Resources/iResource.hpp"
 
-
+//Entities are just indexes into sparese component arrays
 typedef unsigned long long Entity;
 
 namespace FAR
 {
-
   class Engine
   {
   public:
     Engine(const Engine&) = delete;
     Engine& operator=(const Engine&) = delete;
 
-    Engine()
-    {
-      return;
-    }
+    Engine() = default;
 
+    //singleton instance, temporary
     static Engine* eng;
-    static void SetInstance(Engine* instance)
-    {
-      eng = instance;
-    }
+    static void SetInstance(Engine* instance){eng = instance;}
+    static Engine* GetInstance(){return eng;}
 
-    static Engine* GetInstance()
-    {
-      return eng;
-    }
+    float dt = 0.016f;//delta time
 
-    float dt = 0.016666666666666f;
-
+    //Engine steps
     void Init();
     void PreUpdate();
     void Update();
     void PostUpdate();
     void Exit();
 
+    /// @brief  Create a new entity for use in the ECS
+    /// @retval  - The new entity's ID
     Entity CreateEntity();
 
-    std::vector<Entity> entities;
+    //TODO: Enforce registered types are valid component/system/resource types
+    
+    /// @brief  Register a system type with the engine, instatiating an instance of it
+    /// @tparam T - The type of the system to register
+    template<typename SystemType>
+    void RegisterSystemType();
 
-    template<typename T>
-    void RegisterSystemType()
-    {
-      static T system;
-      systems.push_back(&system);
-    }
+    /// @brief  Register ac component type with the engine, constructing an intance of it
+    /// @tparam ResourceType - The type of the resource to register
+    /// @tparam Construction - Parameter pack for to pass to the resource's constructor
+    /// @param  params       - Parameter pack for to pass to the resource's constructor
+    template<typename ResourceType, typename... Construction>
+    inline void RegisterResource(Construction&&... params);
 
+    /// @brief  Get a resource by type
+    /// @tparam ResourceType - The type of resource to get
+    /// @retval              - The resource of the specified type
+    template<typename ResourceType>
+    ResourceType* GetResource();
 
-    using void_unique_ptr = std::unique_ptr<void, void(*)(void*)>;
+    /// @brief  Register a component type with the engine, creating a storage array for it
+    /// @tparam ComponentType - The type of component to register
+    template<typename ComponentType>
+    void RegisterComponentType();
 
-    template <typename T, typename... Args>
-    void_unique_ptr make_unique_void_ptr(Args&&... args)
-    {
-      std::unique_ptr<T> ptr = std::make_unique<T>(std::forward<Args>(args)...);
+    /// @brief  Add a component to an entity
+    /// @tparam ComponentType - The type of component to add
+    /// @param  e             - The entity to add the component to
+    /// @param  component     - The component to add
+    template<typename ComponentType>
+    void AddComponent(Entity e, const ComponentType& component);
 
-      return void_unique_ptr(ptr.release(), [](void* p) { delete static_cast<T*>(p); });
-    }
-
-
-    template<typename T, typename... Construction>
-    inline void RegisterResource(Construction&&... params)
-    {
-      std::type_index typeIndex = typeid(T);
-      //std::unique_ptr<T> ptr = std::make_unique<T>();
-      resources.emplace(typeIndex, make_unique_void_ptr<T>(std::forward<Construction>(params)...));
-    }
-
-    template<typename T>
-    T* GetResource()
-    {
-      std::type_index typeIndex = std::type_index(typeid(T));
-      return static_cast<T*> (resources.at(typeIndex).get());
-    }
-
-    template<typename T>
-    void RegisterComponentType()
-    {
-      static std::array<std::optional<T>, 50> componentArray;
-
-      std::type_index typeIndex = std::type_index(typeid(T));
-      componentTypes.push_back(typeIndex);
-
-      componentCreationFuncs.emplace(std::make_pair(typeIndex, [this](Entity e, const void* componentdata)
-        {
-          const T* component = static_cast<const T*>(componentdata);
-          componentArray[e] = *component;
-        }));
-
-      componentGetFuncs.emplace(std::make_pair(typeIndex, [this](Entity e) -> void*
-        {
-          return componentArray[e].has_value() ? &componentArray[e].value() : nullptr;
-        }));
-
-      //componentArrays.emplace(std::make_pair(typeIndex ,new unsigned char[sizeof(T) * 50]));
-    }
-
-    template<typename T>
-    void CreateComponent(Entity e, const T& component)
-    {
-      std::type_index typeIndex = std::type_index(typeid(T));
-      componentCreationFuncs[typeIndex](e, &component);
-    }
-
+    /// @brief  Get all of the entities that have all of the specified component types
+    /// @tparam ComponentTypes - The types of components the entities must have
+    /// @retval                - All of the entities that have all of the specified component types
     template<typename... ComponentTypes>
-    std::vector<Entity> GetEntities()
-    {
-      std::vector<Entity> result;
+    std::vector<Entity> GetEntities();
 
-      for (Entity e : entities)
-      {
-        bool hasAllComponents = (... && HasComponent<ComponentTypes>(e));
-        if (hasAllComponents)
-          result.push_back(e);
-      }
-      return result;
-    }
+    /// @brief  Check if an entity has a component of the specified type
+    /// @tparam ComponentType - The type of component to check for
+    /// @param  e             - The entity to check
+    /// @retval               - Whether the entity has the specified component type or not
+    template<typename ComponentType>
+    bool HasComponent(Entity e);
 
-    const std::vector <std::type_index>& GetComponentTypes()
-    {
-      return componentTypes;
-    }
+    /// @brief  Get a reference to a specified component on a specified entity
+    /// @tparam ComponentType - The component type to get a ref to
+    /// @param  e             - The entity to get the component from
+    /// @retval               - A reference to the specified component on the specified entity
+    template<typename ComponentType>
+    ComponentType& GetComponent(Entity e);
 
-    const std::vector<Entity>& GetAllEntities()
-    {
-      return entities;
-    }
+    //somewhat temporary getters for entities and component types
+    const std::vector <std::type_index>& GetComponentTypes() { return componentTypes; }
+    const std::vector<Entity>& GetAllEntities() { return entities; }
 
-    template<typename T>
-    T& GetComponent(Entity e)
-    {
-      std::type_index typeIndex = std::type_index(typeid(T));
-      return *(static_cast<T*>(componentGetFuncs[typeIndex](e)));
-    }
+  private:
+    std::vector<Entity> entities; //all of the entities in the ecs
 
-    template<typename T>
-    bool HasComponent(Entity e)
-    {
-      std::type_index typeIndex = std::type_index(typeid(T));
-      return componentGetFuncs[typeIndex](e) != nullptr;
-    }
+    std::chrono::high_resolution_clock::time_point last; //last frame time point
+    std::chrono::high_resolution_clock::time_point current; //current frame time point
 
-    std::chrono::high_resolution_clock::time_point last;
-    std::chrono::high_resolution_clock::time_point current;
+    std::vector<std::type_index> componentTypes; //all of the registered component types
 
-    //std::map<std::type_index, unsigned char*> componentArrays;
-    std::vector<std::type_index> componentTypes;
+    std::vector<iSystem*> systems;//instances of all registered systems
 
-    std::vector<iSystem*> systems;
+    std::unordered_map<std::type_index, std::unique_ptr<iResource>> resources;//instances of all registered resources
 
-    std::unordered_map<std::type_index, void_unique_ptr > resources;
-
-
-    std::map<std::type_index, std::function<void(Entity, const void*)>> componentCreationFuncs;
-    std::map<std::type_index, std::function<void* (Entity)>> componentGetFuncs;
+    std::map<std::type_index, std::function<void(Entity, const void*)>> componentAddFuncs;//lambdas for adding components to the static component arrays
+    std::map<std::type_index, std::function<void* (Entity)>> componentGetFuncs;//lambdas for getting components from the static component arrays
   };
 }// namespace FAR
+
+
+#include "Engine.inl"

@@ -1,17 +1,16 @@
-#include "PCH.hpp"
+///
+/// @file   SkeletalAnimation.hpp
+/// @brief  System for loading and updating skeletal animations on models
+/// @author Jack Love
+/// @date   11.10.2025
+///
+
+#include "PCH/PCH.hpp"
 
 #include "SkeletalAnimation.hpp"
-
 #include "Components/Model.hpp"
 
-  glm::mat4 ToGlm(const aiMatrix4x4& m) {
-    return glm::mat4(
-      m.a1, m.b1, m.c1, m.d1,
-      m.a2, m.b2, m.c2, m.d2,
-      m.a3, m.b3, m.c3, m.d3,
-      m.a4, m.b4, m.c4, m.d4
-    );
-  }
+#include "Util/MathHelpers.hpp"
 
 namespace FAR
 {
@@ -19,7 +18,7 @@ namespace FAR
 
   void SkeletalAnimation::LoadAnimationData(const aiScene* scene, SkeletalAnimator& animator)
   {
-    for (int i = 0; i < scene->mNumAnimations; i++)
+    for (unsigned int i = 0; i < scene->mNumAnimations; i++)
     {
       LoadAnimation(scene->mAnimations[i], animator);
     }
@@ -65,7 +64,6 @@ namespace FAR
       }
 
       //for each unique key time, find the corresponding pos/rot/scale (or the last one before it)
-
       for (float time : keyTimes)
       {
         VQS vqs;
@@ -110,8 +108,6 @@ namespace FAR
             vqs.v = glm::vec3(p.x, p.y, p.z);
           }
         }
-
-
         if (numRotationKeys > 0)
         {
           bool rotKeyFound = false;
@@ -151,7 +147,6 @@ namespace FAR
             vqs.q = Quat(q.w, q.x, q.y, q.z);
           }
         }
-
         if (numScalingKeys > 0)
         {
           //if not a perfect match, lerp between the last key and the next key
@@ -175,7 +170,12 @@ namespace FAR
                 float t1 = channel->mScalingKeys[j].mTime;
                 float t2 = channel->mScalingKeys[j + 1].mTime;
                 float alpha = (time - t1) / (t2 - t1);
-                vqs.s = glm::mix(scale1, scale2, alpha);
+
+                vqs.s.x = elerp(scale1.x, scale2.x, alpha);
+                vqs.s.y = elerp(scale1.y, scale2.y, alpha);
+                vqs.s.z = elerp(scale1.z, scale2.z, alpha);
+
+                //vqs.s = glm::mix(scale1, scale2, alpha);
                 scaleKeyFound = true;
               }
               else
@@ -197,11 +197,6 @@ namespace FAR
       newAnim.channels.push_back(newChannel);
     }
     animator.animations.push_back(newAnim);
-  }
-
-  float elerp(float a, float b, float f)
-  {
-    return a + f * (b - a);
   }
 
   void SkeletalAnimation::UpdateNode(Model& model, SkeletalAnimator& animator, int nodeIndex)
@@ -243,19 +238,11 @@ namespace FAR
             prevTransform = channel->keyFrames[i].second;
             channel->currentKeyFrame = i;
 
-            if (channel->nodeName == "LeftLeg_rD_red_$AssimpFbx$_Rotation")
-            std::cout << "kf" << std::endl;
-
             node.transform = prevTransform;
             return;
           }
-          else
-          {
-            if (channel->nodeName == "LeftLeg_rD_red_$AssimpFbx$_Rotation")
-            std::cout << " not kf" << std::endl;
-          }
 
-          localTransform = VQS::IncrementalInterpolate(prevTransform, channel->incrementalValues[i].second);
+          localTransform = VQS::IncrementalInterpolate(prevTransform, channel->incrementalValues[i]);
         }
       }
       node.transform = localTransform;
@@ -276,11 +263,11 @@ namespace FAR
       float a = glm::acos(glm::clamp(Quat::Dot(channel.keyFrames[i].second.q, channel.keyFrames[i + 1].second.q), -1.0f, 1.0f));
 
       VQS increment;
-        VQS kf1 = channel.keyFrames[i].second;
-        VQS kf2 = channel.keyFrames[i + 1].second;
+      VQS kf1 = channel.keyFrames[i].second;
+      VQS kf2 = channel.keyFrames[i + 1].second;
 
-        kf1.q.Normalize();
-        kf2.q.Normalize();
+      kf1.q.Normalize();
+      kf2.q.Normalize();
 
       if (a < std::numeric_limits<float>::epsilon())
       {
@@ -288,7 +275,6 @@ namespace FAR
       }
       else
       {
-
         float B = a / (float)n;
 
         glm::vec3 u0 = glm::vec3(kf1.q.x, kf1.q.y, kf1.q.z);
@@ -299,28 +285,28 @@ namespace FAR
 
         glm::vec3 u;
 
-        //u = ((w0 * u0) - (wn * un) + glm::cross(u0, un)) / sin(a);
-
         u = (kf2.q * kf1.q.Conjugate()).GetVectorPart() / sin(a);
 
         u = glm::normalize(u);
 
         float sinB = sin(B);
 
-
         glm::vec3 sinBu = sinB * u;
 
+        //islerping rotation
         increment.q = Quat(cos(B), sinBu.x, sinBu.y, sinBu.z);
         increment.q.Normalize();
 
       }
-        increment.v = (kf2.v - kf1.v) / (float)n;
+      //ilerping position
+      increment.v = (kf2.v - kf1.v) / (float)n;
 
-        increment.s.x = pow(kf2.s.x / kf1.s.x, 1.0f / float(n));
-        increment.s.y = pow(kf2.s.y / kf1.s.y, 1.0f / float(n));
-        increment.s.z = pow(kf2.s.z / kf1.s.z, 1.0f / float(n));
+      //ielerping scale
+      increment.s.x = pow(kf2.s.x / kf1.s.x, 1.0f / float(n));
+      increment.s.y = pow(kf2.s.y / kf1.s.y, 1.0f / float(n));
+      increment.s.z = pow(kf2.s.z / kf1.s.z, 1.0f / float(n));
 
-        channel.incrementalValues.push_back({ channel.keyFrames[i].first, increment });
+      channel.incrementalValues.push_back(increment);
     }
   }
 
@@ -331,6 +317,7 @@ namespace FAR
 
   void SkeletalAnimation::PreUpdate()
   {
+    //check for newly created SkeletalAnimator components that need their animation data loaded
     std::vector<Entity> entities = Engine::GetInstance()->GetEntities<SkeletalAnimator, Model>();
     for (const Entity& e : entities)
     {
@@ -340,14 +327,15 @@ namespace FAR
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(sk.path, aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_Triangulate | aiProcess_OptimizeGraph | aiProcess_GlobalScale);
         LoadAnimationData(scene, sk);
+        importer.FreeScene();
       }
     }
   }
 
   void SkeletalAnimation::Update()
   {
+    //update all skeletal animators
     std::vector<Entity> entities = Engine::GetInstance()->GetEntities<SkeletalAnimator, Model>();
-
     for (const Entity& e : entities)
     {
       Model& model = Engine::GetInstance()->GetComponent<Model>(e);
@@ -356,19 +344,19 @@ namespace FAR
       float dt = Engine::GetInstance()->dt;
 
       if (sk.playing)
-        sk.animationTime += dt * sk.animations[sk.currentAnimation].ticksPerSecond;
+      sk.animationTime += dt * sk.animations[sk.currentAnimation].ticksPerSecond;
 
       if (sk.looping)
         sk.animationTime = fmod(sk.animationTime, sk.animations[sk.currentAnimation].duration);
       else if (sk.animationTime > sk.animations[sk.currentAnimation].duration)
         sk.animationTime = sk.animations[sk.currentAnimation].duration;
 
+      if (sk.playing)
       for (int i = 0; i < model.nodes.size(); i++)
       {
         UpdateNode(model, sk, i);
       }
     }
-
   }
 
   void SkeletalAnimation::PostUpdate()

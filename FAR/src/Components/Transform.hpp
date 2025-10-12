@@ -1,13 +1,16 @@
+///
+/// @file   Transform.hpp
+/// @brief  Standard transform component for position, rotation, and scale.
+/// @author Jack Love
+/// @date   11.10.2025
+///
 #pragma once
+#include "PCH/PCH.hpp"
 
-#include "PCH.hpp"
-
+//TODO: Consider alignment
 struct Transform
 {
   glm::vec3 position{ 0.0f, 0.0f, 0.0f };
-  //glm::vec3 rotation{ 0.0f, 0.0f, 0.0f };
-
-  //glm::quat rotationQuaternion{ 0.0f, 0.0f, 0.0f, 1.0f };
 
   FAR::Quat rotationQuaternion{ 1.0f, 0.0f, 0.0f, 0.0f };
 

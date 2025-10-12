@@ -1,6 +1,13 @@
+///
+/// @file   InputSystem.hpp
+/// @brief  System for handling input from keyboard and mouse and storing it in the InputResource
+/// @author Jack Love
+/// @date   11.10.2025
+///
+
 #pragma once
 
-#include "PCH.hpp"
+#include "PCH/PCH.hpp"
 #include "Systems/iSystem.hpp"
 #include "Engine/Engine.hpp"
 
@@ -14,6 +21,8 @@ namespace FAR
   public:
     InputSystem() = default;
     ~InputSystem() override = default;
+
+    //engine steps
     void Init() override;
     void PreUpdate() override;
     void Update() override;
@@ -21,7 +30,7 @@ namespace FAR
     void Exit() override;
   private:
 
-    InputResource* inputResc;
-    WindowResource* windowResc;
+    InputResource* inputResc = nullptr;
+    WindowResource* windowResc = nullptr;
   };
 }

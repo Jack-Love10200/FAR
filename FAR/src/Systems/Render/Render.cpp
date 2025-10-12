@@ -1,4 +1,10 @@
-#include "PCH.hpp"
+///
+/// @file   Render.cpp
+/// @brief  System for rendering models to the screen using OpenGL
+/// @author Jack Love
+/// @date   11.10.2025
+///
+#include "PCH/PCH.hpp"
 #include "Render.hpp"
 
 #include "Engine/Engine.hpp"
@@ -12,31 +18,24 @@
 
 #include "Components/SkeletalAnimator.hpp"
 
+#include "Util/MathHelpers.hpp"
+
 namespace FAR
 {
-
-  glm::mat4 ToGlm(const aiMatrix4x4& m) {
-    return glm::mat4(
-      m.a1, m.b1, m.c1, m.d1,
-      m.a2, m.b2, m.c2, m.d2,
-      m.a3, m.b3, m.c3, m.d3,
-      m.a4, m.b4, m.c4, m.d4
-    );
-  }
 
   GLuint Render::CreateShaderProgram(const std::filesystem::path& vertex, const std::filesystem::path& fragment)
   {
     GLint error;
 
+    //read in shader files
     std::ifstream vshaderfile(vertex.string());
     std::ifstream fshaderfile(fragment.string());
-
     std::string vshaderstr((std::istreambuf_iterator<char>(vshaderfile)), std::istreambuf_iterator<char>());
     std::string fshaderstr((std::istreambuf_iterator<char>(fshaderfile)), std::istreambuf_iterator<char>());
-
     const char* vshader = vshaderstr.c_str();
     const char* fshader = fshaderstr.c_str();
 
+    //upload and compile vertex shader
     GLuint vertshader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertshader, 1, &vshader, nullptr);
     glCompileShader(vertshader);
@@ -48,6 +47,7 @@ namespace FAR
       std::cout << "Vertex Shader Compilation Failed\n" << infoLog << std::endl;
     }
 
+    //upload and compile fragment shader
     GLuint fragshader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragshader, 1, &fshader, nullptr);
     glCompileShader(fragshader);
@@ -56,9 +56,10 @@ namespace FAR
     {
       char infoLog[512];
       glGetShaderInfoLog(vertshader, 512, nullptr, infoLog);
-      std::cout << "Vertex Shader Compilation Failed\n" << infoLog << std::endl;
+      std::cout << "Fragment Shader Compilation Failed\n" << infoLog << std::endl;
     }
 
+    //link shaders into a program
     GLuint shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertshader);
     glAttachShader(shaderProgram, fragshader);
@@ -73,12 +74,14 @@ namespace FAR
       throw std::runtime_error(buffer);
     }
 
+
+    //clean up shaders, we don't need them anymore
     glDeleteShader(vertshader);
     glDeleteShader(fragshader);
 
+    //TODO:
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-
 
     //bind texture samplers to texture units
     glUseProgram(shaderProgram);
@@ -115,21 +118,16 @@ namespace FAR
 
     LoadNodes(samba->mRootNode, samba, model, -1, VQS());
 
-    //if (samba->mNumAnimations > 0)
-    //  LoadAnimationData(samba, model);
-
-    //model.animation.globalInverseTransform = glm::inverse(ToGlm(samba->mRootNode->mTransformation));
-
-    //meshes
+    //for each mesh
     for (unsigned int i = 0; i < samba->mNumMeshes; i++)
     {
 
-      PutNodesInModelSpace(model, samba->mMeshes[i]);
+      GetInverseBindPositions(model, samba->mMeshes[i]);
 
       meshInfo m;
       unsigned int numVerts = m.verticies.size();
-      std::cout << "num uv channels: " << samba->mMeshes[i]->GetNumUVChannels() << std::endl;
 
+      //get all verticies
       for (unsigned int j = 0; j < samba->mMeshes[i]->mNumVertices; j++)
       {
         if (!samba->mMeshes[i]->HasTextureCoords(0))
@@ -146,6 +144,7 @@ namespace FAR
         }
       }
 
+      //get all faces
       for (unsigned int j = 0; j < samba->mMeshes[i]->mNumFaces; j++)
       {
         m.indicies.push_back(numVerts + samba->mMeshes[i]->mFaces[j].mIndices[0]);
@@ -156,17 +155,14 @@ namespace FAR
       ApplyBoneWeightsToVerticies(m, samba->mMeshes[i], model);
 
       CreateVAO(m, model);
-      //model.textures.insert(model.textures.end(), std::make_pair(model.VAOs.back().first, std::vector<GLuint>()));
 
+
+      //get all of the textures for this mesh, upload to gpu, and store in model.textures
       std::vector<GLuint> empty;
       model.textures.insert(model.textures.end(), std::make_pair(model.VAOs.back().first, empty));
-      //model.textures.emplace(model.VAOs.back(), empty);
-
       aiMaterial* material = samba->mMaterials[samba->mMeshes[i]->mMaterialIndex];
       aiString texPath;
-
       unsigned int texCount = material->GetTextureCount(aiTextureType_DIFFUSE);
-
       for (unsigned int t = 0; t < texCount; t++)
       {
         aiReturn texFound = material->GetTexture(aiTextureType_DIFFUSE, t, &texPath);
@@ -221,9 +217,9 @@ namespace FAR
         else
         {
           //non-embedded texture
-
           std::filesystem::path texFullPath = filepath.parent_path() / texPath.C_Str();
 
+          //read in texture data
           int width;
           int height;
           int channels;
@@ -236,9 +232,8 @@ namespace FAR
             continue;
           }
 
-          // GPU buffer for texture
+          //create buffer and upload to gpu
           GLuint currentTex;
-
           glGenTextures(1, &currentTex);
           glBindTexture(GL_TEXTURE_2D, currentTex);
           glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -249,10 +244,16 @@ namespace FAR
           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
+          //save texture in model
           model.textures[model.VAOs.back().first].push_back(currentTex);
+
+          //free image data
+          stbi_image_free(sambaa);
         }
       }
     }
+    //free importer data
+    importer.FreeScene();
   }
 
   void Render::CreateVAO(const meshInfo& m, Model& model)
@@ -302,17 +303,14 @@ namespace FAR
   void Render::LoadNodes(const aiNode* node, const aiScene* scene, Model& model, int parentIndex, VQS parentTransform)
   {
     Model::Node newNode;
+
     newNode.parent = parentIndex;
-    //newNode.transform = ToGlm(node->mTransformation);
+    newNode.name = node->mName.C_Str();
 
     VQS localTransform = VQS(ToGlm(node->mTransformation));
     newNode.transform = parentTransform * localTransform;
 
-    newNode.name = node->mName.C_Str();
-
-
     int currentIndex = model.nodes.size();
-
     model.nodes.push_back(newNode);
 
     if (parentIndex != -1)
@@ -320,7 +318,6 @@ namespace FAR
 
     for (unsigned int i = 0; i < node->mNumChildren; i++)
     {
-      //LoadNodes(node->mChildren[i], scene, model, currentIndex, newNode.transform);
       LoadNodes(node->mChildren[i], scene, model, currentIndex, VQS());
     }
   }
@@ -331,16 +328,17 @@ namespace FAR
 
     BuildBonePointList(model, points, 0, VQS());
 
+    //put points in world space
     for (glm::vec4& point : points)
     {
       point = trans.modelMatrix * point;
     }
 
+    //draw lines
     for (int i = 0; i < points.size(); i += 2)
     {
       renderResc->DrawRay(points[i], points[i + 1]);
     }
-
   }
 
   void Render::BuildBonePointList(Model& model, std::vector<glm::vec4>& points, int index, VQS parentTrans)
@@ -349,15 +347,12 @@ namespace FAR
     VQS globalTrans = parentTrans * localTrans;
 
     glm::vec4 pos = glm::vec4(globalTrans.v, 1.0f);
-    //glm::vec4 pos = glm::vec4(localTrans.v, 1.0f);
 
     for (int& i : model.nodes[index].children)
     {
       VQS childTrans = model.nodes[i].transform;
       VQS childGlobalTrans = globalTrans * childTrans;
       glm::vec4 childPos = glm::vec4(childGlobalTrans.v, 1.0f);
-      //glm::vec4 childPos = glm::vec4(childTrans.v, 1.0f);
-      
 
       points.push_back(pos);
       points.push_back(childPos);
@@ -392,9 +387,6 @@ namespace FAR
                 break;
               }
             }
-            
-
-
             m.verticies[weight.mVertexId].boneIds[k] = found;
             m.verticies[weight.mVertexId].boneWeights[k] = weight.mWeight;
             break;
@@ -404,7 +396,7 @@ namespace FAR
     }
   }
 
-  void Render::PutNodesInModelSpace(Model& model, aiMesh* mesh)
+  void Render::GetInverseBindPositions(Model& model, aiMesh* mesh)
   {
     //multipy by the inverse bind pose
     for (int i = 0; i < mesh->mNumBones; i++)
@@ -416,8 +408,6 @@ namespace FAR
         if (model.nodes[j].name == bone->mName.C_Str())
         {
           glm::mat4 invBindPose = ToGlm(bone->mOffsetMatrix);
-          //model.nodes[j].transform = model.nodes[j].transform * glm::inverse(invBindPose);
-          //model.nodes[j].transform = model.nodes[j].transform * invBindPose;
           model.nodes[j].inverseBindPose = invBindPose;
           break;
         }
@@ -492,22 +482,21 @@ namespace FAR
 
   void Render::Update()
   {
-    //AnimUpdate();
-
-    //render to our offscreen framebuffer
+    //set render target to our offscreen framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, renderResc->fbo);
     glViewport(0, 0, renderResc->vpwidth, renderResc->vpheight);
 
+    //clear
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //modeling
+    //set program
     glUseProgram(renderResc->basicShaderProgram);
 
+    //get all of our entities to be rendered
     std::vector<Entity> modelEntities = Engine::GetInstance()->GetEntities<Transform, Model>();
 
-    //for each transform
-    //for (std::optional<Transform>& transform : Engine::GetInstance()->transforms)
+    //recompute model matrices
     for (const Entity& e : modelEntities)
     {
       Transform& transform = Engine::GetInstance()->GetComponent<Transform>(e);
@@ -515,11 +504,10 @@ namespace FAR
       transform.modelMatrix = glm::mat4(1.0f);
       transform.modelMatrix = glm::translate(transform.modelMatrix, transform.position);
       transform.modelMatrix = glm::scale(transform.modelMatrix, transform.scale);
-      //transform.modelMatrix = transform.modelMatrix * glm::eulerAngleXYZ(glm::radians(transform.rotation.x), glm::radians(transform.rotation.y), glm::radians(transform.rotation.z));
       transform.modelMatrix = transform.modelMatrix * transform.rotationQuaternion.ToMatrix();
     }
 
-    //assuming exactly one main cam for now
+    //assuming exactly one main cam for now, get view and projection matrices from it and upload to shader
     std::vector<Entity> cameraEntities = Engine::GetInstance()->GetEntities<Transform, Camera>();
     for (const Entity& e : cameraEntities)
     {
@@ -541,6 +529,7 @@ namespace FAR
       glUniformMatrix4fv(3, 1, GL_FALSE, &projectionMatrix[0][0]);
     }
 
+    //rending each entity
     for (const Entity& e : modelEntities)
     {
       Transform& transform = Engine::GetInstance()->GetComponent<Transform>(e);
@@ -548,36 +537,34 @@ namespace FAR
 
       if (model.VAOs.size() == 0) continue;
 
-      //just assemble all of the node matrices into a big array for now
-
+      //TODO: Change this
+      //just apply the node heirarchy and get final matricies into one big array here for now
       if (Engine::GetInstance()->HasComponent<SkeletalAnimator>(e))
       {
         glm::mat4 nodeMatrices[300] = { glm::mat4(1.0f) };
-
         std::vector<Model::Node> nodesCopy = model.nodes;
-
         ApplyNodeHeirarchy(nodesCopy, 0, VQS());
-
         for (int i = 0; i < model.nodes.size(); i++)
         {
-          //nodeMatrices[i] = model.nodes[i].skinningTransform;
           nodeMatrices[i] = nodesCopy[i].transform.ToMatrix() * nodesCopy[i].inverseBindPose;
         }
-
         glUniformMatrix4fv(50, 100, GL_FALSE, &nodeMatrices[0][0][0]);
-        glUniform1i(200, 1);
+        glUniform1i(200, 1); //using skinning
       }
       else
       {
-        glUniform1i(200, 0);
+        glUniform1i(200, 0); //not using skinning
       }
 
+      //set textured, color, and model matrix uniforms
       glUniform1i(5, model.textured ? 1 : 0);
       glUniform4fv(4, 1, &model.color[0]);
       glUniformMatrix4fv(1, 1, GL_FALSE, &transform.modelMatrix[0][0]);
 
+      //render each of the model's mesh vaos
       for (const auto& [vao, indexCount] : model.VAOs)
       {
+        //bind all of the textures for this vao if any
         if (model.textured && model.textures.contains(vao))
         {
           int texIndex = 0;
@@ -592,48 +579,54 @@ namespace FAR
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
         glBindVertexArray(0);
       }
-      //if (model.path == "assets/jack_samba.glb")
+
+      //draw bones/nodes
       RenderNodes(model, transform);
     }
-
     glUseProgram(0);
 
     //done rendering to offscreen framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    //line rendering
-    glBindFramebuffer(GL_FRAMEBUFFER, renderResc->fbo);
-    glViewport(0, 0, renderResc->vpwidth, renderResc->vpheight);
-    glDisable(GL_DEPTH_TEST);
-
-    glUseProgram(renderResc->lineShaderProgram);
-    CreateLinesVAO();
 
 
-    glUniformMatrix4fv(1, 1, false, &viewMatrix[0][0]);
-    glUniformMatrix4fv(2, 1, false, &projectionMatrix[0][0]);
-
-    glBindVertexArray(lineVAO);
-
-    glDrawArrays(GL_LINES, 0, renderResc->rays.size());
-
-    glBindVertexArray(0);
-
-    glDeleteVertexArrays(1, &lineVAO);
-    glUseProgram(0);
-
-    glfwSwapBuffers(windowResc->window);
-    glfwPollEvents();
-    renderResc->rays.clear();
-
-    glEnable(GL_DEPTH_TEST);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
 
 
   void Render::PostUpdate()
   {
+    //line rendering
 
+    //set render target to our offscreen framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, renderResc->fbo);
+    glViewport(0, 0, renderResc->vpwidth, renderResc->vpheight);
+
+    //lines always on top
+    glDisable(GL_DEPTH_TEST);
+
+    //lines shader program
+    glUseProgram(renderResc->lineShaderProgram);
+    CreateLinesVAO();
+
+    //upload view and projection matrices
+    glUniformMatrix4fv(1, 1, false, &viewMatrix[0][0]);
+    glUniformMatrix4fv(2, 1, false, &projectionMatrix[0][0]);
+
+    //draw lines
+    glBindVertexArray(lineVAO);
+    glDrawArrays(GL_LINES, 0, renderResc->rays.size());
+    glBindVertexArray(0);
+
+    //cleanup
+    glDeleteVertexArrays(1, &lineVAO);
+    glUseProgram(0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glEnable(GL_DEPTH_TEST);
+
+    //end of frame stuff
+    glfwSwapBuffers(windowResc->window);
+    glfwPollEvents();
+    renderResc->rays.clear();
   }
 
   void Render::Exit()
