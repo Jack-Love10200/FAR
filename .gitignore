@@ -11,6 +11,8 @@
 *.sln.docstates
 *.env
 
+
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
@@ -417,3 +419,6 @@ FodyWeavers.xsd
 *.msm
 *.msp
 /FAR/imgui.ini
+
+# dont ignore anything in the dependencies directory
+!FAR/dependencies/**

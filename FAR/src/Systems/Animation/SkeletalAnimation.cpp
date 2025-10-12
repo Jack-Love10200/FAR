@@ -251,7 +251,7 @@ namespace FAR
 
   void SkeletalAnimation::ComputeIncrementalInterpolationConstants(SkeletalAnimator::Animation::Channel& channel, float tps)
   {
-    float fps = 60.0f;
+    float fps = 144.0f;
 
     for (int i = 0; i < channel.keyFrames.size() - 1; i++)
     {

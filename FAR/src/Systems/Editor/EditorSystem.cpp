@@ -74,6 +74,8 @@ namespace FAR
     RenderSceneHierarchy();
 
     RenderInspector();
+
+    RenderDetailsPanel();
   }
 
   void EditorSystem::PostUpdate()
@@ -194,6 +196,13 @@ namespace FAR
         ImGui::TreePop();
       }
     }
+    ImGui::End();
+  }
+
+  void EditorSystem::RenderDetailsPanel()
+  {
+    ImGui::Begin("Details");
+    ImGui::Text("FPS: %.1f", 1.0f / Engine::GetInstance()->dt);
     ImGui::End();
   }
 }

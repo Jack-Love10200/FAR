@@ -32,13 +32,6 @@ namespace FAR
 
   private:
 
-    Entity cam;
-    Entity jack;
-    Entity adi;
-    Entity okayu;
-    Entity pika;
-    Entity roman;
-    Entity egyptian;
-    Entity viking;
+    Entity cam = 0;
   };
 }

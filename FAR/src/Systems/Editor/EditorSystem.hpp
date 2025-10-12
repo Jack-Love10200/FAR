@@ -32,6 +32,7 @@ namespace FAR
     void RenderSceneView();
     void RenderSceneHierarchy();
     void RenderInspector();
+    void RenderDetailsPanel();
 
     //The entity currently selected in the heirarchy view
     Entity selected = 0;
