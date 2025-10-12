@@ -51,7 +51,7 @@ namespace FAR
     std::chrono::duration<float> dtf = current - last;
 
     dt = dtf.count();
-    dt = 1.0f / 60.0f;
+    //dt = 1.0f / 60.0f;
   }
 
   void Engine::Exit()

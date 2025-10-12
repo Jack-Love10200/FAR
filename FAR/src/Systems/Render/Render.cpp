@@ -326,7 +326,7 @@ namespace FAR
   {
     std::vector<glm::vec4> points;
 
-    BuildBonePointList(model, points, 0, VQS());
+    BuildBonePointList(model, points, 3, VQS());
 
     //put points in world space
     for (glm::vec4& point : points)
@@ -343,6 +343,8 @@ namespace FAR
 
   void Render::BuildBonePointList(Model& model, std::vector<glm::vec4>& points, int index, VQS parentTrans)
   {
+
+
     VQS localTrans = model.nodes[index].transform;
     VQS globalTrans = parentTrans * localTrans;
 
@@ -350,6 +352,10 @@ namespace FAR
 
     for (int& i : model.nodes[index].children)
     {
+      //skip sword and shield bones for the cs460, they look unsightly
+      if (model.nodes[i].name == "sword" || model.nodes[i].name == "shield")
+        continue;
+
       VQS childTrans = model.nodes[i].transform;
       VQS childGlobalTrans = globalTrans * childTrans;
       glm::vec4 childPos = glm::vec4(childGlobalTrans.v, 1.0f);

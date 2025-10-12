@@ -38,15 +38,24 @@
 //TODO: Make IMGUI/STB prebuilt libraies
 
 //TODO: Proper frame rate controler build into engine class
-void BusyWaitFrameRateControl(float targetFrameTime)
+void BusyWaitFrameRateControl(float fps)
 {
-  auto start = std::chrono::high_resolution_clock::now();
-  while (true)
-  {
-    auto now = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<float> elapsed = now - start;
-    if (elapsed.count() >= targetFrameTime)
-      break;
+  int nanoseconds_per_frame = (int)(1.0f / fps * 1'000'000'000.0f);
+  using clock = std::chrono::steady_clock;
+  static auto next_time = clock::now();
+  static const auto frame_duration = std::chrono::steady_clock::duration(nanoseconds_per_frame);
+
+  next_time += frame_duration;
+
+  auto now = clock::now();
+  if (now < next_time) {
+    while (clock::now() < next_time) {
+      std::atomic_signal_fence(std::memory_order_seq_cst); // prevent optimization
+    }
+  }
+  else {
+    // If we’re behind, re-sync
+    next_time = now;
   }
 } 
 
@@ -77,7 +86,7 @@ int main()
     engine.PreUpdate();
     engine.Update();
     engine.PostUpdate();
-    BusyWaitFrameRateControl(1.0f / 60.0f);
+    BusyWaitFrameRateControl(144.0f);
   }
 
   engine.Exit();
