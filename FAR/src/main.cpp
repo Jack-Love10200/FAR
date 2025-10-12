@@ -1,16 +1,16 @@
-#include "PCH.hpp"
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @file   main.cpp
+/// @brief  Entry point for the FAR engine, registers components, systems, 
+/// and resources, then enters the main loop.
+/// @author Jack Love
+/// @date   11.10.2025
+///
+////////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_RESIZE_IMPLEMENTATION
-
-#include "stb_image.h"
-#include "stb_image_resize2.h"
-
+#include "PCH/PCH.hpp"
 #include "Engine/Engine.hpp"
 
-//main depends on render for now, will resolve silly dependencies later
 //systems
 #include "Systems/Render/Render.hpp"
 #include "Systems/Sandbox/Sandbox.hpp"
@@ -29,6 +29,15 @@
 #include "Resources/WindowResource.hpp"
 #include "Resources/RenderResource.hpp"
 
+//TASKS
+//TODO: Custom logger
+//TODO: Asset libraries/loaders
+//TODO: Scene management
+//TODO: Serialization
+//TDOO: RenderResource Reorganization
+//TODO: Make IMGUI/STB prebuilt libraies
+
+//TODO: Proper frame rate controler build into engine class
 void BusyWaitFrameRateControl(float targetFrameTime)
 {
   auto start = std::chrono::high_resolution_clock::now();
@@ -54,7 +63,6 @@ int main()
   engine.RegisterSystemType<FAR::EditorSystem>();
   engine.RegisterSystemType<FAR::Render>();
   engine.RegisterSystemType<FAR::SkeletalAnimation>();
-
   engine.RegisterSystemType<FAR::Sandbox>();
   engine.RegisterSystemType<FAR::InputSystem>();
 
@@ -62,12 +70,9 @@ int main()
   engine.RegisterResource<FAR::WindowResource>();
   engine.RegisterResource<FAR::RenderResource>();
 
-
   engine.Init();
 
-
-
-  while (true)
+  while (!engine.GetResource<FAR::WindowResource>()->isWindowClosing())
   {
     engine.PreUpdate();
     engine.Update();

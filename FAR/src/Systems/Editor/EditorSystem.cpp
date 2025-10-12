@@ -1,19 +1,24 @@
-#include "PCH.hpp"
+///
+/// @file   EditorSystem.cpp
+/// @brief  GUI system for editing entities, components, scenes, etc.
+/// @author Jack Love
+/// @date   11.10.2025
+///
+
+#include "PCH/PCH.hpp"
 
 #include "EditorSystem.hpp"
 
+// IMGUI
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 
-#include "Engine/Engine.hpp"
-
-
+//TODO: Create registry for this instead of having all imlemented in the editor system
 #include "Components/Transform.hpp"
 #include "Components/Camera.hpp"
 #include "Components/Model.hpp"
 #include "Components/SkeletalAnimator.hpp"
-
 
 namespace FAR
 {
@@ -69,7 +74,6 @@ namespace FAR
     RenderSceneHierarchy();
 
     RenderInspector();
-
   }
 
   void EditorSystem::PostUpdate()
@@ -159,6 +163,7 @@ namespace FAR
       }
     }
 
+    //Skeletal Animator Component
     if (selected != -1 && Engine::GetInstance()->HasComponent<SkeletalAnimator>(selected))
     {
       SkeletalAnimator& sk = Engine::GetInstance()->GetComponent<SkeletalAnimator>(selected);
@@ -189,9 +194,6 @@ namespace FAR
         ImGui::TreePop();
       }
     }
-
-
     ImGui::End();
   }
-
 }

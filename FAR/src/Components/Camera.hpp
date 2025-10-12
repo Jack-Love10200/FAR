@@ -1,6 +1,13 @@
+///
+/// @file   Camera.hpp
+/// @brief  Basic camera component for perspective proj
+/// @author Jack Love
+/// @date   11.10.2025
+///
+
 #pragma once
 
-#include "PCH.hpp"
+#include "PCH/PCH.hpp"
 
 struct Camera
 {

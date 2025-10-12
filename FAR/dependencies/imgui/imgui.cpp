@@ -282,9 +282,9 @@ CODE
      // Application init: create a dear imgui context, setup some options, load fonts
      ImGui::CreateContext();
      ImGuiIO& io = ImGui::GetIO();
-     // TODO: Set optional io.ConfigFlags values, e.g. 'io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard' to enable keyboard controls.
-     // TODO: Fill optional fields of the io structure later.
-     // TODO: Load TTF/OTF fonts if you don't want to use the default font.
+     // IMDO: Set optional io.ConfigFlags values, e.g. 'io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard' to enable keyboard controls.
+     // IMDO: Fill optional fields of the io structure later.
+     // IMDO: Load TTF/OTF fonts if you don't want to use the default font.
 
      // Initialize helper Platform and Renderer backends (here we are using imgui_impl_win32.cpp and imgui_impl_dx11.cpp)
      ImGui_ImplWin32_Init(hwnd);
@@ -337,10 +337,10 @@ IMPLEMENTING SUPPORT for ImGuiBackendFlags_RendererHasTextures:
      // Application init: create a Dear ImGui context, setup some options, load fonts
      ImGui::CreateContext();
      ImGuiIO& io = ImGui::GetIO();
-     // TODO: set io.ConfigXXX values, e.g.
+     // IMDO: set io.ConfigXXX values, e.g.
      io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable keyboard controls
 
-     // TODO: Load TTF/OTF fonts if you don't want to use the default font.
+     // IMDO: Load TTF/OTF fonts if you don't want to use the default font.
      io.Fonts->AddFontFromFileTTF("NotoSans.ttf");
 
      // Application main loop

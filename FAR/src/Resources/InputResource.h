@@ -1,12 +1,19 @@
+///
+/// @file   InputResource.h
+/// @brief  Resrouce for storing and retrieving state
+/// @author Jack Love
+/// @date   11.10.2025
+///
+
 #pragma once
 
-#include "PCH.hpp"
+#include "PCH/PCH.hpp"
 #include "Resources/iResource.hpp"
 #include "KeyCodes.hpp"
 
 namespace FAR
 {
-  class InputResource// : public iResource
+  class InputResource : public iResource
   {
   public:
     InputResource();// = default;
@@ -41,16 +48,17 @@ namespace FAR
     {
       return !currentMouseButtonStates[button] && previousMouseButtonStates[button];
     }
-
-    std::unordered_map<KEYCODE, bool> currentKeyStates;
-    std::unordered_map<KEYCODE, bool> previousKeyStates;
-
-    std::unordered_map<KEYCODE, bool> currentMouseButtonStates;
-    std::unordered_map<KEYCODE, bool> previousMouseButtonStates;
+    
 
     glm::vec2 mousePosition{ 0.0f, 0.0f};
     glm::vec2 previousMousePosition{ 0.0f, 0.0f};
     glm::vec2 mouseDelta{ 0.0f, 0.0f};
-  private:
+
+    //key&button states
+    std::unordered_map<KEYCODE, bool> currentKeyStates;
+    std::unordered_map<KEYCODE, bool> previousKeyStates;
+    std::unordered_map<KEYCODE, bool> currentMouseButtonStates;
+    std::unordered_map<KEYCODE, bool> previousMouseButtonStates;
+
   };
 }
