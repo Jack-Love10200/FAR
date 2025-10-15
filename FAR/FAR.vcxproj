@@ -200,6 +200,7 @@ xcopy "$(ProjectDir)assets" "$(OutDir)assets" /I /S /Y</Command>
     <ClCompile Include="src\Systems\Render\Render.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Systems\Sandbox\Sandbox.cpp" />
+    <ClCompile Include="src\Systems\ScriptedMotion\ScriptedMotion.cpp" />
     <ClCompile Include="src\Util\MathHelpers.cpp" />
     <ClCompile Include="src\Util\Quaternion.cpp" />
     <ClCompile Include="src\Util\VQS.cpp" />
@@ -215,6 +216,7 @@ xcopy "$(ProjectDir)assets" "$(OutDir)assets" /I /S /Y</Command>
     <ClInclude Include="dependencies\imgui\imstb_truetype.h" />
     <ClInclude Include="src\Components\Camera.hpp" />
     <ClInclude Include="src\Components\Model.hpp" />
+    <ClInclude Include="src\Components\ScriptedMotionPath.hpp" />
     <ClInclude Include="src\Components\SkeletalAnimator.hpp" />
     <ClInclude Include="src\Components\Transform.hpp" />
     <ClInclude Include="src\Engine\Engine.hpp" />
@@ -230,6 +232,7 @@ xcopy "$(ProjectDir)assets" "$(OutDir)assets" /I /S /Y</Command>
     <ClInclude Include="src\Systems\Render\Render.hpp" />
     <ClInclude Include="src\PCH\PCH.hpp" />
     <ClInclude Include="src\Systems\Sandbox\Sandbox.hpp" />
+    <ClInclude Include="src\Systems\ScriptedMotion\ScriptedMotion.hpp" />
     <ClInclude Include="src\Util\MathHelpers.hpp" />
     <ClInclude Include="src\Util\Quaternion.hpp" />
     <ClInclude Include="src\Util\VQS.hpp" />

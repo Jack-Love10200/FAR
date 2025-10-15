@@ -343,8 +343,6 @@ namespace FAR
 
   void Render::BuildBonePointList(Model& model, std::vector<glm::vec4>& points, int index, VQS parentTrans)
   {
-
-
     VQS localTrans = model.nodes[index].transform;
     VQS globalTrans = parentTrans * localTrans;
 
@@ -353,7 +351,7 @@ namespace FAR
     for (int& i : model.nodes[index].children)
     {
       //skip sword and shield bones for the cs460, they look unsightly
-      if (model.nodes[i].name == "sword" || model.nodes[i].name == "shield")
+      if (model.nodes[i].name == "sword" || model.nodes[i].name == "shield" || model.nodes[i].name == "spear")
         continue;
 
       VQS childTrans = model.nodes[i].transform;
@@ -423,6 +421,7 @@ namespace FAR
 
   void Render::CreateLinesVAO()
   {
+
     GLuint vbo;
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -442,6 +441,9 @@ namespace FAR
 
     //done with vao
     glBindVertexArray(0);
+
+    //delete vbo
+	glDeleteBuffers(1, &vbo);
   }
 
   void Render::ApplyNodeHeirarchy(std::vector<Model::Node>& nodes, int nodeIndex, const VQS& parentTransform)
@@ -593,9 +595,6 @@ namespace FAR
 
     //done rendering to offscreen framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-
   }
 
 
@@ -632,6 +631,7 @@ namespace FAR
     //end of frame stuff
     glfwSwapBuffers(windowResc->window);
     glfwPollEvents();
+
     renderResc->rays.clear();
   }
 

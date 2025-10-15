@@ -17,12 +17,14 @@
 #include "Systems/Input/InputSystem.hpp"
 #include "Systems/Animation/SkeletalAnimation.hpp"
 #include "Systems/Editor/EditorSystem.hpp"
+#include "Systems/ScriptedMotion/ScriptedMotion.hpp"
 
 //components
 #include "Components/Transform.hpp"
 #include "Components/Camera.hpp"
 #include "Components/Model.hpp"
 #include "Components/SkeletalAnimator.hpp"
+#include "Components/ScriptedMotionPath.hpp"
 
 //resources
 #include "Resources/InputResource.h"
@@ -68,10 +70,12 @@ int main()
   engine.RegisterComponentType<Camera>();
   engine.RegisterComponentType<Model>();
   engine.RegisterComponentType<SkeletalAnimator>();
+  engine.RegisterComponentType<ScriptedMotionPath>();
 
   engine.RegisterSystemType<FAR::EditorSystem>();
   engine.RegisterSystemType<FAR::Render>();
   engine.RegisterSystemType<FAR::SkeletalAnimation>();
+  engine.RegisterSystemType<FAR::ScriptedMotion>();
   engine.RegisterSystemType<FAR::Sandbox>();
   engine.RegisterSystemType<FAR::InputSystem>();
 
