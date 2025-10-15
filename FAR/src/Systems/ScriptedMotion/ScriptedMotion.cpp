@@ -6,11 +6,31 @@
 
 #include "Engine/Engine.hpp"
 
+#include "Eigen/Dense"
+
 namespace FAR
 {
   void ScriptedMotion::Init()
   {
     renderResc = Engine::GetInstance()->GetResource<RenderResource>();
+
+    Eigen::MatrixXd m;
+
+    m.setRandom(10, 10);
+
+    Eigen::Matrix<double, 10, 1> v;
+
+    v.setRandom();
+
+    Eigen::ColPivHouseholderQR<Eigen::MatrixXd> system(m);
+
+    Eigen::Matrix<double, 10, 1> x = system.solve(v);
+
+    std::cout << "The solution is:\n" << x << std::endl;
+
+    x.array().operator[](0) = 3;
+
+    std::cout << "it is now:\n" << x << std::endl;
   }
 
   void ScriptedMotion::PreUpdate()

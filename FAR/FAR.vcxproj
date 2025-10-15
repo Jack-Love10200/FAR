@@ -104,7 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)dependencies\GLFW\include;$(ProjectDir)dependencies\GLEW\include;$(ProjectDir)dependencies\assimp\include;$(ProjectDir)dependencies\glm\;$(ProjectDir)dependencies\stb\;$(ProjectDir)src;$(ProjectDir)dependencies\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)dependencies\GLFW\include;$(ProjectDir)dependencies\GLEW\include;$(ProjectDir)dependencies\assimp\include;$(ProjectDir)dependencies\glm\;$(ProjectDir)dependencies\stb\;$(ProjectDir)src;$(ProjectDir)dependencies\imgui;$(ProjectDir)dependencies\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH/PCH.hpp</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -135,7 +135,7 @@ xcopy "$(ProjectDir)assets" "$(OutDir)assets" /I /S /Y</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)dependencies\GLFW\include;$(ProjectDir)dependencies\GLEW\include;$(ProjectDir)dependencies\assimp\include;$(ProjectDir)dependencies\glm\;$(ProjectDir)dependencies\stb\;$(ProjectDir)src;$(ProjectDir)dependencies\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)dependencies\GLFW\include;$(ProjectDir)dependencies\GLEW\include;$(ProjectDir)dependencies\assimp\include;$(ProjectDir)dependencies\glm\;$(ProjectDir)dependencies\stb\;$(ProjectDir)src;$(ProjectDir)dependencies\imgui;$(ProjectDir)dependencies\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH/PCH.hpp</PrecompiledHeaderFile>
