@@ -1,3 +1,10 @@
+///
+/// @file   basic.vert
+/// @brief  Vertex shader for basic rendering with skinning support.
+/// @author Jack Love
+/// @date   11.10.2025
+///
+
 #version 460 core
 layout(location = 0) in vec4 vertex_position;
 layout(location = 1) in vec4 uv;

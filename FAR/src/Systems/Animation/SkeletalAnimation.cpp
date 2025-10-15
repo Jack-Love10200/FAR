@@ -14,8 +14,6 @@
 
 namespace FAR
 {
-
-
   void SkeletalAnimation::LoadAnimationData(const aiScene* scene, SkeletalAnimator& animator)
   {
     for (unsigned int i = 0; i < scene->mNumAnimations; i++)
@@ -256,9 +254,7 @@ namespace FAR
     for (int i = 0; i < channel.keyFrames.size() - 1; i++)
     {
       float duration = (channel.keyFrames[i + 1].first - channel.keyFrames[i].first);
-
       float ticksPerFrame = tps / fps;
-
       int n = duration / ticksPerFrame;
       float a = glm::acos(glm::clamp(Quat::Dot(channel.keyFrames[i].second.q, channel.keyFrames[i + 1].second.q), -1.0f, 1.0f));
 
@@ -266,13 +262,8 @@ namespace FAR
       VQS kf1 = channel.keyFrames[i].second;
       VQS kf2 = channel.keyFrames[i + 1].second;
 
-      kf1.q.Normalize();
-      kf2.q.Normalize();
-
       if (a < std::numeric_limits<float>::epsilon())
-      {
         increment.q = Quat(1, 0, 0, 0);
-      }
       else
       {
         float B = a / (float)n;
@@ -286,11 +277,9 @@ namespace FAR
         glm::vec3 u;
 
         u = (kf2.q * kf1.q.Conjugate()).GetVectorPart() / sin(a);
-
         u = glm::normalize(u);
 
         float sinB = sin(B);
-
         glm::vec3 sinBu = sinB * u;
 
         //islerping rotation

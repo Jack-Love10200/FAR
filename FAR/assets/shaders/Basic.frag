@@ -1,3 +1,10 @@
+///
+/// @file   basic.vert
+/// @brief  Fragment shader for rendering colored and textured objects.
+/// @author Jack Love
+/// @date   11.10.2025
+///
+
 #version 460 core
 layout(location = 6) uniform sampler2D textures[16];
 layout(location = 4) uniform vec4 color;
