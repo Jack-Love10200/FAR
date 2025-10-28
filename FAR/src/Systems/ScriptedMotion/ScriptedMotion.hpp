@@ -31,10 +31,9 @@ namespace FAR
 
 	double GetCubicSplineMatrixTerm(int t, int termnum);
 
-	void ComputePath(ScriptedMotionPath& smp, Eigen::MatrixXd mat);
+	//void ComputePath(ScriptedMotionPath& smp, Eigen::MatrixXd mat);
 
-  //area under the velocity curve from 0 to a
-  float VelocityCurveArea(ScriptedMotionPath& smp, float a);
+  void ComputeSplineCoefficients(ScriptedMotionPath& smp, Eigen::MatrixXd mat);
 
   //void ComputeArcLengths(ScriptedMotionPath& smp);
   void ComputeArcLengthsAdaptive(ScriptedMotionPath& smp, float start, float end, float distance);

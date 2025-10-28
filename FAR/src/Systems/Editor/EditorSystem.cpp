@@ -19,6 +19,8 @@
 #include "Components/ScriptedMotionPath.hpp"
 
 
+//for piecewise linear integral for the scripted motion path speed curve
+#include "Util/MathHelpers.hpp"
 
 
 namespace FAR
@@ -35,6 +37,8 @@ namespace FAR
     IMGUI_CHECKVERSION();
     ImGuiContext* c = ImGui::CreateContext();
     ImGui::SetCurrentContext(c);
+
+    ImPlot::CreateContext();
 
 
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -72,13 +76,9 @@ namespace FAR
   void EditorSystem::Update()
   {
     ImGui::DockSpaceOverViewport();
-
     RenderSceneView();
-
     RenderSceneHierarchy();
-
     RenderInspector();
-
     RenderDetailsPanel();
   }
 
@@ -95,7 +95,10 @@ namespace FAR
 
   void EditorSystem::Exit()
   {
-
+    ImPlot::DestroyContext();
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
   }
 
   void EditorSystem::RenderSceneView()
@@ -319,6 +322,67 @@ namespace FAR
         {
           smp.controlPoints.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
           smp.isDirty = true;
+        }
+
+        for (int i = 0; i < smp.velocityKeys.size(); i++)
+        {
+          //ImGui::Text("Time: %.2f, Velocity: %.2f", time, vel);
+
+          //ensure time keys are in order
+          float timeMin = (i == 0) ? 0.0f : smp.velocityKeys[i - 1].first + 0.01f;
+          float timeMax = (i == smp.velocityKeys.size() - 1) ? 1.0f : smp.velocityKeys[i + 1].first - 0.01f;
+
+          float velMin = 0.0f;
+          float velMax = 1.0f;
+
+          if (ImGui::DragFloat(("Time##" + std::to_string(i)).c_str(), (float*)&smp.velocityKeys[i].first, 0.01f, timeMin, timeMax))
+            smp.isDirty = true;
+          //ImGui::SameLine();
+
+          if (ImGui::DragFloat(("Velocity##" + std::to_string(i)).c_str(), (float*)&smp.velocityKeys[i].second, 0.01f, velMin, velMax))
+            smp.isDirty = true;
+        }
+
+        //velocity/time plot
+        if (ImPlot::BeginPlot("Velocity Curve"))
+        {
+          ImPlot::SetupAxes("Time", "Velocity");
+          std::vector<float> times;
+          std::vector<float> velocities;
+          for (const auto& [time, vel] : smp.velocityKeys)
+          {
+            times.push_back(time);
+            velocities.push_back(vel);
+          }
+          ImPlot::PlotLine("Velocity", times.data(), velocities.data(), (int)times.size());
+          ImPlot::EndPlot();
+        }
+
+        float increment = 1.0f / 100.0f;
+        float currenttime = 0.0f;
+
+        //postion/time plot
+        if (ImPlot::BeginPlot("Position Curve"))
+        {
+          ImPlot::SetupAxes("Time", "Position");
+          std::vector<float> positions;
+          std::vector<float> posTimes;
+
+          for (int i = 0; i < 100; i++)
+          {
+            currenttime += increment;
+            float pos = GetPiecewiseLinearIntegral(smp.velocityKeys, currenttime);
+            
+            positions.push_back(pos);
+            posTimes.push_back(currenttime);
+          }
+
+          //normalize positions range to [0,1]
+          float maxPos = positions.back();
+          std::for_each(positions.begin(), positions.end(), [maxPos](float& p) { p /= maxPos; });
+
+          ImPlot::PlotLine("Position", posTimes.data(), positions.data(), (int)posTimes.size());
+          ImPlot::EndPlot();
         }
 
         ImGui::DragFloat("Total Time", &smp.totalTime, 0.1f, 0.1f, 100.0f);

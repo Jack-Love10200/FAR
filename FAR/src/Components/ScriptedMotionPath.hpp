@@ -13,6 +13,8 @@ struct ScriptedMotionPath
   std::vector<glm::vec3> controlPoints;
   std::vector<std::pair<float, float>> velocityKeys; //time, velocity
 
+  //TODO: This wouldn't need to have the pos during game time, 
+  //but still needed during editor time for visualization
   struct KeyPoint
   {
     glm::vec3 pos;
@@ -23,8 +25,8 @@ struct ScriptedMotionPath
   std::vector<KeyPoint> keyPoints;
 
   //std::array<float, PATH_RESOLUTION> arcLengths;
-  std::vector<std::pair<float, float>> arcLenTable;
-  std::array<glm::vec3, PATH_RESOLUTION> pathPoints;
+  //std::vector<std::pair<float, float>> arcLenTable;
+  //std::array<glm::vec3, PATH_RESOLUTION> pathPoints;
 
   float t = 0.0f;
 

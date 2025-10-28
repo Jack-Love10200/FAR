@@ -104,7 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)dependencies\GLFW\include;$(ProjectDir)dependencies\GLEW\include;$(ProjectDir)dependencies\assimp\include;$(ProjectDir)dependencies\glm\;$(ProjectDir)dependencies\stb\;$(ProjectDir)src;$(ProjectDir)dependencies\imgui;$(ProjectDir)dependencies\Eigen;$(ProjectDir)dependencies\imguizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)dependencies\GLFW\include;$(ProjectDir)dependencies\GLEW\include;$(ProjectDir)dependencies\assimp\include;$(ProjectDir)dependencies\glm\;$(ProjectDir)dependencies\stb\;$(ProjectDir)src;$(ProjectDir)dependencies\imgui;$(ProjectDir)dependencies\Eigen;$(ProjectDir)dependencies\imguizmo;$(ProjectDir)dependencies\implot;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH/PCH.hpp</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -135,7 +135,7 @@ xcopy "$(ProjectDir)assets" "$(OutDir)assets" /I /S /Y</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)dependencies\GLFW\include;$(ProjectDir)dependencies\GLEW\include;$(ProjectDir)dependencies\assimp\include;$(ProjectDir)dependencies\glm\;$(ProjectDir)dependencies\stb\;$(ProjectDir)src;$(ProjectDir)dependencies\imgui;$(ProjectDir)dependencies\Eigen;$(ProjectDir)dependencies\imguizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)dependencies\GLFW\include;$(ProjectDir)dependencies\GLEW\include;$(ProjectDir)dependencies\assimp\include;$(ProjectDir)dependencies\glm\;$(ProjectDir)dependencies\stb\;$(ProjectDir)src;$(ProjectDir)dependencies\imgui;$(ProjectDir)dependencies\Eigen;$(ProjectDir)dependencies\imguizmo;$(ProjectDir)dependencies\implot;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH/PCH.hpp</PrecompiledHeaderFile>
@@ -209,6 +209,18 @@ xcopy "$(ProjectDir)assets" "$(OutDir)assets" /I /S /Y</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="dependencies\implot\implot.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\implot\implot_demo.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\implot\implot_items.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="src\Engine\Engine.cpp" />
     <ClCompile Include="src\PCH\STB_Impls.cpp" />
     <ClCompile Include="src\Resources\InputResource.cpp" />
@@ -240,6 +252,8 @@ xcopy "$(ProjectDir)assets" "$(OutDir)assets" /I /S /Y</Command>
     <ClInclude Include="dependencies\imgui\imstb_rectpack.h" />
     <ClInclude Include="dependencies\imgui\imstb_textedit.h" />
     <ClInclude Include="dependencies\imgui\imstb_truetype.h" />
+    <ClInclude Include="dependencies\implot\implot.h" />
+    <ClInclude Include="dependencies\implot\implot_internal.h" />
     <ClInclude Include="src\Components\Camera.hpp" />
     <ClInclude Include="src\Components\Model.hpp" />
     <ClInclude Include="src\Components\ScriptedMotionPath.hpp" />

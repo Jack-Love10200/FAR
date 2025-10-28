@@ -6,6 +6,7 @@
 
 #include "Engine/Engine.hpp"
 
+#include "Util/MathHelpers.hpp"
 
 namespace FAR
 {
@@ -54,30 +55,31 @@ namespace FAR
       Eigen::MatrixXd mat = GetMatrixByNumCtrlPts(smp.controlPoints.size());
 
       if (smp.totalTime <= 0.0f)
-       smp.totalTime = 0.1f;
+        smp.totalTime = 0.1f;
 
       if (smp.isDirty)
       {
 
+        ComputeSplineCoefficients(smp, mat);
 
-        ComputePath(smp, mat);
+        //ComputePath(smp, mat);
         //ComputeArcLengths(smp);
         smp.isDirty = false;
-        smp.velCurveIntegral = VelocityCurveArea(smp, 1.0f);
-        float test = VelocityCurveArea(smp, 0.5f);
+        smp.velCurveIntegral = GetPiecewiseLinearIntegral(smp.velocityKeys, 1.0f);
+        //float test = GetPiecewiseLinearIntegral(smp.velocityKeys, 0.5f);
 
-        smp.arcLenTable.clear();
+        //smp.arcLenTable.clear();
         smp.keyPoints.clear();
 
-        smp.arcLenTable.push_back(std::make_pair(0.0f, 0.0f));
+        //smp.arcLenTable.push_back(std::make_pair(0.0f, 0.0f));
 
         ComputeArcLengthsAdaptive(smp, 0.0f, 1.0f, 0.0f);
 
-        float totalLength = smp.arcLenTable.end()[-1].second;
-        
-        std::for_each(smp.arcLenTable.begin(), smp.arcLenTable.end(), [totalLength](std::pair<float, float>& p) {
-          p.second /= totalLength;
-          });
+        //float totalLength = smp.arcLenTable.end()[-1].second;
+        //
+        //std::for_each(smp.arcLenTable.begin(), smp.arcLenTable.end(), [totalLength](std::pair<float, float>& p) {
+        //  p.second /= totalLength;
+        //  });
       }
 
       for (int i = 0; i < smp.controlPoints.size() - 1; i++)
@@ -112,31 +114,19 @@ namespace FAR
 
       smp.currentSpeed = GetCurrentSpeed(smp);
 
-      //smp.currentPos += GetVelocityAtTime(smp) * Engine::GetInstance()->dt;
-
-      //float currentpos = smp.currentPos;
-      //float currentpos = smp.t;
-      
-      //smp.currentSpeed = 
-
-      float areaprog = VelocityCurveArea(smp, smp.t) / smp.velCurveIntegral;
+      float areaprog = GetPiecewiseLinearIntegral(smp.velocityKeys, smp.t) / smp.velCurveIntegral;
 
       float currentpos = GetUfromArcLength(smp, areaprog);
 
-      //float currentpos = GetUfromArcLength(smp);
-
-
       while (currentpos > 1.0f)
         currentpos -= 1.0f;
-
-      // smp.pathPoints[i] = glm::vec3(x, y, z);
-
-      //transform.position = glm::vec3(x, y, z);
 
       glm::vec3 currentPos = GetCurvePoint(smp, currentpos);
       glm::vec3 centerOfInterest = GetCurvePoint(smp, currentpos + 0.001f);
 
 
+
+      //Orientation control (Forward Center of Interest)
       glm::vec3 w = centerOfInterest - currentPos;
 
       glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -147,7 +137,6 @@ namespace FAR
       w = glm::normalize(w);
       u = glm::normalize(u);
       v = glm::normalize(v);
-
 
       glm::mat4 translation = glm::mat4(
         glm::vec4(1.0f, 0.0f, 0.0f, 0.0f),
@@ -163,34 +152,8 @@ namespace FAR
         glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
       );
 
-      //rotation = glm::transpose(rotation);
-
       transform.modelMatrix = translation * rotation;
       transform.matManuallyModified = true;
-
-      //transform.modelMatrix = glm::transpose(transform.modelMatrix);
-
-      //float pathPos = currentpos * (PATH_RESOLUTION - 1);
-      //int index = (int)pathPos;
-      //float frac = pathPos - (float)index;
-      //if (index >= PATH_RESOLUTION - 1)
-      //{
-      //  index = PATH_RESOLUTION - 2;
-      //  frac = 1.0f;
-      //}
-
-      ////lerp between 2 closest points
-      //glm::vec3 pos = smp.pathPoints[index] * (1.0f - frac) + smp.pathPoints[index + 1] * frac;
-      //transform.position = pos;
-
-      ////rotation control
-      //glm::vec3 dir = smp.pathPoints[index + 1] - smp.pathPoints[index];
-      //dir = glm::normalize(dir); 
-      //glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-      //glm::vec3 right = glm::normalize(glm::cross(up, dir));
-      //up = glm::normalize(glm::cross(dir, right));
-      //glm::quat transformQuat = glm::quat_cast(glm::mat3(right, up, dir));
-      //transform.rotationQuaternion = Quat(transformQuat.w, transformQuat.x, transformQuat.y, transformQuat.z);
     }
   }
 
@@ -261,12 +224,114 @@ namespace FAR
     return tMinusC * tMinusC * tMinusC;
   }
 
-  void ScriptedMotion::ComputePath(ScriptedMotionPath& smp, Eigen::MatrixXd mat)
+
+
+
+  //void ScriptedMotion::ComputePath(ScriptedMotionPath& smp, Eigen::MatrixXd mat)
+  //{
+  //  Eigen::VectorXd vecX(smp.controlPoints.size() + 2);
+  //  Eigen::VectorXd vecY(smp.controlPoints.size() + 2);
+  //  Eigen::VectorXd vecZ(smp.controlPoints.size() + 2);
+  //  
+  //  vecX.setZero();
+  //  vecY.setZero();
+  //  vecZ.setZero();
+
+  //  smp.vecX.setZero();
+  //  smp.vecY.setZero();
+  //  smp.vecZ.setZero();
+
+  //  for (int i = 0; i < smp.controlPoints.size(); i++)
+  //  {
+  //    vecX[i] = smp.controlPoints[i].x;
+  //    vecY[i] = smp.controlPoints[i].y;
+  //    vecZ[i] = smp.controlPoints[i].z;
+  //  }
+
+  //  Eigen::ColPivHouseholderQR<Eigen::MatrixXd> system(mat.transpose());
+
+  //  Eigen::VectorXd solvedX = system.solve(vecX);
+  //  Eigen::VectorXd solvedY = system.solve(vecY);
+  //  Eigen::VectorXd solvedZ = system.solve(vecZ);
+
+  //  //smp.vecX = solvedX;
+  //  //smp.vecY = solvedY;
+  //  //smp.vecZ = solvedZ;
+
+  //  smp.vecX = system.solve(vecX);
+  //  smp.vecY = system.solve(vecY);
+  //  smp.vecZ = system.solve(vecZ);
+
+  //  float step = (float)(smp.controlPoints.size() - 1) / (PATH_RESOLUTION - 1);
+  //  //float step = (float)(smp.controlPoints.size() - 1) / (5 - 1);
+
+  //  float current = 0.0f;
+
+  //  for (int i = 0; i < PATH_RESOLUTION; i++)
+  //  //for (int i = 0; i < 5; i++)
+  //  {
+  //    float x = 0.0f;
+  //    float y = 0.0f;
+  //    float z = 0.0f;
+
+  //    x += solvedX[0];
+  //    x += solvedX[1] * current;
+  //    x += solvedX[2] * current * current;
+  //    x += solvedX[3] * current * current * current;
+
+  //    y += solvedY[0];
+  //    y += solvedY[1] * current;
+  //    y += solvedY[2] * current * current;
+  //    y += solvedY[3] * current * current * current;
+
+  //    z += solvedZ[0];
+  //    z += solvedZ[1] * current;
+  //    z += solvedZ[2] * current * current;
+  //    z += solvedZ[3] * current * current * current;
+
+  //    for (int j = 4; j < smp.controlPoints.size() + 2; j++)
+  //    {
+  //      float t = current - (float)(j - 3);
+  //      if (t < 0)
+  //      {
+  //        continue;
+  //      }
+  //      x += solvedX[j] * t * t * t;
+  //      y += solvedY[j] * t * t * t;
+  //      z += solvedZ[j] * t * t * t;
+  //    }
+
+  //    smp.pathPoints[i] = glm::vec3(x, y, z);
+
+  //    current += step;
+  //  }
+  //}
+
+  //void ScriptedMotion::ComputeArcLengths(ScriptedMotionPath& smp)
+  //{
+    //smp.arcLengths[0] = 0.0f;
+    //float totalLength = 0.0f;
+
+    ////linear distance approximation
+    //for (int i = 1; i < PATH_RESOLUTION; i++)
+    //{
+    //  float segmentLength = glm::length(smp.pathPoints[i] - smp.pathPoints[i - 1]);
+    //  totalLength += segmentLength;
+    //  smp.arcLengths[i] = totalLength;
+    //}
+    ////normalize
+    //for (int i = 0; i < PATH_RESOLUTION; i++)
+    //{
+    //  smp.arcLengths[i] /= totalLength;
+    //}
+//}
+
+  void ScriptedMotion::ComputeSplineCoefficients(ScriptedMotionPath& smp, Eigen::MatrixXd mat)
   {
     Eigen::VectorXd vecX(smp.controlPoints.size() + 2);
     Eigen::VectorXd vecY(smp.controlPoints.size() + 2);
     Eigen::VectorXd vecZ(smp.controlPoints.size() + 2);
-    
+
     vecX.setZero();
     vecY.setZero();
     vecZ.setZero();
@@ -289,121 +354,13 @@ namespace FAR
     Eigen::VectorXd solvedZ = system.solve(vecZ);
 
     //smp.vecX = solvedX;
-    //smp.vecY = solvedY;
+    //smp.vecY = solvedYW;
     //smp.vecZ = solvedZ;
 
     smp.vecX = system.solve(vecX);
     smp.vecY = system.solve(vecY);
     smp.vecZ = system.solve(vecZ);
-
-    float step = (float)(smp.controlPoints.size() - 1) / (PATH_RESOLUTION - 1);
-    //float step = (float)(smp.controlPoints.size() - 1) / (5 - 1);
-
-    float current = 0.0f;
-
-    for (int i = 0; i < PATH_RESOLUTION; i++)
-    //for (int i = 0; i < 5; i++)
-    {
-      float x = 0.0f;
-      float y = 0.0f;
-      float z = 0.0f;
-
-      x += solvedX[0];
-      x += solvedX[1] * current;
-      x += solvedX[2] * current * current;
-      x += solvedX[3] * current * current * current;
-
-      y += solvedY[0];
-      y += solvedY[1] * current;
-      y += solvedY[2] * current * current;
-      y += solvedY[3] * current * current * current;
-
-      z += solvedZ[0];
-      z += solvedZ[1] * current;
-      z += solvedZ[2] * current * current;
-      z += solvedZ[3] * current * current * current;
-
-      for (int j = 4; j < smp.controlPoints.size() + 2; j++)
-      {
-        float t = current - (float)(j - 3);
-        if (t < 0)
-        {
-          continue;
-        }
-        x += solvedX[j] * t * t * t;
-        y += solvedY[j] * t * t * t;
-        z += solvedZ[j] * t * t * t;
-      }
-
-      smp.pathPoints[i] = glm::vec3(x, y, z);
-
-      current += step;
-    }
   }
-
-  float ScriptedMotion::VelocityCurveArea(ScriptedMotionPath& smp, float a)
-  {
-    //piecewise linear velocity curve
-
-    if (a <= 0.0f)
-      return 0.0f;
-
-    if (smp.velocityKeys.size() == 0)
-      return 0.0f;
-
-    float area = (smp.velocityKeys[0].first * smp.velocityKeys[0].second) / 2.0f;
-
-    for (int i = 1; i < smp.velocityKeys.size(); i++)
-    {
-      if (smp.velocityKeys[i].first <= a)
-      {
-        float xDiff = smp.velocityKeys[i].first - smp.velocityKeys[i - 1].first;
-        float yDiff = smp.velocityKeys[i].second - smp.velocityKeys[i - 1].second;
-
-        float rectarea = smp.velocityKeys[i - 1].second * xDiff;
-        float triarea = (xDiff * yDiff) / 2;
-
-        area += rectarea + triarea;
-        //area += key.second * key.first;
-      }
-      else
-      {
-        float frac = (a - smp.velocityKeys[i - 1].first) / (smp.velocityKeys[i].first - smp.velocityKeys[i - 1].first);
-
-        float interpX = a;
-        float interpY = glm::mix(smp.velocityKeys[i - 1].second, smp.velocityKeys[i].second, frac);
-
-        float xDiff = interpX - smp.velocityKeys[i - 1].first;
-        float yDiff = interpY - smp.velocityKeys[i - 1].second;
-
-        float rectarea = smp.velocityKeys[i - 1].second * xDiff;
-        float triarea = (xDiff * yDiff) / 2;
-
-        area += rectarea + triarea;
-        break;
-      }
-    }
-    return area;
-  }
-
-  //void ScriptedMotion::ComputeArcLengths(ScriptedMotionPath& smp)
-  //{
-    //smp.arcLengths[0] = 0.0f;
-    //float totalLength = 0.0f;
-
-    ////linear distance approximation
-    //for (int i = 1; i < PATH_RESOLUTION; i++)
-    //{
-    //  float segmentLength = glm::length(smp.pathPoints[i] - smp.pathPoints[i - 1]);
-    //  totalLength += segmentLength;
-    //  smp.arcLengths[i] = totalLength;
-    //}
-    ////normalize
-    //for (int i = 0; i < PATH_RESOLUTION; i++)
-    //{
-    //  smp.arcLengths[i] /= totalLength;
-    //}
-  //}
 
   void ScriptedMotion::ComputeArcLengthsAdaptive(ScriptedMotionPath& smp, float start, float end, float distance)
   {

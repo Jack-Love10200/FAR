@@ -19,4 +19,6 @@ namespace FAR
 
   //convert aiMatrix4x4 to glm::mat4
   glm::mat4 ToGlm(const aiMatrix4x4& m);
+
+  float GetPiecewiseLinearIntegral(const std::vector<std::pair<float, float>>& points, float a);
 }

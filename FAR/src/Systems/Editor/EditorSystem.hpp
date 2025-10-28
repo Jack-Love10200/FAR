@@ -21,6 +21,9 @@
 //Guizmo
 #include <ImGuizmo.h>
 
+//Implot
+#include <implot.h>
+
 namespace FAR
 {
   class EditorSystem : public iSystem
