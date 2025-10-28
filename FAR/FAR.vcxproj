@@ -104,7 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)dependencies\GLFW\include;$(ProjectDir)dependencies\GLEW\include;$(ProjectDir)dependencies\assimp\include;$(ProjectDir)dependencies\glm\;$(ProjectDir)dependencies\stb\;$(ProjectDir)src;$(ProjectDir)dependencies\imgui;$(ProjectDir)dependencies\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)dependencies\GLFW\include;$(ProjectDir)dependencies\GLEW\include;$(ProjectDir)dependencies\assimp\include;$(ProjectDir)dependencies\glm\;$(ProjectDir)dependencies\stb\;$(ProjectDir)src;$(ProjectDir)dependencies\imgui;$(ProjectDir)dependencies\Eigen;$(ProjectDir)dependencies\imguizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH/PCH.hpp</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -135,7 +135,7 @@ xcopy "$(ProjectDir)assets" "$(OutDir)assets" /I /S /Y</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)dependencies\GLFW\include;$(ProjectDir)dependencies\GLEW\include;$(ProjectDir)dependencies\assimp\include;$(ProjectDir)dependencies\glm\;$(ProjectDir)dependencies\stb\;$(ProjectDir)src;$(ProjectDir)dependencies\imgui;$(ProjectDir)dependencies\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)dependencies\GLFW\include;$(ProjectDir)dependencies\GLEW\include;$(ProjectDir)dependencies\assimp\include;$(ProjectDir)dependencies\glm\;$(ProjectDir)dependencies\stb\;$(ProjectDir)src;$(ProjectDir)dependencies\imgui;$(ProjectDir)dependencies\Eigen;$(ProjectDir)dependencies\imguizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH/PCH.hpp</PrecompiledHeaderFile>
@@ -161,6 +161,26 @@ xcopy "$(ProjectDir)assets" "$(OutDir)assets" /I /S /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dependencies\imguizmo\GraphEditor.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\imguizmo\ImCurveEdit.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\imguizmo\ImGradient.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\imguizmo\ImGuizmo.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\imguizmo\ImSequencer.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="dependencies\imgui\backends\imgui_impl_glfw.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -206,6 +226,12 @@ xcopy "$(ProjectDir)assets" "$(OutDir)assets" /I /S /Y</Command>
     <ClCompile Include="src\Util\VQS.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dependencies\imguizmo\GraphEditor.h" />
+    <ClInclude Include="dependencies\imguizmo\ImCurveEdit.h" />
+    <ClInclude Include="dependencies\imguizmo\ImGradient.h" />
+    <ClInclude Include="dependencies\imguizmo\ImGuizmo.h" />
+    <ClInclude Include="dependencies\imguizmo\ImSequencer.h" />
+    <ClInclude Include="dependencies\imguizmo\ImZoomSlider.h" />
     <ClInclude Include="dependencies\imgui\backends\imgui_impl_glfw.h" />
     <ClInclude Include="dependencies\imgui\backends\imgui_impl_opengl3.h" />
     <ClInclude Include="dependencies\imgui\imconfig.h" />

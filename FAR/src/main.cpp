@@ -74,8 +74,8 @@ int main()
 
   engine.RegisterSystemType<FAR::EditorSystem>();
   engine.RegisterSystemType<FAR::Render>();
-  engine.RegisterSystemType<FAR::SkeletalAnimation>();
   engine.RegisterSystemType<FAR::ScriptedMotion>();
+  engine.RegisterSystemType<FAR::SkeletalAnimation>();
   engine.RegisterSystemType<FAR::Sandbox>();
   engine.RegisterSystemType<FAR::InputSystem>();
 

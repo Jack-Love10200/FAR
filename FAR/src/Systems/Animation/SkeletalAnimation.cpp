@@ -9,6 +9,7 @@
 
 #include "SkeletalAnimation.hpp"
 #include "Components/Model.hpp"
+#include "Components/ScriptedMotionPath.hpp"
 
 #include "Util/MathHelpers.hpp"
 
@@ -197,7 +198,7 @@ namespace FAR
     animator.animations.push_back(newAnim);
   }
 
-  void SkeletalAnimation::UpdateNode(Model& model, SkeletalAnimator& animator, int nodeIndex)
+  void SkeletalAnimation::UpdateNodeIncremental(Model& model, SkeletalAnimator& animator, int nodeIndex)
   {
     Model::Node& node = model.nodes[nodeIndex];
     SkeletalAnimator::Animation& currentAnim = animator.animations[animator.currentAnimation];
@@ -242,6 +243,67 @@ namespace FAR
 
           localTransform = VQS::IncrementalInterpolate(prevTransform, channel->incrementalValues[i]);
         }
+      }
+      node.transform = localTransform;
+    }
+  }
+
+  void SkeletalAnimation::UpdateNode(Model& model, SkeletalAnimator& animator, int nodeIndex)
+  {
+    Model::Node& node = model.nodes[nodeIndex];
+    SkeletalAnimator::Animation& currentAnim = animator.animations[animator.currentAnimation];
+
+    SkeletalAnimator::Animation::Channel* channel = nullptr;
+    if (nodeIndex < currentAnim.channels.size() && currentAnim.channels[nodeIndex].nodeName == node.name)
+    {
+      channel = &currentAnim.channels[nodeIndex];
+    }
+    else
+    {
+      //fall back to searching by name
+      for (auto& ch : currentAnim.channels)
+      {
+        if (ch.nodeName == node.name)
+        {
+          channel = &ch;
+          break;
+        }
+      }
+    }
+
+    VQS localTransform;
+
+    if (channel)
+    {
+      // Interpolate position
+      bool found = false;
+      for (int i = 0; i < channel->keyFrames.size() - 1; i++)
+      {
+        if (animator.animationTime >= channel->keyFrames[i].first && animator.animationTime <= channel->keyFrames[i + 1].first)
+        {
+          float alpha = (animator.animationTime - channel->keyFrames[i].first) / (channel->keyFrames[i + 1].first - channel->keyFrames[i].first);
+          VQS kf1 = channel->keyFrames[i].second;
+          VQS kf2 = channel->keyFrames[i + 1].second;
+          localTransform = VQS::Interpolate(kf1, kf2, alpha);
+          found = true;
+          break;
+        }
+        else if (animator.animationTime < channel->keyFrames[0].first)
+        {
+          localTransform = channel->keyFrames[0].second;
+          found = true;
+          break;
+        }
+        else if (animator.animationTime > channel->keyFrames.back().first)
+        {
+          localTransform = channel->keyFrames.back().second;
+          found = true;
+          break;
+        }
+      }
+      if (!found)
+      {
+        std::cout << "Warning: Animation time out of bounds for node " << node.name << std::endl;
       }
       node.transform = localTransform;
     }
@@ -332,8 +394,20 @@ namespace FAR
 
       float dt = Engine::GetInstance()->dt;
 
+      float motionSpeed = 1.0f;
+
+      //if the entity is moving along a scripted motion path, adjust speed by linear speed
+      if (Engine::GetInstance()->HasComponent<ScriptedMotionPath>(e))
+      {
+        ScriptedMotionPath& smp = Engine::GetInstance()->GetComponent<ScriptedMotionPath>(e);
+        motionSpeed = smp.currentSpeed;
+      }
+
+      //std::cout << "Motion Speed: " << motionSpeed << std::endl;
+      //motionSpeed = 0.1f;
+
       if (sk.playing)
-      sk.animationTime += dt * sk.animations[sk.currentAnimation].ticksPerSecond;
+      sk.animationTime += dt * sk.animations[sk.currentAnimation].ticksPerSecond * motionSpeed * sk.playbackSpeed;
 
       if (sk.looping)
         sk.animationTime = fmod(sk.animationTime, sk.animations[sk.currentAnimation].duration);

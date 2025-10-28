@@ -43,6 +43,7 @@ namespace FAR
     void LoadAnimation(aiAnimation* animation, SkeletalAnimator& animator);
 
     //update a single node's transform based on the current animation time
+    void UpdateNodeIncremental(Model& model, SkeletalAnimator& animator, int nodeIndex);
     void UpdateNode(Model& model, SkeletalAnimator& animator, int nodeIndex);
 
     //precompute incremental interpolation values for a channel

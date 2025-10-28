@@ -52,4 +52,6 @@ struct SkeletalAnimator
   bool playing;
   //whether the animation should loop
   bool looping;
+
+  float playbackSpeed = 1.0f;
 };

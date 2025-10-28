@@ -15,9 +15,9 @@ layout(location = 1) uniform mat4 Modeling;
 layout(location = 2) uniform mat4 Viewing;
 layout(location = 3) uniform mat4 Projection;
 
-layout(location = 200) uniform bool useSkinning;
+layout(location = 50) uniform bool useSkinning;
 
-layout(location = 50) uniform mat4 BoneTransforms[100];
+layout(location = 51) uniform mat4 BoneTransforms[200];
 
 out vec4 frag_uv;
 out vec4 vert_color;
@@ -42,5 +42,23 @@ void main()
     //outputs to the fragment shader
     gl_Position = Projection * Viewing * Modeling * totalPosition;
     vert_color = vec4(uv.xy, 1.0f, 1.0f);
+
+//    vec4 outcol = vec4(0.0f);
+//
+//    if (bones.x != -1)
+//        outcol.x = 1.0f;
+//
+//        if (bones.y != -1)
+//        outcol.y = 1.0f;
+//
+//        if (bones.z != -1)
+//        outcol.z = 1.0f;
+//
+//        if (bones.w != -1)
+//        outcol.w = 0.50f;
+//        else
+//        outcol.w = 1.0f;
+
+    //vert_color = outcol;
     frag_uv = uv;
 }

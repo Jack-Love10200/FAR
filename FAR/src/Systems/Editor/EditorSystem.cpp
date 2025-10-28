@@ -9,16 +9,17 @@
 
 #include "EditorSystem.hpp"
 
-// IMGUI
-#include <imgui.h>
-#include <backends/imgui_impl_glfw.h>
-#include <backends/imgui_impl_opengl3.h>
+
 
 //TODO: Create registry for this instead of having all imlemented in the editor system
 #include "Components/Transform.hpp"
 #include "Components/Camera.hpp"
 #include "Components/Model.hpp"
 #include "Components/SkeletalAnimator.hpp"
+#include "Components/ScriptedMotionPath.hpp"
+
+
+
 
 namespace FAR
 {
@@ -28,6 +29,7 @@ namespace FAR
     const char* glsl_version = "#version 460 core";
     windowResc = Engine::GetInstance()->GetResource<WindowResource>();
     renderResc = Engine::GetInstance()->GetResource<RenderResource>();
+    inputResc = Engine::GetInstance()->GetResource<InputResource>();
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -62,7 +64,9 @@ namespace FAR
   {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
+
     ImGui::NewFrame();
+    ImGuizmo::BeginFrame();
   }
 
   void EditorSystem::Update()
@@ -99,8 +103,100 @@ namespace FAR
     ImGui::Begin("Scene View", nullptr, ImGuiWindowFlags_NoScrollbar);
     ImVec2 windowsize = ImGui::GetContentRegionAvail();
     renderResc->CreateFrameBuffer(windowsize.x, windowsize.y);
+
+    ImVec2 pos = ImGui::GetCursorScreenPos();
+    //pos = ImGui::GetWindowPos();
+    
+    
     ImGui::Image((void*)(intptr_t)renderResc->colorTex, windowsize, ImVec2(0, 1), ImVec2(1, 0));
+
+    ImGuizmo::SetRect(pos.x, pos.y, windowsize.x, windowsize.y);
+
+    RenderGuizmo();
+
+
     ImGui::End();
+  }
+
+  void EditorSystem::RenderGuizmo()
+  {
+    ImGuizmo::SetDrawlist();
+
+    //super temp, just get the test cam for now
+    Camera& cam = Engine::GetInstance()->GetComponent<Camera>(0);
+    Transform& camTransform = Engine::GetInstance()->GetComponent<Transform>(0);
+
+    glm::mat4 viewMatrix = glm::mat4(1.0f);
+    viewMatrix = glm::lookAt(camTransform.position, camTransform.position + cam.forward, cam.up);
+
+    glm::mat4 projectionMatrix = glm::mat4(1.0f);
+    projectionMatrix = glm::perspective(glm::radians(cam.fov), cam.aspect, cam.nearPlane, cam.farPlane);
+
+    Transform& selectedTransform = Engine::GetInstance()->GetComponent<Transform>(selected);
+
+    glm::mat4 modelMatrix = glm::translate(selectedTransform.position);
+    //glm::mat4 modelMatrix = selectedTransform.modelMatrix;
+
+    glm::vec3 oldPos = selectedTransform.position;
+    glm::vec3 oldScl = selectedTransform.scale;
+    //glm::vec3 oldRot = 
+
+    if (ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix),
+      guizmoOperation, ImGuizmo::WORLD,
+      glm::value_ptr(modelMatrix)))
+    {
+      if (!gizmoActive)
+      {
+        gizmoTrackPos = glm::vec3(0.0f);
+        gizmoTrackRot = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+        gizmoStartPos = selectedTransform.position;
+        //gizmoStartRot = glm::eulerAngles(glm::quat_cast(selectedTransform.rotationQuaternion.ToMatrix()));
+        gizmoStartScl = selectedTransform.scale;
+        gizmoActive = true;
+        std::cout << "Gizmo activated\n";
+      }
+      //selectedTransform.matManuallyModified = true;
+
+      //decompose matrix back into position, rotation, scale
+      glm::vec3 dummyPosition;
+      glm::vec3 dummyRotation;
+      glm::vec3 dummyScale;
+
+      ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(modelMatrix),
+        glm::value_ptr(dummyPosition),
+        glm::value_ptr(dummyRotation),
+        glm::value_ptr(dummyScale));
+
+      if (guizmoOperation == ImGuizmo::TRANSLATE)
+      {
+        gizmoTrackPos += dummyPosition - oldPos;
+
+        //selectedTransform.position = gizmoStartPos + dummyPosition;
+        selectedTransform.position = gizmoTrackPos + gizmoStartPos;
+        //std::cout << dummyPosition.x << std::endl;
+      }
+
+      else if (guizmoOperation == ImGuizmo::SCALE)
+      {
+        gizmoTrackPos += dummyScale - oldScl;
+        selectedTransform.scale = gizmoStartScl * dummyScale;
+      }
+
+      else if (guizmoOperation == ImGuizmo::ROTATE)
+      {
+        glm::quat rotQuat = glm::quat(glm::radians(dummyRotation));
+        selectedTransform.rotationQuaternion = selectedTransform.rotationQuaternion * FAR::Quat(rotQuat.w, rotQuat.x, rotQuat.y, rotQuat.z);
+      }
+
+
+      //glm::quat rotQuat = glm::quat_cast(selectedTransform.modelMatrix);
+
+    }
+    else if (gizmoActive && (!inputResc->GetMouseButton(KEYCODE::MOUSE_LEFT))) // Reset the guizmo tracker if the user is not manipulating the guizmo
+    {
+      gizmoActive = false;
+      std::cout << "Gizmo deactivated\n";
+    }
   }
 
   void EditorSystem::RenderSceneHierarchy()
@@ -177,6 +273,8 @@ namespace FAR
 
         ImGui::DragFloat("Animation Time", &sk.animationTime, 0.1f, 0, sk.animations[sk.currentAnimation].duration);
 
+        ImGui::DragFloat("Playback Speed", &sk.playbackSpeed, 0.1f, 0.1f, 10.0f);
+
         if (ImGui::BeginCombo("Animation", sk.animations[sk.currentAnimation].name.c_str()))
         {
           for (int i = 0; i < sk.animations.size(); i++)
@@ -196,6 +294,40 @@ namespace FAR
         ImGui::TreePop();
       }
     }
+
+    //Scripted Motion Path Component
+    if (selected != -1 && Engine::GetInstance()->HasComponent<ScriptedMotionPath>(selected))
+    {
+      ScriptedMotionPath& smp = Engine::GetInstance()->GetComponent<ScriptedMotionPath>(selected);
+      if (ImGui::TreeNode("Scripted Motion Path Component"))
+      {
+        for (int i = 0; i < smp.controlPoints.size(); i++)
+        {
+          std::string label = "Control Point " + std::to_string(i);
+
+          if (ImGui::DragFloat3(label.c_str(), &smp.controlPoints[i][0], 0.1f))
+            smp.isDirty = true;
+
+          if (ImGui::Button(("Remove##" + std::to_string(i)).c_str()))
+          {
+            smp.controlPoints.erase(smp.controlPoints.begin() + i);
+            smp.isDirty = true;
+          }
+        }
+
+        if (ImGui::Button("Add Control Point"))
+        {
+          smp.controlPoints.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
+          smp.isDirty = true;
+        }
+
+        ImGui::DragFloat("Total Time", &smp.totalTime, 0.1f, 0.1f, 100.0f);
+
+        ImGui::TreePop();
+      }
+    }
+
+
     ImGui::End();
   }
 
@@ -203,6 +335,17 @@ namespace FAR
   {
     ImGui::Begin("Details");
     ImGui::Text("FPS: %.1f", 1.0f / Engine::GetInstance()->dt);
+
+    //radio buttons for gizmo mode
+    if (ImGui::RadioButton("Translate", guizmoOperation == ImGuizmo::TRANSLATE))
+      guizmoOperation = ImGuizmo::TRANSLATE;
+  
+    if (ImGui::RadioButton("Rotate", guizmoOperation == ImGuizmo::ROTATE))
+      guizmoOperation = ImGuizmo::ROTATE;
+
+    if (ImGui::RadioButton("Scale", guizmoOperation == ImGuizmo::SCALE))
+      guizmoOperation = ImGuizmo::SCALE;
+
     ImGui::End();
   }
 }

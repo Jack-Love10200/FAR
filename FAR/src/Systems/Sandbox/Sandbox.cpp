@@ -12,41 +12,33 @@ namespace FAR
 {
   void Sandbox::Init()
   {
-    //Engine& engine = *Engine::GetInstance();
-    //cam = engine.CreateEntity();
-    //engine.AddComponent(cam, Camera{ .isMain = true });
-    //engine.AddComponent(cam, Transform{ .position = glm::vec3(5.0f, 0.0f, 0.0f), .rotationQuaternion = Quat(0.0f, 0.0f, 0.0f, 1.0f)});
+    Engine& engine = *Engine::GetInstance();
+    cam = engine.CreateEntity();
+
+    FAR::Quat camRot = Quat(-0.209f, 0.523f, -0.306f, -0.767f);
+    camRot.Normalize();
+
+    engine.AddComponent(cam, Camera{ .forward = camRot * glm::vec3(0.0f, 0.0f, -1.0f), .isMain = true });
+    engine.AddComponent(cam, Transform{ .position = glm::vec3(-10.0f, 7.0f, 0.0f), .rotationQuaternion = camRot });
 
 
-    //Entity e = engine.CreateEntity();
-    //engine.AddComponent(e, ScriptedMotionPath{ .points = {{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}} });
+    Entity e = engine.CreateEntity();
+    engine.AddComponent(e, ScriptedMotionPath{ 
+      //.controlPoints = {{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} },
+      //.controlPoints = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f} , {0.0f, 0.0f, 0.0f}},
+      .controlPoints = {{-1.1f, 0.0f, -6.7f}, {2.2f, 0.0f, -2.6f}, {6.1f, 0.0f, -0.6f} , {4.9f, 0.0f, 2.9f}, {-1.8f, 0.0f, 6.9f}, {-7.6f, 0.0f, 0.0f}, {-8.8f, 0.0f, -10.8f}, {0.3f, 0.0f, -16.7f}, {-1.5f, 0.0f, -11.6f}, {-1.1f, 0.0f, -6.7f}},
+      .velocityKeys = {{0.0f, 0.0f}, {0.1f, 0.01f}, { 0.45f ,1.0f }, {0.55f, 1.0f}, {0.9f, 0.01f}, { 1.0f, 0.0f }},
+      .totalTime = 30.0f
+      //.velocityKeys = {{0.0f, 1.0f}, {1.0f, 1.0f}}
+      });
+    engine.AddComponent(e, Transform{ .position = glm::vec3(0.0f, 0.0f, 0.0f) });
+    engine.AddComponent(e, Model{ .path = "assets/trotting_cat.glb", .textured = false });
+    engine.AddComponent(e, SkeletalAnimator{ .path = "assets/trotting_cat.glb", .animationTime = 0.0f, .currentAnimation = 0, .playing = true, .looping = true, .playbackSpeed = 1.3f });
 
-    //for (int x = 0; x < 10; x++)
-    //{
-    //  if (x % 3 == 0)
-    //  {
-    //    Entity viking = engine.CreateEntity();
-    //    engine.AddComponent(viking, Model{ .path = "assets/CS460Models/fbx/viking_C.fbx", .textured = true });
-    //    engine.AddComponent(viking, Transform{ .position = glm::vec3(x, -5.0f, -10.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
-    //    engine.AddComponent(viking, SkeletalAnimator{ .path = "assets/CS460Models/fbx/viking_C.fbx", .animationTime = (x * 70.0f), .currentAnimation = 0, .playing = true, .looping = true });
-    //  }
 
-    //  if (x % 3 == 1)
-    //  {
-    //    Entity egyptian = engine.CreateEntity();
-    //    engine.AddComponent(egyptian, Model{ .path = "assets/CS460Models/fbx/egyptian_B.fbx", .textured = false });
-    //    engine.AddComponent(egyptian, Transform{ .position = glm::vec3(x, -5.0f, -10.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
-    //    engine.AddComponent(egyptian, SkeletalAnimator{ .path = "assets/CS460Models/fbx/egyptian_B.fbx", .animationTime = (x * 70.0f), .currentAnimation = 0, .playing = true, .looping = true });
-    //  }
-
-    //  if (x % 3 == 2)
-    //  {
-    //    Entity roman = engine.CreateEntity();
-    //    engine.AddComponent(roman, Model{ .path = "assets/CS460Models/fbx/roman_D.fbx", .textured = true });
-    //    engine.AddComponent(roman, Transform{ .position = glm::vec3(x, -5.0f, -10.0f), .scale = glm::vec3(1.0f, 1.0f, 1.0f) });
-    //    engine.AddComponent(roman, SkeletalAnimator{ .path = "assets/CS460Models/fbx/roman_D.fbx", .animationTime = (x * 70.0f), .currentAnimation = 0, .playing = true, .looping = true });
-    //  }
-    //}
+    Entity floor = engine.CreateEntity();
+    engine.AddComponent(floor, Model{ .path = "assets/quad.obj", .textured = false });
+    engine.AddComponent(floor, Transform{ .position = glm::vec3(-12.0f, -0.01f, -19.0f), .rotationQuaternion = Quat(0.707f, 0.707f, 0.0f, 0.0f), .scale = glm::vec3(22.0f, 30.0f, 0.0f)});
   }
 
   void Sandbox::PreUpdate()
@@ -55,59 +47,59 @@ namespace FAR
 
   void Sandbox::Update()
   {
-    //InputResource* inputResc = Engine::GetInstance()->GetResource<InputResource>();
+    InputResource* inputResc = Engine::GetInstance()->GetResource<InputResource>();
 
-    //float speed = 0.01f;
-    //if (!inputResc->GetMouseButton(KEYCODE::MOUSE_RIGHT))
-    //  return;
+    float speed = 0.01f;
+    if (!inputResc->GetMouseButton(KEYCODE::MOUSE_RIGHT))
+      return;
 
-    //Transform& camTransform = Engine::GetInstance()->GetComponent<Transform>(cam);
-    //Camera& camera = Engine::GetInstance()->GetComponent<Camera>(cam);
-
-
-    //if (inputResc->GetKey(KEYCODE::W))
-    //{
-    //  camTransform.position += camera.forward * speed;
-    //}
-
-    //if (inputResc->GetKey(KEYCODE::S))
-    //{
-
-    //  camTransform.position -= camera.forward * speed;
-    //}
-
-    //if (inputResc->GetKey(KEYCODE::A))
-    //{
-    //  glm::vec3 right = glm::cross(camera.forward, camera.up);
-    //  camTransform.position -= right * speed;
-    //}
-
-    //if (inputResc->GetKey(KEYCODE::D))
-    //{
-    //  glm::vec3 right = glm::cross(camera.forward, camera.up);
-    //  camTransform.position += right * speed;
-    //}
+    Transform& camTransform = Engine::GetInstance()->GetComponent<Transform>(cam);
+    Camera& camera = Engine::GetInstance()->GetComponent<Camera>(cam);
 
 
-    //float sensitivity = 0.01f; // tweak
-    //float yaw = inputResc->mouseDelta.x * sensitivity * -1.0f;
-    //float pitch = inputResc->mouseDelta.y * sensitivity;
+    if (inputResc->GetKey(KEYCODE::W))
+    {
+      camTransform.position += camera.forward * speed;
+    }
 
-    //if (glm::dot(camTransform.rotationQuaternion * glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f)) > 0.99f && pitch < 0.0f)
-    //  pitch = 0.0f;
+    if (inputResc->GetKey(KEYCODE::S))
+    {
 
-    //if (glm::dot(camTransform.rotationQuaternion * glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)) > 0.99f && pitch > 0.0f)
-    //  pitch = 0.0f;
+      camTransform.position -= camera.forward * speed;
+    }
 
-    //// build incremental quaternion from mouse movement
-    //Quat qYaw = Quat::FromAxisAngle(yaw, glm::vec3(0, 1, 0));
-    //Quat qPitch = Quat::FromAxisAngle(pitch, glm::vec3(1, 0, 0));
+    if (inputResc->GetKey(KEYCODE::A))
+    {
+      glm::vec3 right = glm::cross(camera.forward, camera.up);
+      camTransform.position -= right * speed;
+    }
 
-    //camTransform.rotationQuaternion = qYaw * camTransform.rotationQuaternion;
-    //camTransform.rotationQuaternion = camTransform.rotationQuaternion * qPitch;
-    //camTransform.rotationQuaternion = camTransform.rotationQuaternion.Normalize(); // keep it clean
+    if (inputResc->GetKey(KEYCODE::D))
+    {
+      glm::vec3 right = glm::cross(camera.forward, camera.up);
+      camTransform.position += right * speed;
+    }
 
-    //camera.forward = camTransform.rotationQuaternion * glm::vec3(0.0f, 0.0f, -1.0f);
+
+    float sensitivity = 0.01f; // tweak
+    float yaw = inputResc->mouseDelta.x * sensitivity * -1.0f;
+    float pitch = inputResc->mouseDelta.y * sensitivity;
+
+    if (glm::dot(camTransform.rotationQuaternion * glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f)) > 0.99f && pitch < 0.0f)
+      pitch = 0.0f;
+
+    if (glm::dot(camTransform.rotationQuaternion * glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)) > 0.99f && pitch > 0.0f)
+      pitch = 0.0f;
+
+    // build incremental quaternion from mouse movement
+    Quat qYaw = Quat::FromAxisAngle(yaw, glm::vec3(0, 1, 0));
+    Quat qPitch = Quat::FromAxisAngle(pitch, glm::vec3(1, 0, 0));
+
+    camTransform.rotationQuaternion = qYaw * camTransform.rotationQuaternion;
+    camTransform.rotationQuaternion = camTransform.rotationQuaternion * qPitch;
+    camTransform.rotationQuaternion = camTransform.rotationQuaternion.Normalize(); // keep it clean
+
+    camera.forward = camTransform.rotationQuaternion * glm::vec3(0.0f, 0.0f, -1.0f);
 
   }
 

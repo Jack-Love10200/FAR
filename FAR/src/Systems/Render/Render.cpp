@@ -10,6 +10,7 @@
 #include "Engine/Engine.hpp"
 
 #include <glm/gtx/euler_angles.hpp>
+//#include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_access.hpp>
 #include <glm/gtx/transform.hpp>
@@ -19,6 +20,7 @@
 #include "Components/SkeletalAnimator.hpp"
 
 #include "Util/MathHelpers.hpp"
+
 
 namespace FAR
 {
@@ -106,13 +108,13 @@ namespace FAR
 
 
     //print out all of the bone names
-    for (unsigned int i = 0; i < samba->mNumMeshes; i++)
-    {
-      for (unsigned int j = 0; j < samba->mMeshes[i]->mNumBones; j++)
-      {
-        std::cout << "bone: " << samba->mMeshes[i]->mBones[j]->mName.C_Str() << std::endl;
-      }
-    }
+    //for (unsigned int i = 0; i < samba->mNumMeshes; i++)
+    //{
+    //  for (unsigned int j = 0; j < samba->mMeshes[i]->mNumBones; j++)
+    //  {
+    //    std::cout << "bone: " << samba->mMeshes[i]->mBones[j]->mName.C_Str() << std::endl;
+    //  }
+    //}
 
     stbi_set_flip_vertically_on_load(true);
 
@@ -216,6 +218,8 @@ namespace FAR
         }
         else
         {
+          std::cout << "nonembedded texture found" << std::endl;
+
           //non-embedded texture
           std::filesystem::path texFullPath = filepath.parent_path() / texPath.C_Str();
 
@@ -326,7 +330,7 @@ namespace FAR
   {
     std::vector<glm::vec4> points;
 
-    BuildBonePointList(model, points, 3, VQS());
+    BuildBonePointList(model, points, 0, VQS());
 
     //put points in world space
     for (glm::vec4& point : points)
@@ -351,8 +355,8 @@ namespace FAR
     for (int& i : model.nodes[index].children)
     {
       //skip sword and shield bones for the cs460, they look unsightly
-      if (model.nodes[i].name == "sword" || model.nodes[i].name == "shield" || model.nodes[i].name == "spear")
-        continue;
+      //if (model.nodes[i].name == "sword" || model.nodes[i].name == "shield" || model.nodes[i].name == "spear")
+      //  continue;
 
       VQS childTrans = model.nodes[i].transform;
       VQS childGlobalTrans = globalTrans * childTrans;
@@ -376,6 +380,7 @@ namespace FAR
       {
         aiVertexWeight weight = bone->mWeights[j];
         //add the bone index to the vertex's bone id list
+
         for (int k = 0; k < 4; k++)
         {
           if (m.verticies[weight.mVertexId].boneIds[k] == -1)
@@ -391,6 +396,10 @@ namespace FAR
                 break;
               }
             }
+
+            if (found == -1)
+              std::cout << "no valid bone found" << std::endl;
+
             m.verticies[weight.mVertexId].boneIds[k] = found;
             m.verticies[weight.mVertexId].boneWeights[k] = weight.mWeight;
             break;
@@ -508,11 +517,26 @@ namespace FAR
     for (const Entity& e : modelEntities)
     {
       Transform& transform = Engine::GetInstance()->GetComponent<Transform>(e);
+      if (transform.matManuallyModified)
+      {
+        //TODO: Dont have this live in render code
+        //decompose matrix into position, rotation, scale
+        glm::quat rotation = glm::quat();
+        glm::vec3 skew;
+        glm::vec4 perspective;
+
+        glm::decompose(transform.modelMatrix, transform.scale, rotation, transform.position, skew, perspective);
+
+        transform.rotationQuaternion = FAR::Quat(rotation.w, rotation.x, rotation.y, rotation.z);
+        transform.matManuallyModified = false;
+        continue;
+      }
 
       transform.modelMatrix = glm::mat4(1.0f);
       transform.modelMatrix = glm::translate(transform.modelMatrix, transform.position);
-      transform.modelMatrix = glm::scale(transform.modelMatrix, transform.scale);
       transform.modelMatrix = transform.modelMatrix * transform.rotationQuaternion.ToMatrix();
+      transform.modelMatrix = glm::scale(transform.modelMatrix, transform.scale);
+      transform.matManuallyModified = false;
     }
 
     //assuming exactly one main cam for now, get view and projection matrices from it and upload to shader
@@ -556,12 +580,12 @@ namespace FAR
         {
           nodeMatrices[i] = nodesCopy[i].transform.ToMatrix() * nodesCopy[i].inverseBindPose;
         }
-        glUniformMatrix4fv(50, 100, GL_FALSE, &nodeMatrices[0][0][0]);
-        glUniform1i(200, 1); //using skinning
+        glUniformMatrix4fv(51, 200, GL_FALSE, &nodeMatrices[0][0][0]);
+        glUniform1i(50, 1); //using skinning
       }
       else
       {
-        glUniform1i(200, 0); //not using skinning
+        glUniform1i(50, 0); //not using skinning
       }
 
       //set textured, color, and model matrix uniforms
