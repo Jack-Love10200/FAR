@@ -224,108 +224,6 @@ namespace FAR
     return tMinusC * tMinusC * tMinusC;
   }
 
-
-
-
-  //void ScriptedMotion::ComputePath(ScriptedMotionPath& smp, Eigen::MatrixXd mat)
-  //{
-  //  Eigen::VectorXd vecX(smp.controlPoints.size() + 2);
-  //  Eigen::VectorXd vecY(smp.controlPoints.size() + 2);
-  //  Eigen::VectorXd vecZ(smp.controlPoints.size() + 2);
-  //  
-  //  vecX.setZero();
-  //  vecY.setZero();
-  //  vecZ.setZero();
-
-  //  smp.vecX.setZero();
-  //  smp.vecY.setZero();
-  //  smp.vecZ.setZero();
-
-  //  for (int i = 0; i < smp.controlPoints.size(); i++)
-  //  {
-  //    vecX[i] = smp.controlPoints[i].x;
-  //    vecY[i] = smp.controlPoints[i].y;
-  //    vecZ[i] = smp.controlPoints[i].z;
-  //  }
-
-  //  Eigen::ColPivHouseholderQR<Eigen::MatrixXd> system(mat.transpose());
-
-  //  Eigen::VectorXd solvedX = system.solve(vecX);
-  //  Eigen::VectorXd solvedY = system.solve(vecY);
-  //  Eigen::VectorXd solvedZ = system.solve(vecZ);
-
-  //  //smp.vecX = solvedX;
-  //  //smp.vecY = solvedY;
-  //  //smp.vecZ = solvedZ;
-
-  //  smp.vecX = system.solve(vecX);
-  //  smp.vecY = system.solve(vecY);
-  //  smp.vecZ = system.solve(vecZ);
-
-  //  float step = (float)(smp.controlPoints.size() - 1) / (PATH_RESOLUTION - 1);
-  //  //float step = (float)(smp.controlPoints.size() - 1) / (5 - 1);
-
-  //  float current = 0.0f;
-
-  //  for (int i = 0; i < PATH_RESOLUTION; i++)
-  //  //for (int i = 0; i < 5; i++)
-  //  {
-  //    float x = 0.0f;
-  //    float y = 0.0f;
-  //    float z = 0.0f;
-
-  //    x += solvedX[0];
-  //    x += solvedX[1] * current;
-  //    x += solvedX[2] * current * current;
-  //    x += solvedX[3] * current * current * current;
-
-  //    y += solvedY[0];
-  //    y += solvedY[1] * current;
-  //    y += solvedY[2] * current * current;
-  //    y += solvedY[3] * current * current * current;
-
-  //    z += solvedZ[0];
-  //    z += solvedZ[1] * current;
-  //    z += solvedZ[2] * current * current;
-  //    z += solvedZ[3] * current * current * current;
-
-  //    for (int j = 4; j < smp.controlPoints.size() + 2; j++)
-  //    {
-  //      float t = current - (float)(j - 3);
-  //      if (t < 0)
-  //      {
-  //        continue;
-  //      }
-  //      x += solvedX[j] * t * t * t;
-  //      y += solvedY[j] * t * t * t;
-  //      z += solvedZ[j] * t * t * t;
-  //    }
-
-  //    smp.pathPoints[i] = glm::vec3(x, y, z);
-
-  //    current += step;
-  //  }
-  //}
-
-  //void ScriptedMotion::ComputeArcLengths(ScriptedMotionPath& smp)
-  //{
-    //smp.arcLengths[0] = 0.0f;
-    //float totalLength = 0.0f;
-
-    ////linear distance approximation
-    //for (int i = 1; i < PATH_RESOLUTION; i++)
-    //{
-    //  float segmentLength = glm::length(smp.pathPoints[i] - smp.pathPoints[i - 1]);
-    //  totalLength += segmentLength;
-    //  smp.arcLengths[i] = totalLength;
-    //}
-    ////normalize
-    //for (int i = 0; i < PATH_RESOLUTION; i++)
-    //{
-    //  smp.arcLengths[i] /= totalLength;
-    //}
-//}
-
   void ScriptedMotion::ComputeSplineCoefficients(ScriptedMotionPath& smp, Eigen::MatrixXd mat)
   {
     Eigen::VectorXd vecX(smp.controlPoints.size() + 2);
@@ -349,14 +247,6 @@ namespace FAR
 
     Eigen::ColPivHouseholderQR<Eigen::MatrixXd> system(mat.transpose());
 
-    Eigen::VectorXd solvedX = system.solve(vecX);
-    Eigen::VectorXd solvedY = system.solve(vecY);
-    Eigen::VectorXd solvedZ = system.solve(vecZ);
-
-    //smp.vecX = solvedX;
-    //smp.vecY = solvedYW;
-    //smp.vecZ = solvedZ;
-
     smp.vecX = system.solve(vecX);
     smp.vecY = system.solve(vecY);
     smp.vecZ = system.solve(vecZ);
@@ -364,18 +254,7 @@ namespace FAR
 
   void ScriptedMotion::ComputeArcLengthsAdaptive(ScriptedMotionPath& smp, float start, float end, float distance)
   {
-    float epsilon = 0.000001f;
-
-    //glm::vec3 startPoint = GetCurvePoint(smp, start);
-    //glm::vec3 endPoint = GetCurvePoint(smp, end);
-
-    //float middle = glm::mix(start, end, 0.5f);
-    //glm::vec3 middlePoint = GetCurvePoint(smp, middle);
-
-    //float startToEnd = glm::length(endPoint - startPoint);
-
-    //float startToMiddle = glm::length(middlePoint - startPoint);
-    //float throughMiddle = glm::length(middlePoint - startPoint) + glm::length(endPoint - middlePoint);
+    const float epsilon = 0.000001f;
 
     start = 0.0f;
     end = 1.0f;
@@ -459,64 +338,35 @@ namespace FAR
 
   float ScriptedMotion::GetUfromArcLength(ScriptedMotionPath& smp, float arclength)
   {
-    //for (int i = 0; i < smp.arcLenTable.size() - 1; i++)
-    //{
-    //  if (arclength >= smp.arcLenTable[i].second && arclength <= smp.arcLenTable[i + 1].second)
-    //  {
-    //    float lengthDiff = smp.arcLenTable[i + 1].second - smp.arcLenTable[i].second;
-    //    float frac = (arclength - smp.arcLenTable[i].second) / lengthDiff;
-    //    return glm::mix(smp.arcLenTable[i].first, smp.arcLenTable[i + 1].first, frac);
-    //  }
-    //}
-
-    //for (int i = 0; i < smp.keyPoints.size() - 1; i++)
-    //{
-    //  if (arclength >= smp.keyPoints[i].arcLenght && arclength <= smp.keyPoints[i + 1].arcLenght)
-    //  {
-    //    float lengthDiff = smp.keyPoints[i + 1].arcLenght - smp.keyPoints[i].arcLenght;
-    //    float frac = (arclength - smp.keyPoints[i].arcLenght) / lengthDiff;
-    //    return glm::mix(smp.keyPoints[i].u, smp.keyPoints[i + 1].u, frac);
-    //  }
-    //}
-
-    //binary search
-
+    //edge cases
     if (smp.keyPoints.size() == 0)
       return 0;
-
     if (smp.keyPoints.size() == 1)
       return smp.keyPoints[0].u;
 
+    //start at the middle, ready to jump halfway through each half
     int i = smp.keyPoints.size() / 2;
     int jumpsize = i / 2;
 
-    bool found = false;
-    int j = 0;
-
-    while (!found)
+    //search until the return break
+    while (true)
     {
-      j++;
+      //if arclenth is between i and i+1, interpolate and return u
       if (arclength >= smp.keyPoints[i].arcLenght && arclength <= smp.keyPoints[i + 1].arcLenght)
       {
         float segmentlength = smp.keyPoints[i + 1].arcLenght - smp.keyPoints[i].arcLenght;
         float frac = (arclength - smp.keyPoints[i].arcLenght) / segmentlength;
 
-        //std::cout << j << std::endl;
-
         return glm::mix(smp.keyPoints[i].u, smp.keyPoints[i + 1].u, frac);
       }
+      //if we should be to the right, jump half way through the remaining right side
       else if (arclength > smp.keyPoints[i + 1].arcLenght)
-      {
-        //i += (i / 2);
-        //i = (smp.arcLenTable.size() + i) / 2;
         i += jumpsize;
-      }
+      //else we should be to the left, jump half way through the remaining left side
       else
-      {
-        //i /= 2;
         i -= jumpsize;
-      }
 
+      //half the jump size for binary search, make sure we always jump at least 1 so no inf loop
       jumpsize /= 2;
       if (jumpsize == 0) jumpsize = 1;
     }
@@ -542,6 +392,7 @@ namespace FAR
 
   float ScriptedMotion::GetCurrentSpeed(ScriptedMotionPath& smp)
   {
+    //linear search for the 2 velocity keys surrounding current time t, return the lerp between their velocities
     for (int i = 0; i < smp.velocityKeys.size() - 1; i++)
     {
       if (smp.t >= smp.velocityKeys[i].first && smp.t <= smp.velocityKeys[i + 1].first)
@@ -554,50 +405,13 @@ namespace FAR
     return 0.0f;
   }
 
-    //int numcalls = 0;
   glm::vec3 ScriptedMotion::GetCurvePoint(ScriptedMotionPath& smp, float u)
   {
-    //numcalls++;
-
-    //smp.currentPos = currentpos;
-    //Eigen::VectorXd vecX(smp.controlPoints.size() + 2);
-    //Eigen::VectorXd vecY(smp.controlPoints.size() + 2);
-    //Eigen::VectorXd vecZ(smp.controlPoints.size() + 2);
-
-    //vecX.setZero();
-    //vecY.setZero();
-    //vecZ.setZero();
-
-    //for (int i = 0; i < smp.controlPoints.size(); i++)
-    //{
-    //  vecX[i] = smp.controlPoints[i].x;
-    //  vecY[i] = smp.controlPoints[i].y;
-    //  vecZ[i] = smp.controlPoints[i].z;
-    //}
-
-    //Eigen::MatrixXd mat = GetMatrixByNumCtrlPts(smp.controlPoints.size());
-
-    //Eigen::ColPivHouseholderQR<Eigen::MatrixXd> system(mat.transpose());
-
-    //Eigen::VectorXd solvedX = system.solve(vecX);
-    //Eigen::VectorXd solvedY = system.solve(vecY);
-    //Eigen::VectorXd solvedZ = system.solve(vecZ);
-
     Eigen::VectorXd& solvedX = smp.vecX;
     Eigen::VectorXd& solvedY = smp.vecY;
     Eigen::VectorXd& solvedZ = smp.vecZ;
 
-    //std::cout << solvedX << " vs " << solvedX1 << std::endl;
-    //std::cout << solvedY << " vs " << solvedY1 << std::endl;
-    //std::cout << solvedZ << " vs " << solvedZ1 << std::endl;
-
-    //std::cout << ((solvedX[0] == solvedX1[0]) && (solvedX[1] == solvedX1[1]) && (solvedX[2] == solvedX1[2]) && (solvedX[3] == solvedX1[3])) << std::endl;
-    //std::cout << ((solvedY[0] == solvedY1[0]) && (solvedY[1] == solvedY1[1]) && (solvedY[2] == solvedY1[2]) && (solvedY[3] == solvedY1[3])) << std::endl;
-    //std::cout << ((solvedZ[0] == solvedZ1[0]) && (solvedZ[1] == solvedZ1[1]) && (solvedZ[2] == solvedZ1[2]) && (solvedZ[3] == solvedZ1[3])) << std::endl;
-
-
     float current = u * (smp.controlPoints.size() - 1);
-    //float current = u;
 
     float x = 0.0f;
     float y = 0.0f;
