@@ -13,29 +13,6 @@ namespace FAR
   void ScriptedMotion::Init()
   {
     renderResc = Engine::GetInstance()->GetResource<RenderResource>();
-
-    Eigen::MatrixXd m;
-
-    m.setRandom(10, 10);
-
-    m(13) = 5.0;
-
-    std::cout << "m is:\n" << m << std::endl;
-
-    Eigen::Matrix<double, 10, 1> v;
-
-    v.setRandom();
-
-    Eigen::ColPivHouseholderQR<Eigen::MatrixXd> system(m);
-
-    Eigen::Matrix<double, 10, 1> x = system.solve(v);
-
-
-    std::cout << "The solution is:\n" << x << std::endl;
-
-    x.array().operator[](0) = 3;
-
-    std::cout << "it is now:\n" << x << std::endl;
   }
 
   void ScriptedMotion::PreUpdate()
@@ -52,53 +29,26 @@ namespace FAR
       ScriptedMotionPath& smp = Engine::GetInstance()->GetComponent<ScriptedMotionPath>(e);
 
 
-      Eigen::MatrixXd mat = GetMatrixByNumCtrlPts(smp.controlPoints.size());
-
       if (smp.totalTime <= 0.0f)
         smp.totalTime = 0.1f;
 
       if (smp.isDirty)
       {
+        ComputeSplineCoefficients(smp);
 
-        ComputeSplineCoefficients(smp, mat);
-
-        //ComputePath(smp, mat);
-        //ComputeArcLengths(smp);
         smp.isDirty = false;
         smp.velCurveIntegral = GetPiecewiseLinearIntegral(smp.velocityKeys, 1.0f);
-        //float test = GetPiecewiseLinearIntegral(smp.velocityKeys, 0.5f);
 
-        //smp.arcLenTable.clear();
         smp.keyPoints.clear();
 
-        //smp.arcLenTable.push_back(std::make_pair(0.0f, 0.0f));
-
         ComputeArcLengthsAdaptive(smp, 0.0f, 1.0f, 0.0f);
-
-        //float totalLength = smp.arcLenTable.end()[-1].second;
-        //
-        //std::for_each(smp.arcLenTable.begin(), smp.arcLenTable.end(), [totalLength](std::pair<float, float>& p) {
-        //  p.second /= totalLength;
-        //  });
       }
 
       for (int i = 0; i < smp.controlPoints.size() - 1; i++)
-      {
         renderResc->DrawRay(glm::vec4(smp.controlPoints[i], 1.0f), glm::vec4(smp.controlPoints[i + 1], 1.0f));
-      }
-
-      //for (int i = 0; i < smp.pathPoints.size() - 1; i++)
-      //{
-      //  renderResc->DrawRay(glm::vec4(smp.pathPoints[i], 1.0f), glm::vec4(smp.pathPoints[i + 1], 1.0f));
-      //}
 
       for (int i = 0; i < smp.keyPoints.size() - 1; i++)
-      {
         renderResc->DrawRay(glm::vec4(smp.keyPoints[i].pos, 1.0f), glm::vec4(smp.keyPoints[i + 1].pos, 1.0f));
-      }
-
-      //std::cout << "Cubic Spline Matrix:\n" << mat << std::endl;
-
     }
 
     entities = Engine::GetInstance()->GetEntities<ScriptedMotionPath, Transform>();
@@ -169,9 +119,9 @@ namespace FAR
 
   }
 
-  Eigen::MatrixXd ScriptedMotion::GetMatrixByNumCtrlPts(int numCtrlPts)
+  Eigen::MatrixXf ScriptedMotion::GetMatrixByNumCtrlPts(size_t numCtrlPts)
   {
-    Eigen::MatrixXd matrix(numCtrlPts + 2, numCtrlPts + 2);
+    Eigen::MatrixXf matrix(numCtrlPts + 2, numCtrlPts + 2);
 
     //zero initialize
     matrix.setZero();
@@ -188,47 +138,49 @@ namespace FAR
     matrix(2, numCtrlPts) = 1;
     matrix(2, numCtrlPts + 1) = 1;
 
-    int k = numCtrlPts - 1;
-    for (int i = 3; i < numCtrlPts + 2; i++)
+    size_t k = numCtrlPts - 1;
+    for (size_t i = 3; i < numCtrlPts + 2; i++)
     {
-      int currentterm = k - (i - 3);
+      size_t currentterm = k - (i - 3);
       matrix(i, numCtrlPts) = 0;
-      matrix(i, numCtrlPts + 1) = 6 * currentterm;
+      matrix(i, numCtrlPts + 1) = static_cast<float>(6 * currentterm);
     }
 
     return matrix;
   }
 
-  double ScriptedMotion::GetCubicSplineMatrixTerm(int t, int termnum)
+  float ScriptedMotion::GetCubicSplineMatrixTerm(int t, int termnum)
   {
     if (termnum == 0)
-      return 1;
+      return 1.0f;
 
     if (termnum == 1)
-      return t;
+      return static_cast<float>(t);
 
     if (termnum == 2)
-      return t * t;
+      return static_cast<float>(t * t);
 
     if (termnum == 3)
-      return t * t * t;
+      return static_cast<float>(t * t * t);
 
 
     int c = termnum - 3;
     int tMinusC = t - c;
     if (tMinusC < 0)
     {
-      return 0;
+      return 0.0f;
     }
 
-    return tMinusC * tMinusC * tMinusC;
+    return static_cast<float>(tMinusC * tMinusC * tMinusC);
   }
 
-  void ScriptedMotion::ComputeSplineCoefficients(ScriptedMotionPath& smp, Eigen::MatrixXd mat)
+  void ScriptedMotion::ComputeSplineCoefficients(ScriptedMotionPath& smp)
   {
-    Eigen::VectorXd vecX(smp.controlPoints.size() + 2);
-    Eigen::VectorXd vecY(smp.controlPoints.size() + 2);
-    Eigen::VectorXd vecZ(smp.controlPoints.size() + 2);
+    Eigen::MatrixXf mat = GetMatrixByNumCtrlPts(smp.controlPoints.size());
+
+    Eigen::VectorXf vecX(smp.controlPoints.size() + 2);
+    Eigen::VectorXf vecY(smp.controlPoints.size() + 2);
+    Eigen::VectorXf vecZ(smp.controlPoints.size() + 2);
 
     vecX.setZero();
     vecY.setZero();
@@ -245,7 +197,7 @@ namespace FAR
       vecZ[i] = smp.controlPoints[i].z;
     }
 
-    Eigen::ColPivHouseholderQR<Eigen::MatrixXd> system(mat.transpose());
+    Eigen::ColPivHouseholderQR<Eigen::MatrixXf> system(mat.transpose());
 
     smp.vecX = system.solve(vecX);
     smp.vecY = system.solve(vecY);
@@ -345,8 +297,8 @@ namespace FAR
       return smp.keyPoints[0].u;
 
     //start at the middle, ready to jump halfway through each half
-    int i = smp.keyPoints.size() / 2;
-    int jumpsize = i / 2;
+    size_t i = smp.keyPoints.size() / 2;
+    size_t jumpsize = i / 2;
 
     //search until the return break
     while (true)
@@ -407,9 +359,9 @@ namespace FAR
 
   glm::vec3 ScriptedMotion::GetCurvePoint(ScriptedMotionPath& smp, float u)
   {
-    Eigen::VectorXd& solvedX = smp.vecX;
-    Eigen::VectorXd& solvedY = smp.vecY;
-    Eigen::VectorXd& solvedZ = smp.vecZ;
+    Eigen::VectorXf& solvedX = smp.vecX;
+    Eigen::VectorXf& solvedY = smp.vecY;
+    Eigen::VectorXf& solvedZ = smp.vecZ;
 
     float current = u * (smp.controlPoints.size() - 1);
 

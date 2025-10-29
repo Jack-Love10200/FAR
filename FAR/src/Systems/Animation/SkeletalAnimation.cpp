@@ -317,7 +317,7 @@ namespace FAR
     {
       float duration = (channel.keyFrames[i + 1].first - channel.keyFrames[i].first);
       float ticksPerFrame = tps / fps;
-      int n = duration / ticksPerFrame;
+      float n = duration / ticksPerFrame;
       float a = glm::acos(glm::clamp(Quat::Dot(channel.keyFrames[i].second.q, channel.keyFrames[i + 1].second.q), -1.0f, 1.0f));
 
       VQS increment;
@@ -328,7 +328,7 @@ namespace FAR
         increment.q = Quat(1, 0, 0, 0);
       else
       {
-        float B = a / (float)n;
+        float B = a / n;
 
         glm::vec3 u0 = glm::vec3(kf1.q.x, kf1.q.y, kf1.q.z);
         glm::vec3 un = glm::vec3(kf2.q.x, kf2.q.y, kf2.q.z);
@@ -350,12 +350,12 @@ namespace FAR
 
       }
       //ilerping position
-      increment.v = (kf2.v - kf1.v) / (float)n;
+      increment.v = (kf2.v - kf1.v) / n;
 
       //ielerping scale
-      increment.s.x = pow(kf2.s.x / kf1.s.x, 1.0f / float(n));
-      increment.s.y = pow(kf2.s.y / kf1.s.y, 1.0f / float(n));
-      increment.s.z = pow(kf2.s.z / kf1.s.z, 1.0f / float(n));
+      increment.s.x = pow(kf2.s.x / kf1.s.x, 1.0f / n);
+      increment.s.y = pow(kf2.s.y / kf1.s.y, 1.0f / n);
+      increment.s.z = pow(kf2.s.z / kf1.s.z, 1.0f / n);
 
       channel.incrementalValues.push_back(increment);
     }

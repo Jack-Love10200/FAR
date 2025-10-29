@@ -27,15 +27,12 @@ namespace FAR
 
   private:
 
-	Eigen::MatrixXd GetMatrixByNumCtrlPts(int numCtrlPts);
+	Eigen::MatrixXf GetMatrixByNumCtrlPts(size_t numCtrlPts);
 
-	double GetCubicSplineMatrixTerm(int t, int termnum);
+	float GetCubicSplineMatrixTerm(int t, int termnum);
 
-	//void ComputePath(ScriptedMotionPath& smp, Eigen::MatrixXd mat);
+  void ComputeSplineCoefficients(ScriptedMotionPath& smp);
 
-  void ComputeSplineCoefficients(ScriptedMotionPath& smp, Eigen::MatrixXd mat);
-
-  //void ComputeArcLengths(ScriptedMotionPath& smp);
   void ComputeArcLengthsAdaptive(ScriptedMotionPath& smp, float start, float end, float distance);
 
   float GetUfromArcLength(ScriptedMotionPath& smp, float arclength);

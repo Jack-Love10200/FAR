@@ -24,19 +24,13 @@ struct ScriptedMotionPath
   
   std::vector<KeyPoint> keyPoints;
 
-  //std::array<float, PATH_RESOLUTION> arcLengths;
-  //std::vector<std::pair<float, float>> arcLenTable;
-  //std::array<glm::vec3, PATH_RESOLUTION> pathPoints;
-
   float t = 0.0f;
-
-  float currentPos = 0.0f;
 
   float velCurveIntegral;
 
-  Eigen::VectorXd vecX;
-  Eigen::VectorXd vecY;
-  Eigen::VectorXd vecZ;
+  Eigen::VectorXf vecX;
+  Eigen::VectorXf vecY;
+  Eigen::VectorXf vecZ;
 
   bool isDirty = true;
 
