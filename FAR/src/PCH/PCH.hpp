@@ -17,8 +17,6 @@
 #include <set>
 #include <stack>
 
-#include "Util/Quaternion.hpp"
-
 #define GLM_ENABLE_EXPERIMENTAL
 //#define GLM_MESSAGES 1
 #include <glm/glm.hpp>

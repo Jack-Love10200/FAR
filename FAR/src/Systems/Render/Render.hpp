@@ -83,8 +83,10 @@ namespace FAR
 
     void ApplyNodeHeirarchy(std::vector<Model::Node>& nodes, int nodeIndex, const VQS& parentTransform);
     void CreateLinesVAO();
+    void CreatePointsVAO();
 
     GLuint lineVAO = 0;
+    GLuint pointVAO = 0;
 
     WindowResource* windowResc = nullptr;
     RenderResource* renderResc = nullptr;

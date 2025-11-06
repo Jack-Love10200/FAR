@@ -23,18 +23,31 @@ out vec4 frag_uv;
 out vec4 vert_color;
 
 void main()
-{
+{   
+    bool hasValidSkinning = useSkinning;
     vec4 totalPosition = vec4(0.0f);
+
+    //ensure weights add up to one
+    vec4 weightsNorm = normalize(weights);
+
+    if (weightsNorm.x + weightsNorm.y + weightsNorm.z + weightsNorm.w == 0.0f)
+        weightsNorm = vec4(1.0f, 0.0f, 0.0f, 0.0f);
+
+    //skip skinning if no bones are assigned
+    if (bones.x == -1)
+        hasValidSkinning = false;
+
+
 
     //compute skinning matrix
     mat4 skinMat =
-    BoneTransforms[bones.x] * weights.x +
-    BoneTransforms[bones.y] * weights.y +
-    BoneTransforms[bones.z] * weights.z +
-    BoneTransforms[bones.w] * weights.w;
+    BoneTransforms[bones.x] * weightsNorm.x +
+    BoneTransforms[bones.y] * weightsNorm.y +
+    BoneTransforms[bones.z] * weightsNorm.z +
+    BoneTransforms[bones.w] * weightsNorm.w;
 
     //apply skinning to the vertex position
-    if (useSkinning)
+    if (hasValidSkinning)
     totalPosition = skinMat * vec4(vertex_position.xyz, 1.0f);
     else
     totalPosition = vec4(vertex_position.xyz, 1.0f);

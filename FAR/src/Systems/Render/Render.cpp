@@ -341,7 +341,8 @@ namespace FAR
     //draw lines
     for (int i = 0; i < points.size(); i += 2)
     {
-      renderResc->DrawRay(points[i], points[i + 1]);
+      if (i >= 48 * 2 && i <= 54 * 2)
+      renderResc->DrawRay({ .position = points[i], .color = {1.0f, 0.0f, 0.0f, 1.0f} }, { .position = points[i + 1], .color = {0.0f, 1.0f, 1.0f, 1.0f} });
     }
   }
 
@@ -434,7 +435,7 @@ namespace FAR
     GLuint vbo;
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, renderResc->rays.size() * sizeof(glm::vec4), renderResc->rays.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, renderResc->rays.size() * sizeof(RenderResource::point), renderResc->rays.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     //vao
@@ -445,14 +446,45 @@ namespace FAR
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
     //config attrib ptrs
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), 0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(RenderResource::point), 0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(RenderResource::point), (void*)offsetof(RenderResource::point, color));
+    glEnableVertexAttribArray(1);
 
     //done with vao
     glBindVertexArray(0);
 
     //delete vbo
-	glDeleteBuffers(1, &vbo);
+	  glDeleteBuffers(1, &vbo);
+  }
+
+  void Render::CreatePointsVAO()
+  {
+
+    GLuint vbo;
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, renderResc->points.size() * sizeof(RenderResource::point), renderResc->points.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    //vao
+    glGenVertexArrays(1, &pointVAO);
+    glBindVertexArray(pointVAO);
+
+    //bind vbo to vao
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+    //config attrib ptrs
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(RenderResource::point), 0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(RenderResource::point), (void*)offsetof(RenderResource::point, color));
+    glEnableVertexAttribArray(1);
+
+    //done with vao
+    glBindVertexArray(0);
+
+    //delete vbo
+    glDeleteBuffers(1, &vbo);
   }
 
   void Render::ApplyNodeHeirarchy(std::vector<Model::Node>& nodes, int nodeIndex, const VQS& parentTransform)
@@ -527,14 +559,14 @@ namespace FAR
 
         glm::decompose(transform.modelMatrix, transform.scale, rotation, transform.position, skew, perspective);
 
-        transform.rotationQuaternion = FAR::Quat(rotation.w, rotation.x, rotation.y, rotation.z);
+        transform.rotationQuaternion = glm::normalize(rotation);
         transform.matManuallyModified = false;
         continue;
       }
 
       transform.modelMatrix = glm::mat4(1.0f);
       transform.modelMatrix = glm::translate(transform.modelMatrix, transform.position);
-      transform.modelMatrix = transform.modelMatrix * transform.rotationQuaternion.ToMatrix();
+      transform.modelMatrix = transform.modelMatrix * glm::toMat4(transform.rotationQuaternion);
       transform.modelMatrix = glm::scale(transform.modelMatrix, transform.scale);
       transform.matManuallyModified = false;
     }
@@ -571,7 +603,8 @@ namespace FAR
 
       //TODO: Change this
       //just apply the node heirarchy and get final matricies into one big array here for now
-      if (Engine::GetInstance()->HasComponent<SkeletalAnimator>(e))
+      //if (Engine::GetInstance()->HasComponent<SkeletalAnimator>(e))
+      if (true)
       {
         glm::mat4 nodeMatrices[300] = { glm::mat4(1.0f) };
         std::vector<Model::Node> nodesCopy = model.nodes;
@@ -587,6 +620,7 @@ namespace FAR
       {
         glUniform1i(50, 0); //not using skinning
       }
+
 
       //set textured, color, and model matrix uniforms
       glUniform1i(5, model.textured ? 1 : 0);
@@ -619,13 +653,13 @@ namespace FAR
 
     //done rendering to offscreen framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    renderResc->DrawPoint({ .position = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), .color = {1.0f, 1.0f, 0.0f, 1.0f} });
   }
 
 
   void Render::PostUpdate()
   {
-    //line rendering
-
     //set render target to our offscreen framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, renderResc->fbo);
     glViewport(0, 0, renderResc->vpwidth, renderResc->vpheight);
@@ -636,6 +670,7 @@ namespace FAR
     //lines shader program
     glUseProgram(renderResc->lineShaderProgram);
     CreateLinesVAO();
+    CreatePointsVAO();
 
     //upload view and projection matrices
     glUniformMatrix4fv(1, 1, false, &viewMatrix[0][0]);
@@ -646,8 +681,14 @@ namespace FAR
     glDrawArrays(GL_LINES, 0, renderResc->rays.size());
     glBindVertexArray(0);
 
+    //draw points
+    glBindVertexArray(pointVAO);
+    glDrawArrays(GL_POINTS, 0, renderResc->points.size());
+    glBindVertexArray(0);
+
     //cleanup
     glDeleteVertexArrays(1, &lineVAO);
+    glDeleteVertexArrays(1, &pointVAO);
     glUseProgram(0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glEnable(GL_DEPTH_TEST);
@@ -657,6 +698,8 @@ namespace FAR
     glfwPollEvents();
 
     renderResc->rays.clear();
+    renderResc->points.clear();
+    
   }
 
   void Render::Exit()

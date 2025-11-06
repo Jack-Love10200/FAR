@@ -50,9 +50,9 @@ namespace FAR
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
 
-  void RenderResource::DrawRay(glm::vec4 start, glm::vec4 end)
+  void RenderResource::DrawRay(point p1, point p2)
   {
-    rays.push_back(start);
-    rays.push_back(end);
+    rays.push_back(p1);
+    rays.push_back(p2);
   }
 }

@@ -1,3 +1,10 @@
+///
+/// @file   ScriptedMotion.cpp
+/// @brief  System for calculating cubic spline paths and moving entities along them
+/// @author Jack Love
+/// @date   28.10.2025
+///
+
 #include "PCH/PCH.hpp"
 
 #include "ScriptedMotion.hpp"
@@ -13,6 +20,10 @@ namespace FAR
   void ScriptedMotion::Init()
   {
     renderResc = Engine::GetInstance()->GetResource<RenderResource>();
+
+    //point size for debug point rendering
+    glPointSize(10.0f);
+    glLineWidth(20.0f);
   }
 
   void ScriptedMotion::PreUpdate()
@@ -28,27 +39,27 @@ namespace FAR
     {
       ScriptedMotionPath& smp = Engine::GetInstance()->GetComponent<ScriptedMotionPath>(e);
 
-
+      //prevent divide by zero
       if (smp.totalTime <= 0.0f)
         smp.totalTime = 0.1f;
 
+      //only recompute splines that have been changed
       if (smp.isDirty)
       {
         ComputeSplineCoefficients(smp);
+        ComputeArcLengthsAdaptive(smp, 0.0f, 1.0f, 0.0f); 
 
         smp.isDirty = false;
         smp.velCurveIntegral = GetPiecewiseLinearIntegral(smp.velocityKeys, 1.0f);
-
-        smp.keyPoints.clear();
-
-        ComputeArcLengthsAdaptive(smp, 0.0f, 1.0f, 0.0f);
       }
 
-      for (int i = 0; i < smp.controlPoints.size() - 1; i++)
-        renderResc->DrawRay(glm::vec4(smp.controlPoints[i], 1.0f), glm::vec4(smp.controlPoints[i + 1], 1.0f));
+      //render the control points
+      for (int i = 0; i < smp.controlPoints.size(); i++)
+        renderResc->DrawPoint({ .position = glm::vec4(smp.controlPoints[i], 1.0f), .color = {1.0f, 0.0f, 0.0f, 1.0f} });
 
+      //render the key points as an approximation of the curve
       for (int i = 0; i < smp.keyPoints.size() - 1; i++)
-        renderResc->DrawRay(glm::vec4(smp.keyPoints[i].pos, 1.0f), glm::vec4(smp.keyPoints[i + 1].pos, 1.0f));
+        renderResc->DrawRay({ .position = glm::vec4(smp.keyPoints[i].pos, 1.0f), .color = {1.0f, 1.0f, 1.0f, 1.0f} }, { .position = glm::vec4(smp.keyPoints[i + 1].pos, 1.0f), .color = {0.0f, 0.0f, 0.0f, 1.0f} });
     }
 
     entities = Engine::GetInstance()->GetEntities<ScriptedMotionPath, Transform>();
@@ -57,30 +68,27 @@ namespace FAR
       ScriptedMotionPath& smp = Engine::GetInstance()->GetComponent<ScriptedMotionPath>(e);
       Transform& transform = Engine::GetInstance()->GetComponent<Transform>(e);
 
+      //advance time, looping
       smp.t += Engine::GetInstance()->dt * (1.0f / smp.totalTime);
       while (smp.t > 1.0f)
         smp.t -= 1.0f;
 
-
+      //make sure the current speed is up to date for other systems to use
       smp.currentSpeed = GetCurrentSpeed(smp);
 
+      //get the current U based on the velocity curve and current t-value
       float areaprog = GetPiecewiseLinearIntegral(smp.velocityKeys, smp.t) / smp.velCurveIntegral;
-
       float currentpos = GetUfromArcLength(smp, areaprog);
-
       while (currentpos > 1.0f)
         currentpos -= 1.0f;
 
+      //TODO: There are float imprecision issues here that cause jitter towards the ends of paths, especially long ones
       glm::vec3 currentPos = GetCurvePoint(smp, currentpos);
       glm::vec3 centerOfInterest = GetCurvePoint(smp, currentpos + 0.001f);
 
-
-
       //Orientation control (Forward Center of Interest)
       glm::vec3 w = centerOfInterest - currentPos;
-
-      glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-
+      glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f); 
       glm::vec3 u = glm::cross(up, w);
       glm::vec3 v = glm::cross(w, u);
 
@@ -88,53 +96,30 @@ namespace FAR
       u = glm::normalize(u);
       v = glm::normalize(v);
 
-      glm::mat4 translation = glm::mat4(
-        glm::vec4(1.0f, 0.0f, 0.0f, 0.0f),
-        glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
-        glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
-        glm::vec4(currentPos, 1.0f)
-      );
-
-      glm::mat4 rotation = glm::mat4(
+      transform.modelMatrix = glm::mat4(
         glm::vec4(u.x, u.y, u.z, 0.0f),
         glm::vec4(v.x, v.y, v.z, 0.0f),
         glm::vec4(w.x, w.y, w.z, 0.0f),
-        glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
+        glm::vec4(currentPos, 1.0f)
       );
 
-      transform.modelMatrix = translation * rotation;
       transform.matManuallyModified = true;
     }
   }
 
-
-
-  void ScriptedMotion::PostUpdate()
+  Eigen::MatrixXd ScriptedMotion::GetMatrixByNumCtrlPts(size_t numCtrlPts)
   {
+    Eigen::MatrixXd matrix(numCtrlPts + 2, numCtrlPts + 2);
 
-  }
-
-  void ScriptedMotion::Exit()
-  {
-
-  }
-
-  Eigen::MatrixXf ScriptedMotion::GetMatrixByNumCtrlPts(size_t numCtrlPts)
-  {
-    Eigen::MatrixXf matrix(numCtrlPts + 2, numCtrlPts + 2);
-
-    //zero initialize
+    //zero initializ
     matrix.setZero();
 
+    //fill in terms
     for (int i = 0; i < numCtrlPts + 2; i++)
-    {
       for (int j = 0; j < numCtrlPts; j++)
-      {
-        //matrix[i, j] = GetCubicSplineMatrixTerm(j, i);
         matrix(i, j) = GetCubicSplineMatrixTerm(j, i);
-      }
-    }
 
+    //natural spline boundary conditions, second derivative = 0 at endpoints
     matrix(2, numCtrlPts) = 1;
     matrix(2, numCtrlPts + 1) = 1;
 
@@ -143,52 +128,51 @@ namespace FAR
     {
       size_t currentterm = k - (i - 3);
       matrix(i, numCtrlPts) = 0;
-      matrix(i, numCtrlPts + 1) = static_cast<float>(6 * currentterm);
+      matrix(i, numCtrlPts + 1) = static_cast<double>(6 * currentterm);
     }
 
     return matrix;
   }
 
-  float ScriptedMotion::GetCubicSplineMatrixTerm(int t, int termnum)
+  double ScriptedMotion::GetCubicSplineMatrixTerm(int t, int termnum)
   {
     if (termnum == 0)
-      return 1.0f;
+      return 1.0;
 
     if (termnum == 1)
-      return static_cast<float>(t);
+      return static_cast<double>(t);
 
     if (termnum == 2)
-      return static_cast<float>(t * t);
+      return static_cast<double>(t * t);
 
     if (termnum == 3)
-      return static_cast<float>(t * t * t);
+      return static_cast<double>(t * t * t);
 
 
     int c = termnum - 3;
     int tMinusC = t - c;
     if (tMinusC < 0)
     {
-      return 0.0f;
+      return 0.0;
     }
 
-    return static_cast<float>(tMinusC * tMinusC * tMinusC);
+    return static_cast<double>(tMinusC * tMinusC * tMinusC);
   }
 
   void ScriptedMotion::ComputeSplineCoefficients(ScriptedMotionPath& smp)
   {
-    Eigen::MatrixXf mat = GetMatrixByNumCtrlPts(smp.controlPoints.size());
+    Eigen::MatrixXd mat = GetMatrixByNumCtrlPts(smp.controlPoints.size());
 
-    Eigen::VectorXf vecX(smp.controlPoints.size() + 2);
-    Eigen::VectorXf vecY(smp.controlPoints.size() + 2);
-    Eigen::VectorXf vecZ(smp.controlPoints.size() + 2);
+    //augment our controlpoints with the cubic spline matrix for this num of control points
+    //rref it and solve
+
+    Eigen::VectorXd vecX(smp.controlPoints.size() + 2);
+    Eigen::VectorXd vecY(smp.controlPoints.size() + 2);
+    Eigen::VectorXd vecZ(smp.controlPoints.size() + 2);
 
     vecX.setZero();
     vecY.setZero();
     vecZ.setZero();
-
-    smp.vecX.setZero();
-    smp.vecY.setZero();
-    smp.vecZ.setZero();
 
     for (int i = 0; i < smp.controlPoints.size(); i++)
     {
@@ -197,8 +181,7 @@ namespace FAR
       vecZ[i] = smp.controlPoints[i].z;
     }
 
-    Eigen::ColPivHouseholderQR<Eigen::MatrixXf> system(mat.transpose());
-
+    Eigen::ColPivHouseholderQR<Eigen::MatrixXd> system(mat.transpose());
     smp.vecX = system.solve(vecX);
     smp.vecY = system.solve(vecY);
     smp.vecZ = system.solve(vecZ);
@@ -206,14 +189,14 @@ namespace FAR
 
   void ScriptedMotion::ComputeArcLengthsAdaptive(ScriptedMotionPath& smp, float start, float end, float distance)
   {
-    const float epsilon = 0.000001f;
+    const float epsilon = 0.0001f;
 
-    start = 0.0f;
-    end = 1.0f;
+    //clear existing key points
+    smp.keyPoints.clear();
 
-    int i = 0;
+    //always start with at the beginning of the curve
+    ScriptedMotionPath::KeyPoint startkp = { .pos = GetCurvePoint(smp, 0.0f), .arcLenght = 0.0f, .u = 0.0f };
 
-    ScriptedMotionPath::KeyPoint startkp = { .pos = GetCurvePoint(smp, start), .arcLenght = 0.0f, .u = 0.0f };
     smp.keyPoints.push_back(startkp);
 
     struct segment
@@ -221,71 +204,64 @@ namespace FAR
       float start;
       float end;
 
-      glm::vec3 sp;
-      glm::vec3 ep;
+      glm::vec3 startPoint;
+      glm::vec3 endPoint;
     };
 
     std::stack<segment> segments;
 
-    segments.push(segment{ .start = 0.0f, .end = 1.0f, .sp = GetCurvePoint(smp, 0.0f), .ep = GetCurvePoint(smp, 1.0f)});
+    //accumulates linear distances of accepted segments for arc lengths
+    float accumulatedLength = 0.0f;
 
-    float al = 0.0f;
+    for (int i = smp.controlPoints.size() - 2; i >= 0; i--)
+    {
+      float startU = (float)i / (smp.controlPoints.size() - 1);
+      float endU = (float)(i + 1) / (smp.controlPoints.size() - 1);
 
+      segments.push(segment{ .start = startU, .end = endU, 
+        .startPoint = GetCurvePoint(smp, startU), .endPoint = GetCurvePoint(smp, endU) });
+    }
+
+    //start with a segment of the whole curve and go until all segments that we end up subdividing are processed
+    //segments.push(segment{ .start = 0.0f, .end = 1.0f, .startPoint = GetCurvePoint(smp, 0.0f), .endPoint = GetCurvePoint(smp, 1.0f)});
     while (!segments.empty())
     {
-      //glm::vec3 startPoint = GetCurvePoint(smp, start);
+      //get the next segment
       segment current = segments.top(); segments.pop();
 
-      //glm::vec3 startPoint = GetCurvePoint(smp, current.start);
-      //glm::vec3 endPoint = GetCurvePoint(smp, current.end);
-
-      const glm::vec3& startPoint = current.sp;
-      const glm::vec3& endPoint = current.ep;
-
-
+      //calculate the middle point of the segment
       float middle = glm::mix(current.start, current.end, 0.5f);
       glm::vec3 middlePoint = GetCurvePoint(smp, middle);
 
-      float startToEnd = glm::length(endPoint - startPoint);
-      float startToMiddle = glm::length(middlePoint - startPoint);
-      float throughMiddle = glm::length(middlePoint - startPoint) + glm::length(endPoint - middlePoint);
+      //calculate distances
+      float startToEnd = glm::length(current.endPoint - current.startPoint);
+      float startToMiddle = glm::length(middlePoint - current.startPoint);
+      float throughMiddle = glm::length(middlePoint - current.startPoint) + glm::length(current.endPoint - middlePoint);
 
+      //if the distance going through middle is different from straight line (i.e. dont have enough resolution on the curve yet)
       if (glm::length(startToEnd - throughMiddle) > epsilon)
       {
-        segments.push(segment{ .start = middle, .end = current.end, .sp = middlePoint, .ep = endPoint});
-        segments.push(segment{ .start = current.start, .end = middle, .sp = startPoint, .ep = middlePoint});
+        //subdivide, making sure to push the latter segment first so that the stack processes the earlier segment first
+        segments.push(segment{ .start = middle, .end = current.end, 
+          .startPoint = middlePoint, .endPoint = current.endPoint});
+
+        segments.push(segment{ .start = current.start, .end = middle, 
+          .startPoint = current.startPoint, .endPoint = middlePoint});
       }
+      //else we have enough resolution
       else
       {
-        al += glm::length(startToMiddle);
-        ScriptedMotionPath::KeyPoint kp = { .pos = middlePoint, .arcLenght = al, .u = middle };
-        smp.keyPoints.push_back(kp);
-        al += glm::length(endPoint - middlePoint);
-        kp = { .pos = endPoint, .arcLenght = al, .u = current.end };
-        //smp.keyPoints.push_back(kp);
+        //add the end point of this segment as a key point
+        accumulatedLength += glm::length(current.endPoint - current.startPoint);
+        ScriptedMotionPath::KeyPoint newkp = { .pos = current.endPoint, .arcLenght = accumulatedLength, .u = current.end };
+        smp.keyPoints.push_back(newkp);
       }
     }
 
-
-    float totalLength = smp.keyPoints.back().arcLenght;
-
-    //float totalLength = smp.keyPoints.end()[0].arcLenght;
-
+    //normalize arc lengths to [0, 1]
+    double totalLength = smp.keyPoints.back().arcLenght;
     auto normalizeLength = [totalLength](ScriptedMotionPath::KeyPoint& kp) {kp.arcLenght /= totalLength; };
     std::for_each(smp.keyPoints.begin(), smp.keyPoints.end(), normalizeLength);
-
-    smp.keyPoints.push_back(ScriptedMotionPath::KeyPoint{ .pos = GetCurvePoint(smp, end), .arcLenght = 1.0f, .u = 1.0f });
-    //if (glm::abs(startToEnd - throughMiddle) > epsilon)
-    //{
-    //  ComputeArcLengthsAdaptive(smp, start, middle, distance);
-    //  ComputeArcLengthsAdaptive(smp, middle, end, distance + startToMiddle);
-    //}
-    //else
-    //{
-    //  //store length
-    //  smp.arcLenTable.push_back(std::make_pair(middle, distance + startToMiddle));
-    //  //smp.arcLenTable.push_back(std::make_pair(end, distance + startToEnd));
-    //}
   }
 
   float ScriptedMotion::GetUfromArcLength(ScriptedMotionPath& smp, float arclength)
@@ -324,24 +300,6 @@ namespace FAR
     }
   }
 
-  float ScriptedMotion::GetVelocityAtTime(ScriptedMotionPath& smp)
-  {
-    for (int i = 0; i < smp.velocityKeys.size() - 1; i++)
-    {
-      if (smp.t >= smp.velocityKeys[i].first && smp.t <= smp.velocityKeys[i + 1].first)
-      {
-        float timeDiff = smp.velocityKeys[i + 1].first - smp.velocityKeys[i].first;
-        float frac = (smp.t - smp.velocityKeys[i].first) / timeDiff;
-        //float velDiff = smp.velocityKeys[i + 1].second - smp.velocityKeys[i].second;
-        
-
-        return glm::mix(smp.velocityKeys[i].second, smp.velocityKeys[i + 1].second, frac);
-        //return smp.velocityKeys[i].second + velDiff * frac;
-      }
-    }
-    return 0.0f;
-  }
-
   float ScriptedMotion::GetCurrentSpeed(ScriptedMotionPath& smp)
   {
     //linear search for the 2 velocity keys surrounding current time t, return the lerp between their velocities
@@ -359,42 +317,49 @@ namespace FAR
 
   glm::vec3 ScriptedMotion::GetCurvePoint(ScriptedMotionPath& smp, float u)
   {
-    Eigen::VectorXf& solvedX = smp.vecX;
-    Eigen::VectorXf& solvedY = smp.vecY;
-    Eigen::VectorXf& solvedZ = smp.vecZ;
+    //un-normalized position
+    double current = u * (double)(smp.controlPoints.size() - 1);
 
-    float current = u * (smp.controlPoints.size() - 1);
+    //regular polynomial part
+    glm::vec<3, double> point = {0.0, 0.0, 0.0};
+    point.x += smp.vecX[0];
+    point.x += smp.vecX[1] * current;
+    point.x += smp.vecX[2] * current * current;
+    point.x += smp.vecX[3] * current * current * current;
 
-    float x = 0.0f;
-    float y = 0.0f;
-    float z = 0.0f;
+    point.y += smp.vecY[0];
+    point.y += smp.vecY[1] * current;
+    point.y += smp.vecY[2] * current * current;
+    point.y += smp.vecY[3] * current * current * current;
 
-    x += solvedX[0];
-    x += solvedX[1] * current;
-    x += solvedX[2] * current * current;
-    x += solvedX[3] * current * current * current;
+    point.z += smp.vecZ[0];
+    point.z += smp.vecZ[1] * current;
+    point.z += smp.vecZ[2] * current * current;
+    point.z += smp.vecZ[3] * current * current * current;
 
-    y += solvedY[0];
-    y += solvedY[1] * current;
-    y += solvedY[2] * current * current;
-    y += solvedY[3] * current * current * current;
-
-    z += solvedZ[0];
-    z += solvedZ[1] * current;
-    z += solvedZ[2] * current * current;
-    z += solvedZ[3] * current * current * current;
-
+    //truncated power function part
     for (int j = 4; j < smp.controlPoints.size() + 2; j++)
     {
-      float t = current - (float)(j - 3);
+      double t = current - (double)(j - 3);
       if (t < 0)
       {
         continue;
       }
-      x += solvedX[j] * t * t * t;
-      y += solvedY[j] * t * t * t;
-      z += solvedZ[j] * t * t * t;
+      point.x += smp.vecX[j] * t * t * t;
+      point.y += smp.vecY[j] * t * t * t;
+      point.z += smp.vecZ[j] * t * t * t;
     }
-    return glm::vec3(x, y, z);
+
+    return glm::vec3(point);
+  }
+
+  void ScriptedMotion::PostUpdate()
+  {
+
+  }
+
+  void ScriptedMotion::Exit()
+  {
+
   }
 }

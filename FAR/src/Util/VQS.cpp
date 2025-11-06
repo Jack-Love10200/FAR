@@ -29,13 +29,16 @@ namespace FAR
     rotMatrix[0] /= s.x;
     rotMatrix[1] /= s.y;
     rotMatrix[2] /= s.z;
-    q = Quat::FromMatrix(rotMatrix);
+
+    q = glm::quat_cast(rotMatrix);
+
+    //q = Quat::FromMatrix(rotMatrix);
   }
 
   glm::mat4 VQS::ToMatrix() const
   {
     glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), v);
-    glm::mat4 rotationMatrix = q.ToMatrix();
+    glm::mat4 rotationMatrix = glm::toMat4(q);
     glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(s));
     return translationMatrix * rotationMatrix * scaleMatrix;
   }
@@ -43,7 +46,7 @@ namespace FAR
   VQS VQS::operator*(const VQS& other) const
   {
     glm::vec3 newV = *this * other.v; //apply this transformation to other's translation
-    FAR::Quat newQ = this->q * other.q; //combine rotations
+    glm::quat newQ = this->q * other.q; //combine rotations
     glm::vec3 newS = this->s * other.s; //combine scales
     return VQS(newV, newQ, newS);
   }
@@ -73,7 +76,7 @@ namespace FAR
     //lerp position
     retval.v = glm::mix(left.v, right.v, alpha);
     //slerp rotation
-    retval.q = FAR::Quat::Slerp(left.q, right.q, alpha);
+    retval.q = glm::slerp(left.q, right.q, alpha);
     //elerp scale
     retval.s = elerp(left.s, right.s, alpha);
     return retval;

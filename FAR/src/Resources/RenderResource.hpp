@@ -23,10 +23,6 @@ namespace FAR
     /// @param height - The height of the framebuffer
     void CreateFrameBuffer(int width, int height);
 
-    /// @brief Draw a ray(line segment) in world space on top of the scene
-    /// @param start - One end of the line segment
-    /// @param end   - The other end of the line segment
-    void DrawRay(glm::vec4 start, glm::vec4 end);
     
     GLuint basicShaderProgram;
     GLuint lineShaderProgram;
@@ -36,8 +32,29 @@ namespace FAR
 
     GLuint fbo, colorTex, rboDepth;
 
+    struct point 
+    {
+      glm::vec4 position;
+      glm::vec4 color;
+    };
+
     //array of points representing debug lines to draw on top of the scene
-    std::vector<glm::vec4> rays;
+    std::vector<point> rays;
+
+    std::vector<point> points;
+
+
+    /// @brief Draw a ray(line segment) in world space on top of the scene
+    /// @param start - One end of the line segment
+    /// @param end   - The other end of the line segment
+    void DrawRay(point p1, point p2);
+
+    /// @brief Draw a point in world space on top of the scene
+    /// @param point - The position of the point
+    void DrawPoint(point p)
+    {
+      points.push_back(p);
+    }
 
   private:
 

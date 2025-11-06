@@ -15,11 +15,12 @@ namespace FAR
   public:
 
     glm::vec3 v; // translation
-    FAR::Quat q; // rotation
+    //FAR::Quat q; // rotation
+    glm::quat q;
     glm::vec3 s; // scale
 
     VQS() : v(0.0f), q(1.0f, 0.0f, 0.0f, 0.0f), s(1.0f, 1.0f, 1.0f) {}
-    VQS(const glm::vec3& translation, const FAR::Quat& rotation, glm::vec3 scale)
+    VQS(const glm::vec3& translation, const glm::quat& rotation, glm::vec3 scale)
       : v(translation), q(rotation), s(scale)
     {
     }

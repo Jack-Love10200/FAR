@@ -18,6 +18,7 @@
 #include "Systems/Animation/SkeletalAnimation.hpp"
 #include "Systems/Editor/EditorSystem.hpp"
 #include "Systems/ScriptedMotion/ScriptedMotion.hpp"
+#include "Systems/IK/IK.hpp"
 
 //components
 #include "Components/Transform.hpp"
@@ -25,6 +26,7 @@
 #include "Components/Model.hpp"
 #include "Components/SkeletalAnimator.hpp"
 #include "Components/ScriptedMotionPath.hpp"
+#include "Components/IKPoser.hpp"
 
 //resources
 #include "Resources/InputResource.h"
@@ -71,6 +73,7 @@ int main()
   engine.RegisterComponentType<Model>();
   engine.RegisterComponentType<SkeletalAnimator>();
   engine.RegisterComponentType<ScriptedMotionPath>();
+  engine.RegisterComponentType<IKPoser>();
 
   engine.RegisterSystemType<FAR::EditorSystem>();
   engine.RegisterSystemType<FAR::Render>();
@@ -78,7 +81,10 @@ int main()
   engine.RegisterSystemType<FAR::SkeletalAnimation>();
   engine.RegisterSystemType<FAR::Sandbox>();
   engine.RegisterSystemType<FAR::InputSystem>();
+  engine.RegisterSystemType<FAR::IK>();
 
+  //TODO: Pass parameters to resources as needed
+  //TODO: Do resource registration first so systems can access them during construction
   engine.RegisterResource<FAR::InputResource>();
   engine.RegisterResource<FAR::WindowResource>();
   engine.RegisterResource<FAR::RenderResource>();

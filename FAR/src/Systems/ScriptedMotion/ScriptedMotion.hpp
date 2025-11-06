@@ -1,3 +1,10 @@
+///
+/// @file   ScriptedMotion.cpp
+/// @brief  System for calculating cubic spline paths and moving entities along them
+/// @author Jack Love
+/// @date   28.10.2025
+///
+
 #pragma once
 
 #include "PCH/PCH.hpp"
@@ -16,7 +23,7 @@ namespace FAR
 {
   class ScriptedMotion : public iSystem
   {
-    public:
+  public:
     virtual ~ScriptedMotion() = default;
 
     virtual void Init() override;
@@ -27,21 +34,26 @@ namespace FAR
 
   private:
 
-	Eigen::MatrixXf GetMatrixByNumCtrlPts(size_t numCtrlPts);
+    //get the cubic spline matrix for a given number of control points
+    Eigen::MatrixXd GetMatrixByNumCtrlPts(size_t numCtrlPts);
 
-	float GetCubicSplineMatrixTerm(int t, int termnum);
+    //get the term value for a given t and term number in the cubic spline matrix
+    double GetCubicSplineMatrixTerm(int t, int termnum);
 
-  void ComputeSplineCoefficients(ScriptedMotionPath& smp);
+    //compute the spline coefficients for a given scripted motion path
+    void ComputeSplineCoefficients(ScriptedMotionPath& smp);
 
-  void ComputeArcLengthsAdaptive(ScriptedMotionPath& smp, float start, float end, float distance);
+    //compute the arc length table adaptively for a given scripted motion path
+    void ComputeArcLengthsAdaptive(ScriptedMotionPath& smp, float start, float end, float distance);
 
-  float GetUfromArcLength(ScriptedMotionPath& smp, float arclength);
+    //get the U parameter corresponding to a given arc length proportion
+    float GetUfromArcLength(ScriptedMotionPath& smp, float arclength);
 
-  float GetVelocityAtTime(ScriptedMotionPath& smp);
+    //get the speed at the current t value for a given scripted motion path
+    float GetCurrentSpeed(ScriptedMotionPath& smp);
 
-  float GetCurrentSpeed(ScriptedMotionPath& smp);
-
-  glm::vec3 GetCurvePoint(ScriptedMotionPath& smp, float u);
+    //get a point on the cubic spline curve for a given scripted motion path and u (proportion 0-1) parameter
+    glm::vec3 GetCurvePoint(ScriptedMotionPath& smp, float u);
 
     RenderResource* renderResc = nullptr;
   };

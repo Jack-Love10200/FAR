@@ -17,7 +17,7 @@
 #include "Components/Model.hpp"
 #include "Components/SkeletalAnimator.hpp"
 #include "Components/ScriptedMotionPath.hpp"
-
+#include "Components/IKPoser.hpp"
 
 //for piecewise linear integral for the scripted motion path speed curve
 #include "Util/MathHelpers.hpp"
@@ -188,7 +188,7 @@ namespace FAR
       else if (guizmoOperation == ImGuizmo::ROTATE)
       {
         glm::quat rotQuat = glm::quat(glm::radians(dummyRotation));
-        selectedTransform.rotationQuaternion = selectedTransform.rotationQuaternion * FAR::Quat(rotQuat.w, rotQuat.x, rotQuat.y, rotQuat.z);
+        selectedTransform.rotationQuaternion = selectedTransform.rotationQuaternion * rotQuat;
       }
 
 
@@ -387,6 +387,21 @@ namespace FAR
 
         ImGui::DragFloat("Total Time", &smp.totalTime, 0.1f, 0.1f, 100.0f);
 
+        ImGui::TreePop();
+      }
+    }
+
+    if (selected != -1 && Engine::GetInstance()->HasComponent<IKPoser>(selected))
+    {
+      IKPoser& ik = Engine::GetInstance()->GetComponent<IKPoser>(selected);
+      if (ImGui::TreeNode("IK Poser Component"))
+      {
+        ImGui::Text(("Target Entity: " + std::to_string(ik.target)).c_str());
+        ImGui::Text("Manipulators:");
+        for (int i = 0; i < ik.manipulator.size(); i++)
+        {
+          ImGui::Text(("%d: Bone Index " + std::to_string(ik.manipulator[i])).c_str());
+        }
         ImGui::TreePop();
       }
     }

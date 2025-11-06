@@ -115,22 +115,22 @@ namespace FAR
             if (channel->mRotationKeys[j].mTime == time)
             {
               aiQuaternion q = channel->mRotationKeys[j].mValue;
-              vqs.q = Quat(q.w, q.x, q.y, q.z);
+              vqs.q = glm::quat(q.w, q.x, q.y, q.z);
               rotKeyFound = true;
             }
             //if not a perfect match, lerp between the last key and the next key
             else if (channel->mRotationKeys[j].mTime < time)
             {
               aiQuaternion q = channel->mRotationKeys[j].mValue;
-              Quat rot1 = Quat(q.w, q.x, q.y, q.z);
+              glm::quat rot1 = glm::quat(q.w, q.x, q.y, q.z);
               if (j + 1 < numRotationKeys)
               {
                 aiQuaternion q2 = channel->mRotationKeys[j + 1].mValue;
-                Quat rot2 = Quat(q2.w, q2.x, q2.y, q2.z);
+                glm::quat rot2 = glm::quat(q2.w, q2.x, q2.y, q2.z);
                 float t1 = channel->mRotationKeys[j].mTime;
                 float t2 = channel->mRotationKeys[j + 1].mTime;
                 float alpha = (time - t1) / (t2 - t1);
-                vqs.q = Quat::Slerp(rot1, rot2, alpha);
+                vqs.q = glm::slerp(rot1, rot2, alpha);
                 rotKeyFound = true;
               }
               else
@@ -143,7 +143,7 @@ namespace FAR
           if (!rotKeyFound)
           {
             aiQuaternion q = channel->mRotationKeys[0].mValue;
-            vqs.q = Quat(q.w, q.x, q.y, q.z);
+            vqs.q = glm::quat(q.w, q.x, q.y, q.z);
           }
         }
         if (numScalingKeys > 0)
@@ -309,6 +309,11 @@ namespace FAR
     }
   }
 
+  float quatDot(const glm::quat& q1, const glm::quat& q2)
+  {
+    return q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
+  }
+
   void SkeletalAnimation::ComputeIncrementalInterpolationConstants(SkeletalAnimator::Animation::Channel& channel, float tps)
   {
     float fps = 144.0f;
@@ -318,14 +323,15 @@ namespace FAR
       float duration = (channel.keyFrames[i + 1].first - channel.keyFrames[i].first);
       float ticksPerFrame = tps / fps;
       float n = duration / ticksPerFrame;
-      float a = glm::acos(glm::clamp(Quat::Dot(channel.keyFrames[i].second.q, channel.keyFrames[i + 1].second.q), -1.0f, 1.0f));
+      float a = glm::acos(glm::clamp(quatDot(channel.keyFrames[i].second.q, channel.keyFrames[i + 1].second.q), -1.0f, 1.0f));
+    //  float a = glm::acos(glm::clamp(Quat::Dot(channel.keyFrames[i].second.q, channel.keyFrames[i + 1].second.q), -1.0f, 1.0f));
 
       VQS increment;
       VQS kf1 = channel.keyFrames[i].second;
       VQS kf2 = channel.keyFrames[i + 1].second;
 
       if (a < std::numeric_limits<float>::epsilon())
-        increment.q = Quat(1, 0, 0, 0);
+        increment.q = glm::quat(1, 0, 0, 0);
       else
       {
         float B = a / n;
@@ -338,15 +344,20 @@ namespace FAR
 
         glm::vec3 u;
 
-        u = (kf2.q * kf1.q.Conjugate()).GetVectorPart() / sin(a);
+        glm::quat conj = glm::conjugate(kf1.q);
+
+        u = (kf2.q * glm::vec3(conj.x, conj.y, conj.z) / sin(a));
         u = glm::normalize(u);
+
 
         float sinB = sin(B);
         glm::vec3 sinBu = sinB * u;
 
         //islerping rotation
-        increment.q = Quat(cos(B), sinBu.x, sinBu.y, sinBu.z);
-        increment.q.Normalize();
+        increment.q = glm::quat (cos(B), sinBu.x, sinBu.y, sinBu.z);
+        //increment.q.Normalize();
+
+        increment.q = glm::normalize(increment.q);
 
       }
       //ilerping position
