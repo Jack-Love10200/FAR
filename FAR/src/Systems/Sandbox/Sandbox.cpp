@@ -23,7 +23,7 @@ namespace FAR
     engine.AddComponent(cam, Transform{ .position = glm::vec3(-10.0f, 7.0f, 0.0f), .rotationQuaternion = camRot });
 
     Entity target = engine.CreateEntity();
-    engine.AddComponent(target, Transform{ .position = glm::vec3(0.0f, 0.0f, 0.0f), .scale = glm::vec3(0.33f, 0.33f, 1.0f)});
+    engine.AddComponent(target, Transform{ .position = glm::vec3(0.0f, 1.0f, 0.0f), .scale = glm::vec3(0.33f, 0.33f, 1.0f)});
     engine.AddComponent(target, Model{ .path = "assets/quad.obj", .textured = false });
 
     Entity e = engine.CreateEntity();
@@ -37,8 +37,8 @@ namespace FAR
     //  });
     engine.AddComponent(e, Transform{ .position = glm::vec3(0.0f, 0.0f, 0.0f) });
     engine.AddComponent(e, Model{ .path = "assets/trotting_cat.glb", .textured = false });
-    engine.AddComponent(e, SkeletalAnimator{ .path = "assets/trotting_cat.glb", .animationTime = 0.0f, .currentAnimation = 0, .playing = true, .looping = true, .playbackSpeed = 1.3f });
-    engine.AddComponent(e, IKPoser{ .target = target });
+    //engine.AddComponent(e, SkeletalAnimator{ .path = "assets/trotting_cat.glb", .animationTime = 0.0f, .currentAnimation = 0, .playing = true, .looping = true, .playbackSpeed = 1.3f });
+    engine.AddComponent(e, IKPoser{ .target = target , .manipulator = std::vector<int>{ 49, 50, 51, 52, 53, 54, 55} });
 
     Entity floor = engine.CreateEntity();
     engine.AddComponent(floor, Model{ .path = "assets/quad.obj", .textured = false });

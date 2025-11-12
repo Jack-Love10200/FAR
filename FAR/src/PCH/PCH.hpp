@@ -16,6 +16,7 @@
 #include <utility>
 #include <set>
 #include <stack>
+#include <ranges>
 
 #define GLM_ENABLE_EXPERIMENTAL
 //#define GLM_MESSAGES 1

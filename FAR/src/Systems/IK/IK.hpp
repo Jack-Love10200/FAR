@@ -4,6 +4,10 @@
 
 #include "Systems/iSystem.hpp"
 
+#include "Components/Model.hpp"
+#include "Components/IKPoser.hpp"
+#include "Components/Transform.hpp"
+
 namespace FAR
 {
   class IK : public iSystem
@@ -17,6 +21,11 @@ namespace FAR
     void Update() override;
     void PostUpdate() override;
     void Exit() override;
+
+
+  private:
+    void ApplyNodeHeirarchy(std::vector<Model::Node>& nodes, int nodeIndex, const VQS& parentTransform);
+    void SolveIK(Model& model, IKPoser& ikp, const glm::vec3& targetPos); 
 
   };
 }
