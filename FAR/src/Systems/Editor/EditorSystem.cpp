@@ -394,16 +394,16 @@ namespace FAR
     if (selected != -1 && Engine::GetInstance()->HasComponent<IKPoser>(selected))
     {
       IKPoser& ik = Engine::GetInstance()->GetComponent<IKPoser>(selected);
-      if (ImGui::TreeNode("IK Poser Component"))
-      {
-        ImGui::Text(("Target Entity: " + std::to_string(ik.target)).c_str());
-        ImGui::Text("Manipulators:");
-        for (int i = 0; i < ik.manipulator.size(); i++)
-        {
-          ImGui::Text(("%d: Bone Index " + std::to_string(ik.manipulator[i])).c_str());
-        }
-        ImGui::TreePop();
-      }
+      //if (ImGui::TreeNode("IK Poser Component"))
+      //{
+      //  ImGui::Text(("Target Entity: " + std::to_string(ik.target)).c_str());
+      //  ImGui::Text("Manipulators:");
+      //  for (int i = 0; i < ik.manipulator.size(); i++)
+      //  {
+      //    ImGui::Text(("%d: Bone Index " + std::to_string(ik.manipulator[i])).c_str());
+      //  }
+      //  ImGui::TreePop();
+      //}
     }
 
 

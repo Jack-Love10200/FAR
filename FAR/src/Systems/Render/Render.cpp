@@ -341,7 +341,7 @@ namespace FAR
     //draw lines
     for (int i = 0; i < points.size(); i += 2)
     {
-      if (i >= 48 * 2 && i <= 54 * 2)
+      //if (i >= 48 * 2 && i <= 54 * 2)
       renderResc->DrawRay({ .position = points[i], .color = {1.0f, 0.0f, 0.0f, 1.0f} }, { .position = points[i + 1], .color = {0.0f, 1.0f, 1.0f, 1.0f} });
     }
   }

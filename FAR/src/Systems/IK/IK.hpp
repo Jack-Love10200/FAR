@@ -25,7 +25,8 @@ namespace FAR
 
   private:
     void ApplyNodeHeirarchy(std::vector<Model::Node>& nodes, int nodeIndex, const VQS& parentTransform);
-    void SolveIK(Model& model, IKPoser& ikp, const glm::vec3& targetPos); 
+    void SolveIK(Model& model, IKPoser& ikp); 
+    void SolveManipulator(Model& model, IKPoser::Manipulator& manipulator);
 
   };
 }

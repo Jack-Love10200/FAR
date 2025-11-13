@@ -96,7 +96,7 @@ int main()
     engine.PreUpdate();
     engine.Update();
     engine.PostUpdate();
-    BusyWaitFrameRateControl(144.0f);
+    //BusyWaitFrameRateControl(144.0f);
   }
 
   engine.Exit();

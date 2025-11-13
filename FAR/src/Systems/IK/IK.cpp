@@ -34,15 +34,15 @@ namespace FAR
       Model& model = Engine::GetInstance()->GetComponent<Model>(e);
       IKPoser& ikp = Engine::GetInstance()->GetComponent<IKPoser>(e);
 
-      Transform& targetTrans = Engine::GetInstance()->GetComponent<Transform>(ikp.target);
-      glm::vec3 targetPos = targetTrans.position;
+      //Transform& targetTrans = Engine::GetInstance()->GetComponent<Transform>(ikp.target);
+      //glm::vec3 targetPos = targetTrans.position;
 
       //get euler angles of the bones
       for (int i = 0; i < model.nodes.size(); i++)
       {
         glm::vec3 eulerAngles = glm::eulerAngles(model.nodes[i].transform.q);
 
-        if (i >= 48 && i <= 55)
+        if ((i >= 48 && i <= 55) || (i >= 11 && i <= 16))
         {
           ImGui::Text("Bone %d: Pitch: %.2f, Yaw: %.2f, Roll: %.2f", i, glm::degrees(eulerAngles.x), glm::degrees(eulerAngles.y), glm::degrees(eulerAngles.z));
           ImGui::Text("Bone %d Quaternion: (%.4f, %.4f, %.4f, %.4f)", i, model.nodes[i].transform.q.w, model.nodes[i].transform.q.x, model.nodes[i].transform.q.y, model.nodes[i].transform.q.z);
@@ -50,15 +50,27 @@ namespace FAR
 
       }
 
-      SolveIK(model, ikp, targetPos);
+      SolveIK(model, ikp);
 
-      Engine::GetInstance()->GetResource<RenderResource>()->DrawPoint({ .position = glm::vec4(ikp.currentEEPos, 1.0f), .color = {0.0f, 1.0f, 0.0f, 1.0f} });
+      //Engine::GetInstance()->GetResource<RenderResource>()->DrawPoint({ .position = glm::vec4(ikp.currentEEPos, 1.0f), .color = {0.0f, 1.0f, 0.0f, 1.0f} });
     }
     ImGui::End();
   }
 
-  void IK::SolveIK(Model& model, IKPoser& ikp, const glm::vec3& targetPos)
+  void IK::SolveIK(Model& model, IKPoser& ikp)
   {
+    for (IKPoser::Manipulator& manipulator : ikp.manipulators)
+    {
+      Transform& targetTrans = Engine::GetInstance()->GetComponent<Transform>(manipulator.target);
+      glm::vec3 targetPos = targetTrans.position;
+      SolveManipulator(model, manipulator);
+    }
+  }
+
+  void IK::SolveManipulator(Model& model, IKPoser::Manipulator& manipulator)
+  {
+    const glm::vec3 targetPos = Engine::GetInstance()->GetComponent<Transform>(manipulator.target).position;
+
     std::vector<Model::Node> nodesCopy = model.nodes;
     ApplyNodeHeirarchy(nodesCopy, 0, VQS());
 
@@ -71,21 +83,22 @@ namespace FAR
 
     }
 
-    glm::vec3 lastEEPos = nodesCopy[ikp.manipulator.back()].transform.v;
-
-    while (true)
-    {
-      glm::vec3 lastEEPosSub = ikp.currentEEPos;
+    glm::vec3 lastEEPos = nodesCopy[manipulator.bones.back().boneIndex].transform.v;
 
       uint8_t iterations = 0;
+    while (true)
+    {
+      glm::vec3 lastEEPosSub = manipulator.currentEEPos;
 
-      for (int& nodeID : ikp.manipulator | std::views::reverse)
+
+      for (IKPoser::Manipulator::ManipulatorBone joint : manipulator.bones | std::views::reverse)
+      //for (auto [boneIndex, minAngle, maxAngle] : manipulator.bones)
       {
-        ikp.currentEEPos = nodesCopy[ikp.manipulator.back()].transform.v;
+        manipulator.currentEEPos = nodesCopy[manipulator.bones.back().boneIndex].transform.v;
 
 
-        glm::vec3 Vdk = targetPos - nodesCopy[nodeID].transform.v;
-        glm::vec3 Vck = ikp.currentEEPos - nodesCopy[nodeID].transform.v;
+        glm::vec3 Vdk = targetPos - nodesCopy[joint.boneIndex].transform.v;
+        glm::vec3 Vck = manipulator.currentEEPos - nodesCopy[joint.boneIndex].transform.v;
 
         float angle = AngleBetweenVectors(Vck, Vdk);
 
@@ -100,24 +113,34 @@ namespace FAR
           //model.nodes[nodeID].transform.q = glm::normalize(rotationDelta * model.nodes[nodeID].transform.q);
           //model.nodes[nodeID].transform.q = glm::normalize(model.nodes[nodeID].transform.q * rotationDelta);
 
-          glm::quat parentWorldRot = nodesCopy[model.nodes[nodeID].parent].transform.q; // or however you store it
+          //constrain rotation based on manipulator limits
+
+
+          glm::quat parentWorldRot = nodesCopy[model.nodes[joint.boneIndex].parent].transform.q;
           glm::quat localDelta = glm::inverse(parentWorldRot) * rotationDelta * parentWorldRot;
-          model.nodes[nodeID].transform.q = normalize(localDelta * model.nodes[nodeID].transform.q);
+          model.nodes[joint.boneIndex].transform.q = glm::normalize(localDelta * model.nodes[joint.boneIndex].transform.q);
         }
+
+        glm::vec3 eulerAngles = glm::eulerAngles(model.nodes[joint.boneIndex].transform.q);
+        eulerAngles.x = glm::clamp(eulerAngles.x, joint.minPitch, joint.maxPitch);
+        eulerAngles.y = glm::clamp(eulerAngles.y, joint.minYaw, joint.maxYaw);
+        eulerAngles.z = glm::clamp(eulerAngles.z, joint.minRoll, joint.maxRoll);
+
+        model.nodes[joint.boneIndex].transform.q = glm::quat(eulerAngles);
 
         //recalculate heirarchy
         nodesCopy = model.nodes;
         ApplyNodeHeirarchy(nodesCopy, 0, VQS());
 
-        ikp.currentEEPos = nodesCopy[ikp.manipulator.back()].transform.v;
+        manipulator.currentEEPos = nodesCopy[manipulator.bones.back().boneIndex].transform.v;
 
         //if the distance to the target is close enough, stop
-        if (glm::length(targetPos - ikp.currentEEPos) < 0.001f)
+        if (glm::length(targetPos - manipulator.currentEEPos) < 0.001f)
           return;
 
       }
       iterations++;
-      float len = glm::length(ikp.currentEEPos - lastEEPos);
+      float len = glm::length(manipulator.currentEEPos - lastEEPos);
 
       //std::cout << "EE Movement this iteration: " << len << std::endl;
 
@@ -127,11 +150,16 @@ namespace FAR
         return; //no more significant movement, exit
       }
 
-      lastEEPos = ikp.currentEEPos;
+      lastEEPos = manipulator.currentEEPos;
+
+      //last ditch bail out if too many iterations
+      if (iterations > 15)
+      {
+        std::cout << "IK Iterations this pass: " << (int)iterations << " (maxed out)" << std::endl;
+        return;
+      }
     }
   }
-
-
 
   void IK::ApplyNodeHeirarchy(std::vector<Model::Node>& nodes, int nodeIndex, const VQS& parentTransform)
   {
