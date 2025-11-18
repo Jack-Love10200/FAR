@@ -103,6 +103,8 @@ namespace FAR
         glm::vec4(currentPos, 1.0f)
       );
 
+      transform.modelMatrix = transform.modelMatrix * glm::scale(glm::mat4(1.0f), transform.scale);
+
       transform.matManuallyModified = true;
     }
   }

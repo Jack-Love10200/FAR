@@ -36,7 +36,10 @@ struct IKPoser
       //float maxAngle; //in radians
       //std::pair<float, float> angleLimits; //min, max in radians
     };
+
+
     std::vector<ManipulatorBone> bones;
+    int EEIndex;
     glm::vec3 currentEEPos = glm::vec3(0.0f, 0.0f, 0.0f);
   };
 

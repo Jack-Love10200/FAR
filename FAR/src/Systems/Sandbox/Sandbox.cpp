@@ -16,18 +16,23 @@ namespace FAR
     Engine& engine = *Engine::GetInstance();
     cam = engine.CreateEntity();
 
-    glm::quat camRot = glm::quat(-0.209f, 0.523f, -0.306f, -0.767f);
+    glm::quat camRot = glm::quat(-0.031, -0.424f, -0.160, -0.891);
     camRot = glm::normalize(camRot);
 
     engine.AddComponent(cam, Camera{.nearPlane = 0.001f, .forward = camRot * glm::vec3(0.0f, 0.0f, -1.0f), .isMain = true});
-    engine.AddComponent(cam, Transform{ .position = glm::vec3(-10.0f, 7.0f, 0.0f), .rotationQuaternion = camRot });
+    engine.AddComponent(cam, Transform{ .position = glm::vec3(1.873f, 1.405f, 1.513f), .rotationQuaternion = camRot });
 
     Entity target = engine.CreateEntity();
     engine.AddComponent(target, Transform{ .position = glm::vec3(0.0f, 1.0f, 0.0f), .scale = glm::vec3(0.1f, 0.1f, 1.0f)});
     engine.AddComponent(target, Model{ .path = "assets/quad.obj", .textured = false });
+    engine.AddComponent(target, ScriptedMotionPath{
+      .controlPoints = { {0.0f, 1.0f, -1.0f}, {-0.7f, 1.6f, -1.1f}, {0.4f, 1.2f, -1.1f}, {0.0f, 1.0f, -1.0f} },
+      .velocityKeys = { {0.0f, 0.0f}, {0.2f, 0.5f}, {0.8f, 0.5f}, {1.0f, 0.0f} },
+      .totalTime = 4.0f
+      });
 
     Entity target2 = engine.CreateEntity();
-    engine.AddComponent(target2, Transform{ .position = glm::vec3(0.0f, 1.0f, 0.0f), .scale = glm::vec3(0.1f, 0.1f, 1.0f) });
+    engine.AddComponent(target2, Transform{ .position = glm::vec3(0.115f, 0.086f, 0.476f), .scale = glm::vec3(0.1f, 0.1f, 1.0f) });
     engine.AddComponent(target2, Model{ .path = "assets/quad.obj", .textured = false });
 
     Entity e = engine.CreateEntity();
@@ -47,26 +52,28 @@ namespace FAR
         IKPoser::Manipulator{
           .target = target,
           .bones = {
-IKPoser::Manipulator::ManipulatorBone{.boneIndex = 48, .minPitch = glm::radians(-15.0f), .maxPitch = glm::radians(15.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(-80.0f), .maxRoll = glm::radians(-50.0f)},
-IKPoser::Manipulator::ManipulatorBone{.boneIndex = 49, .minPitch = glm::radians(-20.0f), .maxPitch = glm::radians(15.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(-10.0f), .maxRoll = glm::radians(25.0f)},
-IKPoser::Manipulator::ManipulatorBone{.boneIndex = 50, .minPitch = glm::radians(-15.0f), .maxPitch = glm::radians(15.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(-10.0f), .maxRoll = glm::radians(25.0f)},
-IKPoser::Manipulator::ManipulatorBone{.boneIndex = 51, .minPitch = glm::radians(-15.0f), .maxPitch = glm::radians(15.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(5.0f), .maxRoll = glm::radians(35.0f)},
-IKPoser::Manipulator::ManipulatorBone{.boneIndex = 52, .minPitch = glm::radians(-10.0f), .maxPitch = glm::radians(20.0f), .minYaw = glm::radians(-10.0f), .maxYaw = glm::radians(20.0f), .minRoll = glm::radians(5.0f), .maxRoll = glm::radians(35.0f)},
-IKPoser::Manipulator::ManipulatorBone{.boneIndex = 53, .minPitch = glm::radians(-10.0f), .maxPitch = glm::radians(20.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(5.0f), .maxRoll = glm::radians(35.0f)},
-IKPoser::Manipulator::ManipulatorBone{.boneIndex = 54, .minPitch = glm::radians(-10.0f), .maxPitch = glm::radians(25.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(0.0f), .maxRoll = glm::radians(30.0f)},
 IKPoser::Manipulator::ManipulatorBone{.boneIndex = 55, .minPitch = glm::radians(-15.0f), .maxPitch = glm::radians(15.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(-15.0f), .maxRoll = glm::radians(15.0f)},
-          }
+IKPoser::Manipulator::ManipulatorBone{.boneIndex = 54, .minPitch = glm::radians(-10.0f), .maxPitch = glm::radians(25.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(0.0f), .maxRoll = glm::radians(30.0f)},
+IKPoser::Manipulator::ManipulatorBone{.boneIndex = 53, .minPitch = glm::radians(-10.0f), .maxPitch = glm::radians(20.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(5.0f), .maxRoll = glm::radians(35.0f)},
+IKPoser::Manipulator::ManipulatorBone{.boneIndex = 52, .minPitch = glm::radians(-10.0f), .maxPitch = glm::radians(20.0f), .minYaw = glm::radians(-10.0f), .maxYaw = glm::radians(20.0f), .minRoll = glm::radians(5.0f), .maxRoll = glm::radians(35.0f)},
+IKPoser::Manipulator::ManipulatorBone{.boneIndex = 51, .minPitch = glm::radians(-15.0f), .maxPitch = glm::radians(15.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(5.0f), .maxRoll = glm::radians(35.0f)},
+IKPoser::Manipulator::ManipulatorBone{.boneIndex = 50, .minPitch = glm::radians(-15.0f), .maxPitch = glm::radians(15.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(-10.0f), .maxRoll = glm::radians(25.0f)},
+IKPoser::Manipulator::ManipulatorBone{.boneIndex = 49, .minPitch = glm::radians(-20.0f), .maxPitch = glm::radians(15.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(-10.0f), .maxRoll = glm::radians(25.0f)},
+IKPoser::Manipulator::ManipulatorBone{.boneIndex = 48, .minPitch = glm::radians(-15.0f), .maxPitch = glm::radians(15.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(-80.0f), .maxRoll = glm::radians(-50.0f)},
+          },
+          .EEIndex = 55
         },
         IKPoser::Manipulator{
           .target = target2, 
           .bones = {
-IKPoser::Manipulator::ManipulatorBone{.boneIndex = 11, .minPitch = glm::radians(65.0f), .maxPitch = glm::radians(95.0f), .minYaw = glm::radians(-75.0f), .maxYaw = glm::radians(-45.0f), .minRoll = glm::radians(-35.0f), .maxRoll = glm::radians(-5.0f)},
-IKPoser::Manipulator::ManipulatorBone{.boneIndex = 12, .minPitch = glm::radians(55.0f), .maxPitch = glm::radians(85.0f), .minYaw = glm::radians(-20.0f), .maxYaw = glm::radians(10.0f), .minRoll = glm::radians(0.0f), .maxRoll = glm::radians(30.0f)},
-IKPoser::Manipulator::ManipulatorBone{.boneIndex = 13, .minPitch = glm::radians(105.0f), .maxPitch = glm::radians(135.0f), .minYaw = glm::radians(-10.0f), .maxYaw = glm::radians(20.0f), .minRoll = glm::radians(-5.0f), .maxRoll = glm::radians(25.0f)},
-IKPoser::Manipulator::ManipulatorBone{.boneIndex = 14, .minPitch = glm::radians(-90.0f), .maxPitch = glm::radians(-60.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(-15.0f), .maxRoll = glm::radians(15.0f)},
-IKPoser::Manipulator::ManipulatorBone{.boneIndex = 15, .minPitch = glm::radians(-60.0f), .maxPitch = glm::radians(-30.0f), .minYaw = glm::radians(-10.0f), .maxYaw = glm::radians(25.0f), .minRoll = glm::radians(-25.0f), .maxRoll = glm::radians(5.0f)},
 IKPoser::Manipulator::ManipulatorBone{.boneIndex = 16, .minPitch = glm::radians(-15.0f), .maxPitch = glm::radians(15.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(-15.0f), .maxRoll = glm::radians(15.0f)},
-          }
+IKPoser::Manipulator::ManipulatorBone{.boneIndex = 15, .minPitch = glm::radians(-60.0f), .maxPitch = glm::radians(-30.0f), .minYaw = glm::radians(-10.0f), .maxYaw = glm::radians(25.0f), .minRoll = glm::radians(-25.0f), .maxRoll = glm::radians(5.0f)},
+IKPoser::Manipulator::ManipulatorBone{.boneIndex = 14, .minPitch = glm::radians(-90.0f), .maxPitch = glm::radians(-60.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(-15.0f), .maxRoll = glm::radians(15.0f)},
+IKPoser::Manipulator::ManipulatorBone{.boneIndex = 13, .minPitch = glm::radians(105.0f), .maxPitch = glm::radians(135.0f), .minYaw = glm::radians(-10.0f), .maxYaw = glm::radians(20.0f), .minRoll = glm::radians(-5.0f), .maxRoll = glm::radians(25.0f)},
+IKPoser::Manipulator::ManipulatorBone{.boneIndex = 12, .minPitch = glm::radians(55.0f), .maxPitch = glm::radians(85.0f), .minYaw = glm::radians(-20.0f), .maxYaw = glm::radians(10.0f), .minRoll = glm::radians(0.0f), .maxRoll = glm::radians(30.0f)},
+IKPoser::Manipulator::ManipulatorBone{.boneIndex = 11, .minPitch = glm::radians(65.0f), .maxPitch = glm::radians(95.0f), .minYaw = glm::radians(-75.0f), .maxYaw = glm::radians(-45.0f), .minRoll = glm::radians(-35.0f), .maxRoll = glm::radians(-5.0f)},
+          },
+          .EEIndex = 16
         }
       }
       });
