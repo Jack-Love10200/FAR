@@ -33,7 +33,7 @@ namespace FAR
   void Engine::RegisterComponentType()
   {
     static std::array<std::optional<ComponentType>, 50> componentArray;
-
+    
     std::type_index typeIndex = std::type_index(typeid(ComponentType));
     componentTypes.push_back(typeIndex);
 

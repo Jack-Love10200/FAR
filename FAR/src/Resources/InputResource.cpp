@@ -5,6 +5,6 @@ namespace FAR
 {
   InputResource::InputResource()
   {
-    std::cout << "InputResource created" << std::endl;
+    //std::cout << "InputResource created" << std::endl;
   }
 }

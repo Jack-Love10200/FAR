@@ -506,7 +506,7 @@ namespace FAR
 
   void Render::Init()
   {
-    std::cout << "render inti" << std::endl;
+    //std::cout << "render inti" << std::endl;
     windowResc = Engine::GetInstance()->GetResource<WindowResource>();
     renderResc = Engine::GetInstance()->GetResource<RenderResource>();
 

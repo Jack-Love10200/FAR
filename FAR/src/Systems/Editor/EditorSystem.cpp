@@ -156,7 +156,7 @@ namespace FAR
         //gizmoStartRot = glm::eulerAngles(glm::quat_cast(selectedTransform.rotationQuaternion.ToMatrix()));
         gizmoStartScl = selectedTransform.scale;
         gizmoActive = true;
-        std::cout << "Gizmo activated\n";
+        //std::cout << "Gizmo activated\n";
       }
       //selectedTransform.matManuallyModified = true;
 
@@ -198,7 +198,7 @@ namespace FAR
     else if (gizmoActive && (!inputResc->GetMouseButton(KEYCODE::MOUSE_LEFT))) // Reset the guizmo tracker if the user is not manipulating the guizmo
     {
       gizmoActive = false;
-      std::cout << "Gizmo deactivated\n";
+      //std::cout << "Gizmo deactivated\n";
     }
   }
 

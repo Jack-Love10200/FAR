@@ -7,20 +7,16 @@
 #pragma once
 
 #include "PCH/PCH.hpp"
-
 #include "Engine/Engine.hpp"
 
 struct IKPoser
 {
-
-  //list of indexes into the skeleton's bone list that this IK poser will manipulate
-
   struct Manipulator
   {
     Entity target;
     struct ManipulatorBone
     {
-      int boneIndex;
+      int boneIndex;//which bone in the model's skeleton the part of the manipulator affects
 
       float minPitch = -2.0f * 3.14159f; //in radians
       float maxPitch = 2.0f * 3.14159f; //in radians
@@ -31,21 +27,13 @@ struct IKPoser
 
       float minRoll = -2.0f * 3.14159f; //in radians
       float maxRoll = 2.0f * 3.14159f; //in radians
-
-      //float minAngle; //in radians
-      //float maxAngle; //in radians
-      //std::pair<float, float> angleLimits; //min, max in radians
     };
-
-
     std::vector<ManipulatorBone> bones;
-    int EEIndex;
+
+    int EEIndex; // which bone should be uses for considering end effector convergence
+
     glm::vec3 currentEEPos = glm::vec3(0.0f, 0.0f, 0.0f);
   };
 
-  std::vector<Manipulator> manipulators;
-
-  //std::vector<int> manipulator;
-
-
+  std::vector<Manipulator> manipulators; 
 };

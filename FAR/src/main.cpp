@@ -19,6 +19,7 @@
 #include "Systems/Editor/EditorSystem.hpp"
 #include "Systems/ScriptedMotion/ScriptedMotion.hpp"
 #include "Systems/IK/IK.hpp"
+#include "Systems/Physics/Physics.hpp"
 
 //components
 #include "Components/Transform.hpp"
@@ -27,6 +28,8 @@
 #include "Components/SkeletalAnimator.hpp"
 #include "Components/ScriptedMotionPath.hpp"
 #include "Components/IKPoser.hpp"
+#include "Components/PointMass.hpp"
+#include "Components/Spring.hpp"
 
 //resources
 #include "Resources/InputResource.h"
@@ -41,7 +44,7 @@
 //TDOO: RenderResource Reorganization
 //TODO: Make IMGUI/STB prebuilt libraies
 
-//TODO: Proper frame rate controler build into engine class
+//TODO: Proper frame rate controler built into engine class
 void BusyWaitFrameRateControl(float fps)
 {
   int nanoseconds_per_frame = (int)(1.0f / fps * 1'000'000'000.0f);
@@ -74,6 +77,8 @@ int main()
   engine.RegisterComponentType<SkeletalAnimator>();
   engine.RegisterComponentType<ScriptedMotionPath>();
   engine.RegisterComponentType<IKPoser>();
+  engine.RegisterComponentType<PointMass>();
+  engine.RegisterComponentType<Spring>();
 
   engine.RegisterSystemType<FAR::EditorSystem>();
   engine.RegisterSystemType<FAR::Render>();
@@ -82,6 +87,7 @@ int main()
   engine.RegisterSystemType<FAR::Sandbox>();
   engine.RegisterSystemType<FAR::InputSystem>();
   engine.RegisterSystemType<FAR::IK>();
+  engine.RegisterSystemType<FAR::Physics>();
 
   //TODO: Pass parameters to resources as needed
   //TODO: Do resource registration first so systems can access them during construction

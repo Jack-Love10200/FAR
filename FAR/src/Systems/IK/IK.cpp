@@ -132,7 +132,8 @@ namespace FAR
     node.transform = globalTransform;
 
     // Recurse for children
-    for (int childIdx : node.children) {
+    for (int childIdx : node.children) 
+    {
       ApplyNodeHeirarchy(nodes, childIdx, globalTransform);
     }
   }
