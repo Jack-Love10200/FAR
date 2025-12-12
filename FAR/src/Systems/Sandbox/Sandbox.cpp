@@ -81,40 +81,156 @@ namespace FAR
 //      }
 //      });
 
-    Entity floor = engine.CreateEntity();
-    engine.AddComponent(floor, Model{ .path = "assets/quad.obj", .textured = false });
+    //Entity floor = engine.CreateEntity();
+    //engine.AddComponent(floor, Model{ .path = "assets/quad.obj", .textured = false });
 
-    engine.AddComponent(floor, Transform{ .position = glm::vec3(-12.0f, -0.01f, -19.0f), .rotationQuaternion = glm::quat(0.707f, 0.707f, 0.0f, 0.0f), .scale = glm::vec3(22.0f, 30.0f, 0.0f)});
+    //engine.AddComponent(floor, Transform{ .position = glm::vec3(-12.0f, -0.01f, -19.0f), .rotationQuaternion = glm::quat(0.707f, 0.707f, 0.0f, 0.0f), .scale = glm::vec3(22.0f, 30.0f, 0.0f)});
 
-    Entity springStart = engine.CreateEntity();
-    Entity springEnd = engine.CreateEntity();
+    //Entity springStart = engine.CreateEntity();
+    //Entity springEnd = engine.CreateEntity();
 
-    engine.AddComponent(springStart, Model{ .path = "assets/quad.obj", .textured = false });
-    engine.AddComponent(springStart, Transform{ .position = glm::vec3(1.0f, 3.0f, 2.0f), .rotationQuaternion = glm::quat(0.707f, 0.707f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 0.0f) });
-    engine.AddComponent(springStart, PointMass{ .mass = 0.0f, .velocity = glm::vec3(0.0f), .acceleration = glm::vec3(0.0f) , .isStatic = true});
-    
-    engine.AddComponent(springEnd, Model{ .path = "assets/quad.obj", .textured = false });
-    engine.AddComponent(springEnd, Transform{ .position = glm::vec3(1.0f, 3.0f, -8.0f), .rotationQuaternion = glm::quat(0.707f, 0.707f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 0.0f)});
-    engine.AddComponent(springEnd, PointMass{ .mass = 1.0f, .velocity = glm::vec3(0.0f), .acceleration = glm::vec3(0.0f), .isStatic = true });
+    //engine.AddComponent(springStart, Model{ .path = "assets/quad.obj", .textured = false });
+    //engine.AddComponent(springStart, Transform{ .position = glm::vec3(1.0f, 3.0f, 2.0f), .rotationQuaternion = glm::quat(0.707f, 0.707f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 0.0f) });
+    //engine.AddComponent(springStart, PointMass{ .mass = 0.0f, .velocity = glm::vec3(0.0f), .acceleration = glm::vec3(0.0f) , .isStatic = true});
+    //
+    //engine.AddComponent(springEnd, Model{ .path = "assets/quad.obj", .textured = false });
+    //engine.AddComponent(springEnd, Transform{ .position = glm::vec3(1.0f, 3.0f, -8.0f), .rotationQuaternion = glm::quat(0.707f, 0.707f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 0.0f)});
+    //engine.AddComponent(springEnd, PointMass{ .mass = 1.0f, .velocity = glm::vec3(0.0f), .acceleration = glm::vec3(0.0f), .isStatic = true });
 
-    Entity springMiddle[6] = {};
-    for (int i = 0; i < 6; i++)
+    //Entity springMiddle[6] = {};
+    //for (int i = 0; i < 6; i++)
+    //{
+    //  springMiddle[i] = engine.CreateEntity();
+    //  engine.AddComponent(springMiddle[i], Model{ .path = "assets/quad.obj", .textured = false });
+    //  engine.AddComponent(springMiddle[i], Transform{ .position = glm::vec3(1.0f, 3.0f, -1.0f * (i + 1)), .rotationQuaternion = glm::quat(0.707f, 0.707f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 0.0f) });
+    //  engine.AddComponent(springMiddle[i], PointMass{ .mass = 1.0f, .velocity = glm::vec3(0.0f), .acceleration = glm::vec3(0.0f), .isStatic = false });
+    //}
+
+    //for (int i = 0; i < 6; i++)
+    //{
+    //  Entity attachA = (i == 0) ? springStart : springMiddle[i - 1];
+    //  //Entity attachB = (i == 5) ? springEnd : springMiddle[i + 1];
+    //  engine.AddComponent(springMiddle[i], Spring{ .attachment = attachA, .springCoeff = 5.0f, .dampingCoeff = 0.5f, .restLength = 1.0f });
+    //  //engine.AddComponent(springMiddle[i], Spring{ .attachment = attachB, .springCoeff = 5.0f, .dampingCoeff = 0.5f, .restLength = 1.0f });
+    //}
+
+
+    Entity springCube[64];
+    Spring springs[64];
+
+    //for (int i = 0; i < 64; i++)
+    //{
+    //  springCube[i] = engine.CreateEntity();
+    //  engine.AddComponent(springCube[i], Model{ .path = "assets/quad.obj", .textured = false });
+    //  engine.AddComponent(springCube[i], Transform{ .position = glm::vec3( (float)(i % 8) * 1.5f, 5.0f, (float)(i / 8) * 1.5f), .rotationQuaternion = glm::quat(0.707f, 0.707f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 0.0f) });
+    //  engine.AddComponent(springCube[i], PointMass{ .mass = 1.0f, .velocity = glm::vec3(0.0f), .acceleration = glm::vec3(0.0f), .isStatic = false });
+    //}
+
+    const int cubeDim = 4;          // 4 × 4 × 4
+    const float spacing = 1.5f;
+
+    for (int i = 0; i < 64; i++)
     {
-      springMiddle[i] = engine.CreateEntity();
-      engine.AddComponent(springMiddle[i], Model{ .path = "assets/quad.obj", .textured = false });
-      engine.AddComponent(springMiddle[i], Transform{ .position = glm::vec3(1.0f, 3.0f, -1.0f * (i + 1)), .rotationQuaternion = glm::quat(0.707f, 0.707f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 0.0f) });
-      engine.AddComponent(springMiddle[i], PointMass{ .mass = 1.0f, .velocity = glm::vec3(0.0f), .acceleration = glm::vec3(0.0f), .isStatic = false });
+      int x = i % cubeDim;
+      int y = (i / cubeDim) % cubeDim;
+      int z = i / (cubeDim * cubeDim);
+
+      glm::vec3 pos = glm::vec3(
+        x * spacing,
+        y * spacing,
+        z * spacing
+      );
+
+      springCube[i] = engine.CreateEntity();
+      engine.AddComponent(springCube[i], Model{
+          .path = "assets/quad.obj",
+          .textured = false
+        });
+      engine.AddComponent(springCube[i], Transform{
+          .position = pos,
+          .rotationQuaternion = glm::quat(0.707f, 0.707f, 0.0f, 0.0f),
+          .scale = glm::vec3(0.1f, 0.1f, 0.1f)
+        });
+      engine.AddComponent(springCube[i], PointMass{
+          .mass = 1.0f,
+          .velocity = glm::vec3(0.0f),
+          .acceleration = glm::vec3(0.0f),
+          .isStatic = false
+        });
     }
 
-    for (int i = 0; i < 6; i++)
+    engine.GetComponent<PointMass>(springCube[12]).isStatic = true;
+    engine.GetComponent<PointMass>(springCube[15]).isStatic = true;
+    engine.GetComponent<PointMass>(springCube[60]).isStatic = true;
+    engine.GetComponent<PointMass>(springCube[63]).isStatic = true;
+
+    const float L = 1.5f;
+    const float L2 = L * glm::root_two<float>();     // 1.5 * sqrt(2)
+    const float L3 = L * glm::root_three<float>();   // 1.5 * sqrt(3)
+
+    for (int i = 0; i < 64; i++)
     {
-      Entity attachA = (i == 0) ? springStart : springMiddle[i - 1];
-      //Entity attachB = (i == 5) ? springEnd : springMiddle[i + 1];
-      engine.AddComponent(springMiddle[i], Spring{ .attachment = attachA, .springCoeff = 5.0f, .dampingCoeff = 0.5f, .restLength = 1.0f });
-      //engine.AddComponent(springMiddle[i], Spring{ .attachment = attachB, .springCoeff = 5.0f, .dampingCoeff = 0.5f, .restLength = 1.0f });
+      int xi = (i / 16) % 4;
+      int yi = (i / 4) % 4;
+      int zi = i % 4;
+
+      // STRAIGHT NEIGHBORS (orthogonal)
+      if (xi < 3) {
+        springs[i].attachments.push_back({ .attachedEntity = springCube[i + 16], .restLength = L });
+        springs[i + 16].attachments.push_back({ .attachedEntity = springCube[i], .restLength = L });
+      }
+
+      if (yi < 3) {
+        springs[i].attachments.push_back({ .attachedEntity = springCube[i + 4], .restLength = L });
+        springs[i + 4].attachments.push_back({ .attachedEntity = springCube[i], .restLength = L });
+      }
+
+      if (zi < 3) {
+        springs[i].attachments.push_back({ .attachedEntity = springCube[i + 1], .restLength = L });
+        springs[i + 1].attachments.push_back({ .attachedEntity = springCube[i], .restLength = L });
+      }
+
+      // DIAGONAL NEIGHBORS (two-axis)
+      if (xi < 3 && yi < 3)
+      {
+        springs[i].attachments.push_back({ .attachedEntity = springCube[i + 16 + 4], .restLength = L2 });
+        springs[i + 16].attachments.push_back({ .attachedEntity = springCube[i + 4], .restLength = L2 });
+      }
+
+      if (xi < 3 && zi < 3)
+      {
+        springs[i].attachments.push_back({ .attachedEntity = springCube[i + 16 + 1], .restLength = L2 });
+        springs[i + 16].attachments.push_back({ .attachedEntity = springCube[i + 1], .restLength = L2 });
+      }
+
+      if (yi < 3 && zi < 3)
+      {
+        springs[i].attachments.push_back({ .attachedEntity = springCube[i + 4 + 1], .restLength = L2 });
+        springs[i + 4].attachments.push_back({ .attachedEntity = springCube[i + 1], .restLength = L2 });
+      }
+
+      // THREE-AXIS DIAGONALS (XYZ)
+      if (xi < 3 && yi < 3 && zi < 3)
+      {
+        springs[i].attachments.push_back({ .attachedEntity = springCube[i + 16 + 4 + 1], .restLength = L3 });
+
+        springs[i + 1].attachments.push_back({ .attachedEntity = springCube[i + 16 + 4], .restLength = L3 });
+        springs[i + 4].attachments.push_back({ .attachedEntity = springCube[i + 16 + 1], .restLength = L3 });
+        springs[i + 16].attachments.push_back({ .attachedEntity = springCube[i + 4 + 1], .restLength = L3 });
+
+        springs[i + 1].attachments.push_back({ .attachedEntity = springCube[i + 16], .restLength = L3 });
+        springs[i + 4].attachments.push_back({ .attachedEntity = springCube[i + 1], .restLength = L3 });
+        springs[i + 16].attachments.push_back({ .attachedEntity = springCube[i + 1], .restLength = L3 });
+        springs[i + 16 + 4].attachments.push_back({ .attachedEntity = springCube[i + 1], .restLength = L3 });
+      }
     }
 
-    engine.AddComponent(springEnd, Spring{ .attachment = springMiddle[5], .springCoeff = 5.0f, .dampingCoeff = 0.5f, .restLength = 1.0f });
+    for (int i = 0; i < 64; i++)
+    {
+      engine.AddComponent<Spring>(springCube[i], springs[i]);
+    }
+
+    //engine.AddComponent(springEnd, Spring{ .attachment = springMiddle[5], .springCoeff = 5.0f, .dampingCoeff = 0.5f, .restLength = 1.0f });
     //engine.AddComponent(springStart, Spring{ .attachment = springEnd, .springCoeff = 5.0f, .dampingCoeff = 0.5f, .restLength = 1.0f });
     //engine.AddComponent(springEnd, Spring{ .attachment = springStart, .springCoeff = 5.0f, .dampingCoeff = 0.5f, .restLength = 1.0f });
   }

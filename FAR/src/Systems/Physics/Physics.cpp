@@ -26,18 +26,22 @@ namespace FAR
       PointMass& pmA = Engine::GetInstance()->GetComponent<PointMass>(e);
       Spring& spring = Engine::GetInstance()->GetComponent<Spring>(e);
 
-      Entity attachedEntity = spring.attachment;
 
-      if (!Engine::GetInstance()->HasComponent<Transform>(attachedEntity) || !Engine::GetInstance()->HasComponent<PointMass>(attachedEntity))
-        continue;
+      for (Spring::SpringAttachment& springAttachment : spring.attachments)
+      {
+        Entity attachedEntity = springAttachment.attachedEntity;
 
-      RenderResource* renderResc = Engine::GetInstance()->GetResource<RenderResource>();
-      renderResc->DrawRay({ .position = glm::vec4(tA.position, 1.0f), .color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f) },
-        { .position = glm::vec4(Engine::GetInstance()->GetComponent<Transform>(attachedEntity).position, 1.0f), .color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f) });
+        if (!Engine::GetInstance()->HasComponent<Transform>(attachedEntity) || !Engine::GetInstance()->HasComponent<PointMass>(attachedEntity))
+          continue;
 
-      Transform& tB = Engine::GetInstance()->GetComponent<Transform>(attachedEntity);
-      PointMass& pmB = Engine::GetInstance()->GetComponent<PointMass>(attachedEntity);
-      CalculateSpringForces(spring, tA, pmA, tB, pmB);
+        RenderResource* renderResc = Engine::GetInstance()->GetResource<RenderResource>();
+        renderResc->DrawRay({ .position = glm::vec4(tA.position, 1.0f), .color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f) },
+          { .position = glm::vec4(Engine::GetInstance()->GetComponent<Transform>(attachedEntity).position, 1.0f), .color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f) });
+
+        Transform& tB = Engine::GetInstance()->GetComponent<Transform>(attachedEntity);
+        PointMass& pmB = Engine::GetInstance()->GetComponent<PointMass>(attachedEntity);
+        CalculateSpringForces(springAttachment, tA, pmA, tB, pmB);
+      }
     }
     std::vector<Entity> pmEnts = Engine::GetInstance()->GetEntities<Transform, PointMass>();
 
@@ -89,7 +93,7 @@ namespace FAR
     pm.totalForce = glm::vec3(0.0f);
   }
 
-  void Physics::CalculateSpringForces(Spring& spring, Transform& tA, PointMass& pmA, Transform& tB, PointMass& pmB)
+  void Physics::CalculateSpringForces(Spring::SpringAttachment& spring, Transform& tA, PointMass& pmA, Transform& tB, PointMass& pmB)
   {
     //F = -k * x
     float currentLength = glm::length(tB.position - tA.position);

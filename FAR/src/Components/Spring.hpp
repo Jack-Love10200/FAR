@@ -7,8 +7,12 @@
 
   struct Spring
   {
-    Entity attachment;
-    float springCoeff;
-    float dampingCoeff; 
-    float restLength;
+    struct SpringAttachment
+    {
+      Entity attachedEntity;
+      float springCoeff = 5.0f;
+      float dampingCoeff = 0.5f;
+      float restLength = 1.5f;
+    };
+    std::vector<SpringAttachment> attachments;
   };

@@ -24,7 +24,7 @@ namespace FAR
 
 
     void EulerIntegrate(Transform& t, PointMass& pm);
-    void CalculateSpringForces(Spring& spring, Transform& tA, PointMass& pmA, Transform& tB, PointMass& pmB);
+    void CalculateSpringForces(Spring::SpringAttachment& spring, Transform& tA, PointMass& pmA, Transform& tB, PointMass& pmB);
 
   };
 }
