@@ -1,9 +1,14 @@
+///
+/// @file   Spring.hpp
+/// @brief  Spring component defintions that allows for multiple conections from an entity to sever others
+/// @author Jack Love
+/// @date   12.12.2025
+///
+
 #pragma once
 
 #include "PCH/PCH.hpp"
 #include "Engine/Engine.hpp"
-
-
 
   struct Spring
   {

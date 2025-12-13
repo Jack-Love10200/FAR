@@ -19,114 +19,16 @@ namespace FAR
     Engine& engine = *Engine::GetInstance();
     cam = engine.CreateEntity();
 
-    glm::quat camRot = glm::quat(-0.031, -0.424f, -0.160, -0.891);
+    glm::quat camRot = glm::quat(0.040 , -0.664, -0.187, -0.732);
     camRot = glm::normalize(camRot);
 
     engine.AddComponent(cam, Camera{.nearPlane = 0.001f, .forward = camRot * glm::vec3(0.0f, 0.0f, -1.0f), .isMain = true});
-    engine.AddComponent(cam, Transform{ .position = glm::vec3(1.873f, 1.405f, 1.513f), .rotationQuaternion = camRot });
-
-//    Entity target = engine.CreateEntity();
-//    engine.AddComponent(target, Transform{ .position = glm::vec3(0.0f, 1.0f, 0.0f), .scale = glm::vec3(0.1f, 0.1f, 1.0f)});
-//    engine.AddComponent(target, Model{ .path = "assets/quad.obj", .textured = false });
-//    engine.AddComponent(target, ScriptedMotionPath{
-//      .controlPoints = { {0.0f, 1.0f, -1.0f}, {-0.7f, 1.6f, -1.1f}, {0.4f, 1.2f, -1.1f}, {0.0f, 1.0f, -1.0f} },
-//      .velocityKeys = { {0.0f, 0.0f}, {0.2f, 0.5f}, {0.8f, 0.5f}, {1.0f, 0.0f} },
-//      .totalTime = 4.0f
-//      });
-//
-//    Entity target2 = engine.CreateEntity();
-//    engine.AddComponent(target2, Transform{ .position = glm::vec3(0.115f, 0.086f, 0.476f), .scale = glm::vec3(0.1f, 0.1f, 1.0f) });
-//    engine.AddComponent(target2, Model{ .path = "assets/quad.obj", .textured = false });
-//
-//    Entity e = engine.CreateEntity();
-//    //engine.AddComponent(e, ScriptedMotionPath{ 
-//    //  //.controlPoints = {{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} },
-//    //  //.controlPoints = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f} , {0.0f, 0.0f, 0.0f}},
-//    //  .controlPoints = {{-1.1f, 0.0f, -6.7f}, {2.2f, 0.0ff, 0.0f, -0.6f} , {4.9f, 0.0f, 2.9f}, {-1.8f, 0.0f, 6.9f}, {-7.6f, 0.0f, 0.0f}, {-8.8f, 0.0f, -10.8f}, {0.3f, 0.0f, -16.7f}, {-1.5f, 0.0f, -11.6f}, {-1.1f, 0.0f, -6.7f}},
-//    //  .velocityKeys = {{0.0f, 0.0f}, {0.1f, 0.01f}, { 0.45f ,1.0f }, {0.55f, 1.0f}, {0.9f, 0.01f}, { 1.0f, 0.0f }},
-//    //  //.velocityKeys = {{0.0f, 1.0f}, {1.0f, 1.0f}},
-//    //  .totalTime = 30.0f
-//    //  });
-//    engine.AddComponent(e, Transform{ .position = glm::vec3(0.0f, 0.0f, 0.0f) });
-//    engine.AddComponent(e, Model{ .path = "assets/trotting_cat.glb", .textured = false });
-//    //engine.AddComponent(e, SkeletalAnimator{ .path = "assets/trotting_cat.glb", .animationTime = 0.0f, .currentAnimation = 0, .playing = true, .looping = true, .playbackSpeed = 1.3f });
-//    engine.AddComponent(e, IKPoser{
-//      .manipulators = {
-//        IKPoser::Manipulator{
-//          .target = target,
-//          .bones = {
-//IKPoser::Manipulator::ManipulatorBone{.boneIndex = 55, .minPitch = glm::radians(-15.0f), .maxPitch = glm::radians(15.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(-15.0f), .maxRoll = glm::radians(15.0f)},
-//IKPoser::Manipulator::ManipulatorBone{.boneIndex = 54, .minPitch = glm::radians(-10.0f), .maxPitch = glm::radians(25.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(0.0f), .maxRoll = glm::radians(30.0f)},
-//IKPoser::Manipulator::ManipulatorBone{.boneIndex = 53, .minPitch = glm::radians(-10.0f), .maxPitch = glm::radians(20.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(5.0f), .maxRoll = glm::radians(35.0f)},
-//IKPoser::Manipulator::ManipulatorBone{.boneIndex = 52, .minPitch = glm::radians(-10.0f), .maxPitch = glm::radians(20.0f), .minYaw = glm::radians(-10.0f), .maxYaw = glm::radians(20.0f), .minRoll = glm::radians(5.0f), .maxRoll = glm::radians(35.0f)},
-//IKPoser::Manipulator::ManipulatorBone{.boneIndex = 51, .minPitch = glm::radians(-15.0f), .maxPitch = glm::radians(15.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(5.0f), .maxRoll = glm::radians(35.0f)},
-//IKPoser::Manipulator::ManipulatorBone{.boneIndex = 50, .minPitch = glm::radians(-15.0f), .maxPitch = glm::radians(15.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(-10.0f), .maxRoll = glm::radians(25.0f)},
-//IKPoser::Manipulator::ManipulatorBone{.boneIndex = 49, .minPitch = glm::radians(-20.0f), .maxPitch = glm::radians(15.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(-10.0f), .maxRoll = glm::radians(25.0f)},
-//IKPoser::Manipulator::ManipulatorBone{.boneIndex = 48, .minPitch = glm::radians(-15.0f), .maxPitch = glm::radians(15.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(-80.0f), .maxRoll = glm::radians(-50.0f)},
-//          },
-//          .EEIndex = 55
-//        },
-//        IKPoser::Manipulator{
-//          .target = target2, 
-//          .bones = {
-//IKPoser::Manipulator::ManipulatorBone{.boneIndex = 16, .minPitch = glm::radians(-15.0f), .maxPitch = glm::radians(15.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(-15.0f), .maxRoll = glm::radians(15.0f)},
-//IKPoser::Manipulator::ManipulatorBone{.boneIndex = 15, .minPitch = glm::radians(-60.0f), .maxPitch = glm::radians(-30.0f), .minYaw = glm::radians(-10.0f), .maxYaw = glm::radians(25.0f), .minRoll = glm::radians(-25.0f), .maxRoll = glm::radians(5.0f)},
-//IKPoser::Manipulator::ManipulatorBone{.boneIndex = 14, .minPitch = glm::radians(-90.0f), .maxPitch = glm::radians(-60.0f), .minYaw = glm::radians(-15.0f), .maxYaw = glm::radians(15.0f), .minRoll = glm::radians(-15.0f), .maxRoll = glm::radians(15.0f)},
-//IKPoser::Manipulator::ManipulatorBone{.boneIndex = 13, .minPitch = glm::radians(105.0f), .maxPitch = glm::radians(135.0f), .minYaw = glm::radians(-10.0f), .maxYaw = glm::radians(20.0f), .minRoll = glm::radians(-5.0f), .maxRoll = glm::radians(25.0f)},
-//IKPoser::Manipulator::ManipulatorBone{.boneIndex = 12, .minPitch = glm::radians(55.0f), .maxPitch = glm::radians(85.0f), .minYaw = glm::radians(-20.0f), .maxYaw = glm::radians(10.0f), .minRoll = glm::radians(0.0f), .maxRoll = glm::radians(30.0f)},
-//IKPoser::Manipulator::ManipulatorBone{.boneIndex = 11, .minPitch = glm::radians(65.0f), .maxPitch = glm::radians(95.0f), .minYaw = glm::radians(-75.0f), .maxYaw = glm::radians(-45.0f), .minRoll = glm::radians(-35.0f), .maxRoll = glm::radians(-5.0f)},
-//          },
-//          .EEIndex = 16
-//        }
-//      }
-//      });
-
-    //Entity floor = engine.CreateEntity();
-    //engine.AddComponent(floor, Model{ .path = "assets/quad.obj", .textured = false });
-
-    //engine.AddComponent(floor, Transform{ .position = glm::vec3(-12.0f, -0.01f, -19.0f), .rotationQuaternion = glm::quat(0.707f, 0.707f, 0.0f, 0.0f), .scale = glm::vec3(22.0f, 30.0f, 0.0f)});
-
-    //Entity springStart = engine.CreateEntity();
-    //Entity springEnd = engine.CreateEntity();
-
-    //engine.AddComponent(springStart, Model{ .path = "assets/quad.obj", .textured = false });
-    //engine.AddComponent(springStart, Transform{ .position = glm::vec3(1.0f, 3.0f, 2.0f), .rotationQuaternion = glm::quat(0.707f, 0.707f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 0.0f) });
-    //engine.AddComponent(springStart, PointMass{ .mass = 0.0f, .velocity = glm::vec3(0.0f), .acceleration = glm::vec3(0.0f) , .isStatic = true});
-    //
-    //engine.AddComponent(springEnd, Model{ .path = "assets/quad.obj", .textured = false });
-    //engine.AddComponent(springEnd, Transform{ .position = glm::vec3(1.0f, 3.0f, -8.0f), .rotationQuaternion = glm::quat(0.707f, 0.707f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 0.0f)});
-    //engine.AddComponent(springEnd, PointMass{ .mass = 1.0f, .velocity = glm::vec3(0.0f), .acceleration = glm::vec3(0.0f), .isStatic = true });
-
-    //Entity springMiddle[6] = {};
-    //for (int i = 0; i < 6; i++)
-    //{
-    //  springMiddle[i] = engine.CreateEntity();
-    //  engine.AddComponent(springMiddle[i], Model{ .path = "assets/quad.obj", .textured = false });
-    //  engine.AddComponent(springMiddle[i], Transform{ .position = glm::vec3(1.0f, 3.0f, -1.0f * (i + 1)), .rotationQuaternion = glm::quat(0.707f, 0.707f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 0.0f) });
-    //  engine.AddComponent(springMiddle[i], PointMass{ .mass = 1.0f, .velocity = glm::vec3(0.0f), .acceleration = glm::vec3(0.0f), .isStatic = false });
-    //}
-
-    //for (int i = 0; i < 6; i++)
-    //{
-    //  Entity attachA = (i == 0) ? springStart : springMiddle[i - 1];
-    //  //Entity attachB = (i == 5) ? springEnd : springMiddle[i + 1];
-    //  engine.AddComponent(springMiddle[i], Spring{ .attachment = attachA, .springCoeff = 5.0f, .dampingCoeff = 0.5f, .restLength = 1.0f });
-    //  //engine.AddComponent(springMiddle[i], Spring{ .attachment = attachB, .springCoeff = 5.0f, .dampingCoeff = 0.5f, .restLength = 1.0f });
-    //}
-
+    engine.AddComponent(cam, Transform{ .position = glm::vec3(8.134f, 3.459f, 2.435f), .rotationQuaternion = camRot });
 
     Entity springCube[64];
     Spring springs[64];
 
-    //for (int i = 0; i < 64; i++)
-    //{
-    //  springCube[i] = engine.CreateEntity();
-    //  engine.AddComponent(springCube[i], Model{ .path = "assets/quad.obj", .textured = false });
-    //  engine.AddComponent(springCube[i], Transform{ .position = glm::vec3( (float)(i % 8) * 1.5f, 5.0f, (float)(i / 8) * 1.5f), .rotationQuaternion = glm::quat(0.707f, 0.707f, 0.0f, 0.0f), .scale = glm::vec3(1.0f, 1.0f, 0.0f) });
-    //  engine.AddComponent(springCube[i], PointMass{ .mass = 1.0f, .velocity = glm::vec3(0.0f), .acceleration = glm::vec3(0.0f), .isStatic = false });
-    //}
-
-    const int cubeDim = 4;          // 4 × 4 × 4
+    const int cubeDim = 4;
     const float spacing = 1.5f;
 
     for (int i = 0; i < 64; i++)
@@ -159,14 +61,15 @@ namespace FAR
         });
     }
 
+    //pin top 4 corners
     engine.GetComponent<PointMass>(springCube[12]).isStatic = true;
     engine.GetComponent<PointMass>(springCube[15]).isStatic = true;
     engine.GetComponent<PointMass>(springCube[60]).isStatic = true;
     engine.GetComponent<PointMass>(springCube[63]).isStatic = true;
 
     const float L = 1.5f;
-    const float L2 = L * glm::root_two<float>();     // 1.5 * sqrt(2)
-    const float L3 = L * glm::root_three<float>();   // 1.5 * sqrt(3)
+    const float L2 = L * glm::root_two<float>();
+    const float L3 = L * glm::root_three<float>();
 
     for (int i = 0; i < 64; i++)
     {
@@ -229,10 +132,6 @@ namespace FAR
     {
       engine.AddComponent<Spring>(springCube[i], springs[i]);
     }
-
-    //engine.AddComponent(springEnd, Spring{ .attachment = springMiddle[5], .springCoeff = 5.0f, .dampingCoeff = 0.5f, .restLength = 1.0f });
-    //engine.AddComponent(springStart, Spring{ .attachment = springEnd, .springCoeff = 5.0f, .dampingCoeff = 0.5f, .restLength = 1.0f });
-    //engine.AddComponent(springEnd, Spring{ .attachment = springStart, .springCoeff = 5.0f, .dampingCoeff = 0.5f, .restLength = 1.0f });
   }
 
   void Sandbox::PreUpdate()

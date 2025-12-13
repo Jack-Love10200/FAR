@@ -1,7 +1,13 @@
+///
+/// @file   PointMass.hpp
+/// @brief  Point Mass component defintion
+/// @author Jack Love
+/// @date   12.12.2025
+///
+
 #pragma once
 
 #include "PCH/PCH.hpp"
-
 
 struct PointMass
 {

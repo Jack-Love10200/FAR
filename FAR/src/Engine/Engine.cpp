@@ -51,6 +51,9 @@ namespace FAR
     std::chrono::duration<float> dtf = current - last;
 
     dt = dtf.count();
+
+    if (dt > 0.1f)
+      dt = 0.1f;
     //dt = 1.0f / 60.0f;
   }
 
