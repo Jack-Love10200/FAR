@@ -217,7 +217,7 @@ namespace FAR
 
     for (int i = smp.controlPoints.size() - 2; i >= 0; i--)
     {
-      float startU = (float)i / (smp.controlPoints.size() - 1);
+      float startU = (float)i / (smp.controlPoints.size() - 1); 
       float endU = (float)(i + 1) / (smp.controlPoints.size() - 1);
 
       segments.push(segment{ .start = startU, .end = endU, 
