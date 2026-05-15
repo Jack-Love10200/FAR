@@ -16,7 +16,7 @@
 #include "Eigen/Dense"
 
 #include "Components/ScriptedMotionPath.hpp"
-#include <stb_image_resize2.h>
+#include <stb_image_resize2.h> 
 
 
 namespace FAR
